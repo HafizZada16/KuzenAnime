@@ -1,25 +1,38 @@
-import { fetchData } from "./api.js";
-import { showLoading } from "./utils.js";
+import { fetchData } from "/js/api.js";
+import { showLoading } from "/js/utils.js";
 
 export async function loadPlayer(epSlug) {
+  if (!epSlug) return;
   showLoading(true);
+
   history.pushState(null, null, `/episode/${epSlug}`);
 
   const data = await fetchData(`/episode/${epSlug}`);
   const display = document.getElementById("content-display");
 
-  // Validasi jika data API kosong atau tidak sesuai
   if (!data || !data.mirrors) {
-    display.innerHTML = `<div class="text-center py-20"><p class="text-red-500 mb-4">Gagal memuat data episode.</p>
-                         <button onclick="location.reload()" class="bg-gray-800 px-4 py-2 rounded-lg text-xs">Coba Lagi</button></div>`;
+    display.innerHTML = `<div class="text-center py-20 text-red-500 font-bold uppercase text-[10px]">Gagal memuat data episode.</div>`;
     showLoading(false);
     return;
   }
 
+  // Mengambil slug anime dari localStorage (disimpan saat di detail.js)
+  let animeSlug = localStorage.getItem("current_anime_slug");
+
+  if (!animeSlug) {
+    if (data.anime_url) {
+      animeSlug = data.anime_url.split("/").filter(Boolean).pop();
+    } else {
+      animeSlug = epSlug.split("-episode-")[0] + "-sub-indo";
+    }
+  }
+
+  const animeData = await fetchData(`/anime/${animeSlug}`);
+  const episodes = animeData?.episodes ? [...animeData.episodes].reverse() : [];
+
   const homeData = await fetchData("/home");
   const recommendations = homeData?.ongoing?.slice(0, 10) || [];
 
-  // Ambil semua resolusi unik yang tersedia (misal: 360p, 480p, 720p)
   const qualities = [
     ...new Set(data.mirrors.map((m) => m.payload?.q).filter(Boolean)),
   ];
@@ -28,43 +41,37 @@ export async function loadPlayer(epSlug) {
     : qualities[0] || "";
 
   display.innerHTML = `
-    <div class="flex flex-col lg:flex-row gap-6 animate-fadeIn">
+    <div class="flex flex-col lg:flex-row gap-6 animate-fadeIn px-1">
         <div class="lg:w-[75%]">
             <div id="video-wrapper" class="bg-black rounded-2xl overflow-hidden shadow-2xl border border-gray-800 aspect-video mb-6">
                 <iframe src="${data.default_stream || ""}" allowfullscreen class="w-full h-full border-none"></iframe>
             </div>
 
-            <div class="mb-8 flex flex-col md:flex-row justify-between items-start gap-4">
-                <div class="max-w-full overflow-hidden">
-                    <h1 class="text-xl md:text-2xl font-black mb-2 truncate">${data.title}</h1>
-                    <div class="flex items-center gap-4 text-[10px] text-gray-500 font-bold uppercase tracking-widest">
-                        <span><i class="fas fa-desktop mr-1"></i> Episode</span>
-                        <span><i class="fas fa-clock mr-1"></i> Auto-Synced</span>
-                    </div>
-                </div>
-                <div class="flex gap-2 w-full md:w-auto">
-                    <button onclick="history.back()" class="flex-1 md:flex-none bg-gray-900 border border-gray-800 px-6 py-2 rounded-xl text-xs font-bold transition">Back</button>
-                    <button class="flex-1 md:flex-none bg-purple-600 px-8 py-2 rounded-xl text-xs font-bold shadow-lg shadow-purple-600/20 text-white">Next <i class="fas fa-chevron-right ml-2"></i></button>
+            <div class="mb-8">
+                <h1 class="text-xl md:text-2xl font-black mb-2 tracking-tight text-white">${data.title}</h1>
+                <div class="flex items-center gap-4 text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+                    <span class="text-purple-500"><i class="fas fa-tv mr-1"></i> ${animeData?.title || "Streaming"}</span>
+                    <span><i class="fas fa-clock mr-1"></i> ${data.posted || "Updated"}</span>
                 </div>
             </div>
 
-            <div class="bg-[#121212] border border-gray-800 p-5 rounded-2xl mb-8">
+            <div class="bg-[#121212] border border-gray-800 p-5 rounded-2xl mb-6 shadow-sm">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div class="flex-grow w-full">
                         <h3 class="text-[10px] font-black mb-4 flex items-center gap-2 uppercase tracking-[0.2em] text-gray-400">
-                            <i class="fas fa-server text-purple-500"></i> Streaming Servers
+                            <i class="fas fa-server text-purple-500"></i> Pilih Server
                         </h3>
                         <div id="mirror-list" class="flex flex-wrap gap-2"></div>
                     </div>
-                    <div class="flex-shrink-0 w-full md:w-auto md:text-right">
-                        <h3 class="text-[10px] font-black mb-4 uppercase tracking-[0.2em] text-gray-400">Select Quality</h3>
+                    <div class="flex-shrink-0 w-full md:w-auto">
+                        <h3 class="text-[10px] font-black mb-4 uppercase tracking-[0.2em] text-gray-400 md:text-right">Kualitas</h3>
                         <div class="flex bg-gray-800 p-1 rounded-xl w-fit md:ml-auto">
                             ${qualities
                               .map(
                                 (q) => `
                                 <button onclick="app.changeQuality('${q}', '${btoa(JSON.stringify(data.mirrors))}')" 
                                     id="q-${q}"
-                                    class="quality-btn px-4 py-1.5 rounded-lg text-[10px] font-black transition uppercase ${q === defaultQuality ? "bg-white text-black" : "text-gray-400 hover:text-white"}">
+                                    class="quality-btn px-4 py-1.5 rounded-lg text-[10px] font-black transition uppercase ${q === defaultQuality ? "bg-white text-black shadow-md" : "text-gray-400 hover:text-white"}">
                                     ${q}
                                 </button>`,
                               )
@@ -73,24 +80,48 @@ export async function loadPlayer(epSlug) {
                     </div>
                 </div>
             </div>
+
+            <div class="bg-[#121212] border border-gray-800 p-5 rounded-2xl mb-8 shadow-sm">
+                <div class="flex justify-between items-center mb-5">
+                    <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-2">
+                        <i class="fas fa-th-large text-purple-500"></i> Pilih Episode
+                    </h3>
+                    <span class="text-[9px] text-gray-600 font-black uppercase">Total: ${episodes.length}</span>
+                </div>
+                
+                <div class="flex flex-wrap gap-2">
+                    ${episodes
+                      .map((ep, index) => {
+                        const isCurrent = ep.slug === epSlug;
+                        return `
+                            <button onclick="app.loadPlayer('${ep.slug}')" 
+                                class="px-3 py-1.5 min-w-[32px] rounded-lg text-[10px] font-black transition-all duration-300 uppercase
+                                ${isCurrent ? "bg-pink-500 text-white shadow-lg shadow-pink-500/30 ring-1 ring-pink-400" : "bg-gray-800/60 text-gray-400 border border-gray-700/50 hover:bg-gray-700 hover:text-white"}">
+                                ${index + 1}
+                            </button>
+                        `;
+                      })
+                      .join("")}
+                </div>
+            </div>
         </div>
 
-        <div class="lg:w-[25%]">
-            <div class="bg-[#121212] border border-gray-800 p-5 rounded-2xl">
+        <div class="lg:w-[25%] text-white">
+            <div class="bg-[#121212] border border-gray-800 p-5 rounded-2xl sticky top-24">
                 <h3 class="text-xs font-black mb-6 border-b border-gray-800 pb-3 flex items-center gap-2 uppercase tracking-widest text-gray-300">
-                    <i class="fas fa-list-ul text-purple-500"></i> You Might Like
+                    <i class="fas fa-fire text-orange-500"></i> Rekomendasi
                 </h3>
                 <div class="space-y-4">
                     ${recommendations
                       .map(
                         (anime) => `
-                        <div onclick="app.loadDetail('${anime.slug}', '${anime.thumb}')" class="flex gap-3 group cursor-pointer">
-                            <div class="w-20 h-28 flex-shrink-0 overflow-hidden rounded-xl bg-gray-800">
+                        <div onclick="app.loadDetail('${anime.slug}')" class="flex gap-3 group cursor-pointer">
+                            <div class="w-16 h-20 flex-shrink-0 overflow-hidden rounded-lg bg-gray-800 border border-gray-700">
                                 <img src="${anime.thumb}" class="w-full h-full object-cover group-hover:scale-110 transition duration-300" onerror="this.src='https://via.placeholder.com/150x200'">
                             </div>
-                            <div class="flex flex-col justify-center">
-                                <h4 class="text-[11px] font-bold line-clamp-2 group-hover:text-purple-500 transition leading-snug">${anime.title}</h4>
-                                <span class="text-[9px] text-gray-500 mt-2 font-bold uppercase tracking-tighter">${anime.episode || "Ongoing"}</span>
+                            <div class="flex flex-col justify-center min-w-0">
+                                <h4 class="text-[10px] font-bold line-clamp-2 group-hover:text-purple-500 transition-colors leading-tight">${anime.title}</h4>
+                                <span class="text-[8px] text-gray-500 mt-1 font-black uppercase tracking-tighter">${anime.episode || "Ongoing"}</span>
                             </div>
                         </div>`,
                       )
@@ -100,7 +131,6 @@ export async function loadPlayer(epSlug) {
         </div>
     </div>`;
 
-  // Jalankan inisialisasi server untuk kualitas default
   if (defaultQuality) {
     window.app.changeQuality(
       defaultQuality,
@@ -116,12 +146,13 @@ export const changeQuality = (selectedQ, encodedMirrors) => {
     const container = document.getElementById("mirror-list");
 
     document.querySelectorAll(".quality-btn").forEach((btn) => {
-      btn.classList.remove("bg-white", "text-black");
+      btn.classList.remove("bg-white", "text-black", "shadow-md");
       btn.classList.add("text-gray-400");
     });
 
     const targetBtn = document.getElementById(`q-${selectedQ}`);
-    if (targetBtn) targetBtn.classList.add("bg-white", "text-black");
+    if (targetBtn)
+      targetBtn.classList.add("bg-white", "text-black", "shadow-md");
 
     const filtered = mirrors.filter((m) => m.payload?.q === selectedQ);
     container.innerHTML = filtered
@@ -141,9 +172,7 @@ export const changeQuality = (selectedQ, encodedMirrors) => {
 export async function switchServer(encodedPayload) {
   const payload = JSON.parse(atob(encodedPayload));
   const wrapper = document.getElementById("video-wrapper");
-  wrapper.innerHTML = `<div class="flex items-center justify-center h-full text-white bg-black/50">
-                        <i class="fas fa-circle-notch animate-spin text-4xl text-purple-600"></i>
-                      </div>`;
+  wrapper.innerHTML = `<div class="flex items-center justify-center h-full text-white bg-black/50"><i class="fas fa-circle-notch animate-spin text-4xl text-purple-600"></i></div>`;
 
   try {
     const res = await fetch(`https://api.kanata.web.id/otakudesu/stream`, {
@@ -159,6 +188,6 @@ export async function switchServer(encodedPayload) {
       throw new Error("Iframe not found");
     }
   } catch (err) {
-    wrapper.innerHTML = `<div class="flex items-center justify-center h-full text-red-500">Gagal memuat server. Coba server lain.</div>`;
+    wrapper.innerHTML = `<div class="flex items-center justify-center h-full text-red-500 text-[10px] font-bold uppercase">Gagal memuat server.</div>`;
   }
 }

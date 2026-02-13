@@ -12,6 +12,8 @@ export async function loadDetail(slug, thumbFromHome = null) {
   const poster =
     data.thumb || thumbFromHome || "https://via.placeholder.com/300x450";
 
+  localStorage.setItem("current_anime_slug", slug);
+
   display.innerHTML = `
         <div class="animate-fadeIn px-1">
             <span onclick="history.back()" class="text-[10px] font-bold text-gray-500 hover:text-white cursor-pointer mb-6 inline-block uppercase tracking-wider"><i class="fas fa-arrow-left mr-2"></i> Back</span>

@@ -68,6 +68,7 @@
         const router = async () => {
         const path = window.location.pathname;
         const params = new URLSearchParams(window.location.search);
+        const page = parseInt(params.get('page')) || 1;
         const query = params.get('q');
         
         if (path === '/search' && query) {
