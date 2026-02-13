@@ -23,10 +23,23 @@ http
     let extname = path.extname(fullPath);
     let contentType = MIME_TYPES[extname] || "application/octet-stream";
 
-    fs.readFile(fullPath, (error, content) => {
+    fs.readFile(filePath, (error, content) => {
       if (error) {
-        res.writeHead(404);
-        res.end("File Not Found");
+        if (error.code == "ENOENT") {
+          // JIKA FILE TIDAK ADA (seperti route /genres/action),
+          // KIRIM BALIK KE INDEX.HTML
+          fs.readFile("./index.html", (err, indexContent) => {
+            res.writeHead(200, { "Content-Type": "text/html" });
+            res.end(indexContent, "utf-8");
+          });
+        } else {
+          res.writeHead(500);
+          res.end(
+            "Sorry, check with the site admin for error: " +
+              error.code +
+              " ..\n",
+          );
+        }
       } else {
         res.writeHead(200, { "Content-Type": contentType });
         res.end(content, "utf-8");

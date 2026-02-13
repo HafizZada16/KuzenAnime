@@ -41,11 +41,11 @@
     </main>
 
     <script type="module">
-        import { loadHome, loadCategory, handleSearch } from './js/home.js';
-        import { loadDetail } from './js/detail.js';
-        import { loadPlayer, switchServer, changeQuality } from './js/player.js';
-        import { loadSchedule } from './js/schedule.js';
-        import { loadGenres } from './js/genres.js';
+        import { loadHome, loadCategory, handleSearch } from '/js/home.js';
+        import { loadDetail } from '/js/detail.js';
+        import { loadPlayer, switchServer, changeQuality } from '/js/player.js';
+        import { loadSchedule } from '/js/schedule.js';
+        import { loadGenres } from '/js/genres.js';
 
         const navigateTo = (path) => { history.pushState(null, null, path); router(); };
         
