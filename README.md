@@ -3,6 +3,8 @@
 
 # 🚀 KuzenAnime - Streaming Anime Indonesia
 
+* **Link Website**: https://anime.hapizweb.my.id
+
 Aplikasi web streaming anime modern yang dibangun dengan **Vanilla JavaScript (ES6+)** dan **Tailwind CSS**. Website ini mengambil data secara real-time dari API Otakudesu untuk menyajikan informasi anime ongoing, complete, jadwal rilis, hingga pencarian berdasarkan genre.
 
 ## 🛠️ Tech Stack
