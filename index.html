@@ -11,24 +11,40 @@
 </head>
 <body class="bg-[#0b0b0b] text-white">
     <nav class="sticky top-0 z-50 glass border-b border-gray-800/50 p-3">
-        <div class="container mx-auto flex flex-col md:flex-row justify-between items-center gap-3">
-            <div class="flex items-center justify-between w-full md:w-auto">
+        <div class="container mx-auto">
+            <div class="flex flex-row justify-between items-center gap-3">
                 <div class="flex items-center gap-2 cursor-pointer" onclick="app.navigateTo('/')">
                     <div class="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center shadow-lg shadow-purple-600/20">
                         <i class="fas fa-play text-white text-xs"></i>
                     </div>
                     <h1 class="text-xl font-black tracking-tighter uppercase">Kuzen<span class="text-purple-500">Anime</span></h1>
                 </div>
+                
+                <div class="flex gap-5 text-[10px] font-bold items-center uppercase tracking-wider overflow-x-auto no-scrollbar py-1">
+                    <span onclick="app.navigateTo('/')" class="hover:text-purple-500 cursor-pointer whitespace-nowrap transition">Home</span>
+                    <span onclick="app.navigateTo('/ongoing')" class="hover:text-purple-500 cursor-pointer whitespace-nowrap transition">Ongoing</span>
+                    <span onclick="app.navigateTo('/complete')" class="hover:text-purple-500 cursor-pointer whitespace-nowrap transition">Complete</span>
+                    <span onclick="app.navigateTo('/schedule')" class="hover:text-purple-500 cursor-pointer whitespace-nowrap transition flex items-center gap-1">
+                        <i class="far fa-calendar-alt text-[8px]"></i> Schedule
+                    </span>
+                    <span onclick="app.navigateTo('/genres')" class="hover:text-purple-500 cursor-pointer whitespace-nowrap transition flex items-center gap-1">
+                        <i class="fas fa-ghost text-[8px]"></i> Genres
+                    </span>
+                    
+                    <div class="relative hidden md:block w-48 ml-2">
+                        <input type="text" id="search-input-desktop" placeholder="Cari anime..." 
+                            class="bg-gray-900 border border-gray-700 rounded-full px-4 py-1.5 text-[10px] outline-none focus:border-purple-500 w-full text-white transition">
+                        <i class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 text-[8px]"></i>
+                    </div>
+                </div>
             </div>
-            
-            <div class="flex gap-4 text-[10px] font-bold items-center uppercase tracking-wider overflow-x-auto w-full md:w-auto no-scrollbar py-1">
-                <span onclick="app.navigateTo('/')" class="hover:text-purple-500 cursor-pointer whitespace-nowrap">Home</span>
-                <span onclick="app.navigateTo('/ongoing')" class="hover:text-purple-500 cursor-pointer whitespace-nowrap">Ongoing</span>
-                <span onclick="app.navigateTo('/complete')" class="hover:text-purple-500 cursor-pointer whitespace-nowrap">Complete</span>
-                <span onclick="app.navigateTo('/schedule')" class="hover:text-purple-500 cursor-pointer whitespace-nowrap transition flex items-center gap-1">
-                <i class="far fa-calendar-alt text-[8px]"></i> Schedule</span>
-                <span onclick="app.navigateTo('/genres')" class="hover:text-purple-500 cursor-pointer whitespace-nowrap">Genres</span>
-                <input type="text" id="search-input" placeholder="Cari anime..." class="bg-gray-900 border border-gray-700 rounded-full px-3 py-1.5 text-xs outline-none focus:border-purple-500 w-full md:w-48 text-white">
+
+            <div class="mt-3 md:hidden">
+                <div class="relative w-full">
+                    <input type="text" id="search-input-mobile" placeholder="Cari anime favoritmu..." 
+                        class="bg-gray-900/50 border border-gray-800 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-purple-500 w-full text-white transition">
+                    <i class="fas fa-search absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-xs"></i>
+                </div>
             </div>
         </div>
     </nav>
@@ -71,9 +87,32 @@
         };
  
         window.app = { navigateTo, loadCategory, handleSearch, loadDetail, loadPlayer, switchServer, changeQuality, loadSchedule, loadGenres };
-        window.addEventListener('popstate', router);
-        document.getElementById('search-input').onkeypress = (e) => { if(e.key === 'Enter') handleSearch(); };
-        router();
+        window.addEventListener('DOMContentLoaded', router);
+        window.addEventListener('popstate', router);    
+        
+        // Fungsi Helper untuk mengambil nilai dari salah satu input yang tersedia
+        const getSearchQuery = () => {
+            const mobileInp = document.getElementById('search-input-mobile');
+            const desktopInp = document.getElementById('search-input-desktop');
+            return (mobileInp && mobileInp.value) || (desktopInp && desktopInp.value) || "";
+        };
+
+        // Update handleSearch di home.js agar mengambil data global atau lewat parameter
+        document.getElementById('search-input-mobile').onkeypress = (e) => { 
+            if(e.key === 'Enter') {
+                // Set nilai ke input satunya agar sinkron (opsional)
+                document.getElementById('search-input-desktop').value = e.target.value;
+                app.handleSearch(); 
+            }
+        };
+
+        document.getElementById('search-input-desktop').onkeypress = (e) => { 
+            if(e.key === 'Enter') {
+                document.getElementById('search-input-mobile').value = e.target.value;
+                app.handleSearch(); 
+            }
+        };
+
     </script>
 </body>
 </html>

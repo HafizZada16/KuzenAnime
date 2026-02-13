@@ -53,41 +53,61 @@ function renderPreview(list, title, type) {
 }
 
 export async function handleSearch() {
-  const q = document.getElementById("search-input").value;
+  // 1. Ambil nilai dari input yang tersedia (Mobile atau Desktop)
+  const mobileInput = document.getElementById("search-input-mobile");
+  const desktopInput = document.getElementById("search-input-desktop");
+  const q = (mobileInput?.value || desktopInput?.value || "").trim();
+
+  // 2. Validasi: Jangan jalankan jika input kosong
   if (!q) return;
 
   showLoading(true);
 
-  // Update URL browser agar user bisa menekan tombol 'Back'
-  history.pushState(null, null, `/search?q=${q}`);
+  // 3. Update URL browser agar user bisa menekan tombol 'Back'
+  // Gunakan format /search agar router bisa mengenali halaman ini
+  history.pushState(null, null, `/search?q=${encodeURIComponent(q)}`);
 
-  const data = await fetchData(`/search?q=${q}`);
-  const display = document.getElementById("content-display");
+  try {
+    const data = await fetchData(`/search?q=${q}`);
+    const display = document.getElementById("content-display");
 
-  if (display) {
-    display.innerHTML = `
-      <div class="animate-fadeIn">
-        <h2 class="text-xl font-bold mb-6 mt-6 border-l-4 border-purple-500 pl-3 uppercase">
-          Hasil Pencarian: <span class="text-purple-500">${q}</span>
-        </h2>
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 md:gap-6">
-    `;
-
-    if (data && data.length > 0) {
-      let html = "";
-      data.forEach((a) => {
-        // Gunakan app.loadDetail agar konsisten dengan kartu lainnya
-        html += createAnimeCard(a, `app.loadDetail('${a.slug}')`);
-      });
-      display.querySelector(".grid").innerHTML = html;
-    } else {
-      display.innerHTML += `
-        <div class="col-span-full text-center py-20">
-          <p class="text-gray-500 uppercase font-black text-xs tracking-widest">Anime tidak ditemukan</p>
+    if (display) {
+      // Judul Hasil Pencarian
+      display.innerHTML = `
+        <div class="animate-fadeIn">
+          <div class="flex items-center gap-3 mb-6 mt-2">
+            <div class="w-1 h-6 bg-purple-500 rounded-full"></div>
+            <h2 class="text-xl font-black uppercase tracking-tighter">
+              Search Results: <span class="text-purple-500">"${q}"</span>
+            </h2>
+          </div>
+          <div id="search-results-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 md:gap-6"></div>
         </div>
       `;
+
+      const grid = document.getElementById("search-results-grid");
+
+      if (data && data.length > 0) {
+        let html = "";
+        data.forEach((anime) => {
+          // Gunakan app.loadDetail agar konsisten dengan kartu lainnya
+          html += createAnimeCard(anime, `app.loadDetail('${anime.slug}')`);
+        });
+        grid.innerHTML = html;
+      } else {
+        // Tampilan jika tidak ditemukan
+        display.innerHTML = `
+          <div class="text-center py-32 opacity-50">
+            <i class="fas fa-search-minus text-5xl mb-4"></i>
+            <p class="font-black uppercase text-xs tracking-[0.2em]">Anime tidak ditemukan</p>
+            <button onclick="app.navigateTo('/')" class="mt-6 text-[10px] bg-gray-900 px-6 py-2 rounded-full font-bold hover:text-purple-500 transition">Kembali ke Home</button>
+          </div>
+        `;
+      }
     }
-    display.innerHTML += `</div></div>`;
+  } catch (error) {
+    console.error("Search Error:", error);
+  } finally {
+    showLoading(false);
   }
-  showLoading(false);
 }
