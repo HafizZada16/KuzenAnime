@@ -1,0 +1,35 @@
+body {
+  background: #0b0b0b;
+  font-family: sans-serif;
+  overflow-x: hidden;
+  width: 100%;
+}
+
+/* Sembunyikan scrollbar navigasi mobile */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.glass {
+  background: rgba(15, 15, 15, 0.9);
+  backdrop-filter: blur(10px);
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.4s ease forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

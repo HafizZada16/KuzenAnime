@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="referrer" content="no-referrer">
+    <title>KuzenAnime - Streaming Anime Indonesia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-[#0b0b0b] text-white">
+    <nav class="sticky top-0 z-50 glass border-b border-gray-800/50 p-3">
+        <div class="container mx-auto flex flex-col md:flex-row justify-between items-center gap-3">
+            <div class="flex items-center justify-between w-full md:w-auto">
+                <div class="flex items-center gap-2 cursor-pointer" onclick="app.navigateTo('/')">
+                    <div class="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center shadow-lg shadow-purple-600/20">
+                        <i class="fas fa-play text-white text-xs"></i>
+                    </div>
+                    <h1 class="text-xl font-black tracking-tighter uppercase">Kuzen<span class="text-purple-500">Anime</span></h1>
+                </div>
+            </div>
+            
+            <div class="flex gap-4 text-[10px] font-bold items-center uppercase tracking-wider overflow-x-auto w-full md:w-auto no-scrollbar py-1">
+                <span onclick="app.navigateTo('/')" class="hover:text-purple-500 cursor-pointer whitespace-nowrap">Home</span>
+                <span onclick="app.navigateTo('/ongoing')" class="hover:text-purple-500 cursor-pointer whitespace-nowrap">Ongoing</span>
+                <span onclick="app.navigateTo('/complete')" class="hover:text-purple-500 cursor-pointer whitespace-nowrap">Complete</span>
+                <span onclick="app.navigateTo('/schedule')" class="hover:text-purple-500 cursor-pointer whitespace-nowrap transition flex items-center gap-1">
+                <i class="far fa-calendar-alt text-[8px]"></i> Schedule</span>
+                <span onclick="app.navigateTo('/genres')" class="hover:text-purple-500 cursor-pointer whitespace-nowrap">Genres</span>
+                <input type="text" id="search-input" placeholder="Cari anime..." class="bg-gray-900 border border-gray-700 rounded-full px-3 py-1.5 text-xs outline-none focus:border-purple-500 w-full md:w-48 text-white">
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-4 py-6">
+        <div id="loading" class="hidden py-40 text-center">
+            <div class="inline-block w-10 h-10 border-4 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+        <div id="content-display"></div>
+    </main>
+
+    <script type="module">
+        import { loadHome, loadCategory, handleSearch } from './js/home.js';
+        import { loadDetail } from './js/detail.js';
+        import { loadPlayer, switchServer, changeQuality } from './js/player.js';
+        import { loadSchedule } from './js/schedule.js';
+        import { loadGenres } from './js/genres.js';
+
+        const navigateTo = (path) => { history.pushState(null, null, path); router(); };
+        
+        const router = async () => {
+        const path = window.location.pathname;
+        const params = new URLSearchParams(window.location.search);
+        const query = params.get('q');
+        
+        if (path === '/search' && query) {
+            // Pastikan search-input terisi saat loading dari URL
+            document.getElementById('search-input').value = query;
+            await handleSearch();
+        }
+            
+            if (path === '/' || path === '/home') await loadHome();
+            else if (path === '/ongoing') await loadCategory('ongoing', page);
+            else if (path === '/complete') await loadCategory('complete', page);
+            else if (path === '/schedule') await loadSchedule();
+            else if (path === '/genres') await loadGenres();
+            else if (path.startsWith('/anime/')) await loadDetail(path.split('/')[2]);
+            else if (path.startsWith('/episode/')) await loadPlayer(path.split('/')[2]);
+            else if (path.startsWith('/genres/')) await loadGenres(path.split('/')[2]);
+        };
+
+        window.app = { navigateTo, loadCategory, handleSearch, loadDetail, loadPlayer, switchServer, changeQuality, loadSchedule, loadGenres };
+        window.addEventListener('popstate', router);
+        document.getElementById('search-input').onkeypress = (e) => { if(e.key === 'Enter') handleSearch(); };
+        router();
+    </script>
+</body>
+</html>
