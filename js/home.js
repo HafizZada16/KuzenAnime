@@ -39,15 +39,17 @@ function renderPreview(list, title, type) {
         </div>
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 md:gap-6">
     `;
-  list
-    .slice(0, 6)
-    .forEach(
-      (a) =>
-        (html += createAnimeCard(
-          a,
-          `app.loadDetail('${a.slug}', '${a.thumb}')`,
-        )),
+  list.slice(0, 6).forEach((a) => {
+    // Tambahkan info status ke objek anime sebelum dikirim ke createAnimeCard
+    const animeWithStatus = {
+      ...a,
+      status: type === "ongoing" ? "ongoing" : "complete",
+    };
+    html += createAnimeCard(
+      animeWithStatus,
+      `app.loadDetail('${a.slug}', '${a.thumb}')`,
     );
+  });
   html += `</div>`;
   display.insertAdjacentHTML("beforeend", html);
 }

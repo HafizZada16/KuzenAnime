@@ -6,13 +6,24 @@ export function showLoading(status) {
 }
 
 export function createAnimeCard(anime, onClick) {
-  // Kita pastikan onClick mempassing slug dan thumb
+  // Logika penentuan status secara dinamis
+  // Biasanya API Otakudesu memberikan info status di property 'status' atau kita bisa cek dari 'type'
+  const isCompleted =
+    anime.status?.toLowerCase() === "complete" ||
+    anime.type?.toLowerCase() === "complete";
+  const statusText = isCompleted ? "COMPLETED" : "ONGOING";
+  const statusColor = isCompleted ? "bg-blue-600" : "bg-purple-600";
+
   return `
         <div class="cursor-pointer group animate-fadeIn" onclick="${onClick}">
             <div class="relative overflow-hidden rounded-xl aspect-[3/4] bg-gray-900 mb-2 shadow-lg">
                 <img src="${anime.thumb}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500" onerror="this.src='https://via.placeholder.com/300x400'">
-                <div class="absolute top-2 left-2 bg-purple-600 text-[9px] font-black px-2 py-0.5 rounded text-white shadow-md uppercase">ONGOING</div>
-                <div class="absolute top-2 right-2 bg-black/60 text-white font-bold text-[9px] px-2 py-0.5 rounded backdrop-blur-sm">6</div>
+                <div class="absolute top-2 left-2 ${statusColor} text-[9px] font-black px-2 py-0.5 rounded text-white shadow-md uppercase">
+                    ${statusText}
+                </div>
+                <div class="absolute top-2 right-2 bg-black/60 text-white font-bold text-[9px] px-2 py-0.5 rounded backdrop-blur-sm">
+                    ${anime.episode || anime.eps || "?"}
+                </div>
             </div>
             <h3 class="text-sm font-bold group-hover:text-purple-500 line-clamp-2 leading-tight">${anime.title}</h3>
         </div>
