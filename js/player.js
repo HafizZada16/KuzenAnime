@@ -30,18 +30,16 @@ export async function loadPlayer(epSlug) {
   const animeData = await fetchData(`/anime/${animeSlug}`);
 
   // --- LOGIKA FILTER EPISODE REGULER ---
-  // Menyaring episode Batch / Lengkap agar tidak merusak urutan angka tombol
   let regularEpisodes = [];
   if (animeData?.episodes) {
     regularEpisodes = animeData.episodes
       .filter((ep) => {
         const titleLower = ep.title.toLowerCase();
-        // Hanya kembalikan episode yang TIDAK mengandung kata "batch" dan "sub indo :"
         return (
           !titleLower.includes("batch") && !titleLower.includes("sub indo :")
         );
       })
-      .reverse(); // Dibalik agar urutan dimulai dari Episode 1
+      .reverse();
   }
 
   const homeData = await fetchData("/home");
@@ -57,8 +55,16 @@ export async function loadPlayer(epSlug) {
   display.innerHTML = `
     <div class="flex flex-col lg:flex-row gap-6 animate-fadeIn px-1">
         <div class="lg:w-[75%]">
-            <div id="video-wrapper" class="bg-black rounded-2xl overflow-hidden shadow-2xl border border-gray-800 aspect-video mb-6">
-                <iframe src="${data.default_stream || ""}" allowfullscreen class="w-full h-full border-none"></iframe>
+            <div id="video-wrapper" class="bg-black rounded-2xl overflow-hidden shadow-2xl border border-gray-800 aspect-video mb-6 relative">
+                <iframe src="${data.default_stream || ""}" 
+                    allowfullscreen="true" 
+                    webkitallowfullscreen="true" 
+                    mozallowfullscreen="true" 
+                    frameborder="0" 
+                    scrolling="no" 
+                    referrerpolicy="no-referrer"
+                    class="w-full h-full border-none absolute top-0 left-0">
+                </iframe>
             </div>
 
             <div class="mb-8">
@@ -131,7 +137,7 @@ export async function loadPlayer(epSlug) {
                         (anime) => `
                         <div onclick="app.loadDetail('${anime.slug}')" class="flex gap-3 group cursor-pointer">
                             <div class="w-16 h-20 flex-shrink-0 overflow-hidden rounded-lg bg-gray-800 border border-gray-700">
-                                <img src="${anime.thumb}" class="w-full h-full object-cover group-hover:scale-110 transition duration-300" onerror="this.src='https://via.placeholder.com/150x200'">
+                                <img src="${anime.thumb}" class="w-full h-full object-cover group-hover:scale-110 transition duration-300" onerror="this.onerror=null; this.src='https://via.placeholder.com/150x200?text=No+Image';">
                             </div>
                             <div class="flex flex-col justify-center min-w-0">
                                 <h4 class="text-[10px] font-bold line-clamp-2 group-hover:text-purple-500 transition-colors leading-tight">${anime.title}</h4>
@@ -197,7 +203,17 @@ export async function switchServer(encodedPayload) {
     const data = await res.json();
 
     if (data && data.iframe) {
-      wrapper.innerHTML = `<iframe src="${data.iframe}" allowfullscreen class="w-full h-full border-none shadow-inner"></iframe>`;
+      // Sama seperti di atas, tambahkan referrerpolicy
+      wrapper.innerHTML = `
+        <iframe src="${data.iframe}" 
+            allowfullscreen="true" 
+            webkitallowfullscreen="true" 
+            mozallowfullscreen="true" 
+            frameborder="0" 
+            scrolling="no" 
+            referrerpolicy="no-referrer"
+            class="w-full h-full border-none absolute top-0 left-0">
+        </iframe>`;
     } else {
       throw new Error("Iframe not found");
     }
