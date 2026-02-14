@@ -19,32 +19,6 @@ export async function loadDetail(slug, thumbFromHome = null) {
     return;
   }
 
-  // --- PENGAMBILAN DATA DASAR ---
-  const thumb =
-    data.thumbnail ||
-    data.thumb ||
-    thumbFromHome ||
-    "https://via.placeholder.com/300x400";
-  const title = data.title || "Unknown Title";
-  const sinopsis =
-    data.sinopsis || data.synopsis || "Tidak ada sinopsis tersedia.";
-  const rating = data.rating || data.score || "N/A";
-  const type = data.type || "TV";
-
-  // Handle Genres
-  const genresData = data.genre || data.genres || [];
-  const genresHtml =
-    genresData.length > 0
-      ? genresData
-          .map((g) => {
-            const genreName = typeof g === "string" ? g : g.name;
-            return genreName
-              ? `<span class="bg-gray-800/50 border border-gray-700 px-3 py-1 rounded-lg text-[10px] font-bold text-gray-400 cursor-default">${genreName}</span>`
-              : "";
-          })
-          .join("")
-      : '<span class="text-[10px] text-gray-600 font-bold">Genre tidak diketahui</span>';
-
   // --- LOGIKA STATUS DINAMIS ---
   const statusVal = data.status || "";
   const isCompleted =
@@ -71,7 +45,6 @@ export async function loadDetail(slug, thumbFromHome = null) {
   }
 
   // --- LOGIKA TOTAL EPISODE DINAMIS ---
-  // Jika ada episode reguler, gunakan jumlahnya. Jika tidak ada, gunakan dari API atau fallback "?"
   const totalEps =
     regularEpisodes.length > 0
       ? regularEpisodes.length
@@ -83,26 +56,40 @@ export async function loadDetail(slug, thumbFromHome = null) {
         <button onclick="window.history.back()" class="flex items-center gap-2 text-gray-300 hover:text-white font-bold text-sm mb-6 transition-colors w-fit group">
             <i class="fas fa-arrow-left group-hover:-translate-x-1 transition-transform"></i> Back
         </button>
-        
-        <div class="flex flex-col md:flex-row gap-8 mb-10">
-            <div class="w-full md:w-72 flex-shrink-0">
-                <img src="${thumb}" class="w-full rounded-2xl shadow-2xl border border-gray-800 object-cover" onerror="this.src='https://via.placeholder.com/300x400'">
+
+        <div class="flex flex-col md:flex-row gap-6 md:gap-8 mb-10">
+            <div class="w-48 sm:w-56 md:w-72 mx-auto md:mx-0 flex-shrink-0">
+                <img src="${data.thumb || thumbFromHome}" 
+                     class="w-full rounded-2xl shadow-2xl border border-gray-800 object-cover aspect-[3/4]" 
+                     onerror="this.onerror=null; this.src='https://via.placeholder.com/300x400?text=No+Image';">
             </div>
             
-            <div class="flex-grow">
-                <h1 class="text-3xl md:text-5xl font-black mb-4 tracking-tighter leading-none">${title}</h1>
-                <div class="flex flex-wrap gap-2 mb-6">
-                    ${genresHtml}
+            <div class="flex-grow text-center md:text-left">
+                <h1 class="text-3xl md:text-5xl font-black mb-4 tracking-tighter leading-none">${data.title}</h1>
+                <div class="flex flex-wrap justify-center md:justify-start gap-2 mb-6">
+                    ${
+                      data.genres
+                        ? data.genres
+                            .map((g) => {
+                              const genreName =
+                                typeof g === "string" ? g : g.name || "";
+                              return genreName
+                                ? `<span class="bg-gray-800/50 border border-gray-700 px-3 py-1 rounded-lg text-[10px] font-bold text-gray-400">${genreName}</span>`
+                                : "";
+                            })
+                            .join("")
+                        : ""
+                    }
                 </div>
                 
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 text-left">
                     <div class="bg-gray-900/50 p-4 rounded-2xl border border-gray-800">
                         <p class="text-[9px] font-black text-gray-500 uppercase mb-1">Status</p>
                         <p class="text-xs font-bold ${statusTextColor}">${statusText}</p>
                     </div>
                     <div class="bg-gray-900/50 p-4 rounded-2xl border border-gray-800">
                         <p class="text-[9px] font-black text-gray-500 uppercase mb-1">Rating</p>
-                        <p class="text-xs font-bold text-yellow-500"><i class="fas fa-star mr-1"></i> ${rating}</p>
+                        <p class="text-xs font-bold text-yellow-500"><i class="fas fa-star mr-1"></i> ${data.score || "N/A"}</p>
                     </div>
                     <div class="bg-gray-900/50 p-4 rounded-2xl border border-gray-800">
                         <p class="text-[9px] font-black text-gray-500 uppercase mb-1">Total Episode</p>
@@ -110,12 +97,12 @@ export async function loadDetail(slug, thumbFromHome = null) {
                     </div>
                     <div class="bg-gray-900/50 p-4 rounded-2xl border border-gray-800">
                         <p class="text-[9px] font-black text-gray-500 uppercase mb-1">Type</p>
-                        <p class="text-xs font-bold text-white">${type}</p>
+                        <p class="text-xs font-bold text-white">${data.type || "TV"}</p>
                     </div>
                 </div>
 
-                <div class="bg-gray-900/30 p-6 rounded-2xl border border-gray-800 italic">
-                    <p class="text-sm text-gray-400 leading-relaxed">"${sinopsis}"</p>
+                <div class="bg-gray-900/30 p-6 rounded-2xl border border-gray-800 italic text-left">
+                    <p class="text-sm text-gray-400 leading-relaxed">"${data.synopsis || data.sinopsis || "Tidak ada sinopsis tersedia."}"</p>
                 </div>
             </div>
         </div>
@@ -163,7 +150,7 @@ export async function loadDetail(slug, thumbFromHome = null) {
                               (ep) => `
                         <div onclick="app.loadPlayer('${ep.slug}')" class="bg-gray-900/50 hover:bg-purple-600 border border-gray-800 hover:border-purple-400 p-4 rounded-xl cursor-pointer transition-all group">
                             <div class="flex justify-between items-center">
-                                <span class="text-xs font-bold group-hover:text-white transition truncate pr-4">${ep.title}</span>
+                                <span class="text-xs font-bold group-hover:text-white transition truncate pr-4 text-gray-300">${ep.title}</span>
                                 <i class="fas fa-play-circle text-gray-700 group-hover:text-white transition text-lg"></i>
                             </div>
                         </div>
