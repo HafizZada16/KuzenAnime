@@ -4,20 +4,37 @@ import { showLoading } from "/js/utils.js";
 export async function loadDetail(slug, thumbFromHome = null) {
   showLoading(true);
 
-  // Simpan slug anime ke localStorage
-  localStorage.setItem("current_anime_slug", slug);
+  // 1. SIMPAN THUMBNAIL DARI HALAMAN SEBELUMNYA KE LOCALSTORAGE (CACHING)
+  if (thumbFromHome) {
+    localStorage.setItem(`saved_thumb_${slug}`, thumbFromHome);
+  }
 
-  // Update URL browser
+  localStorage.setItem("current_anime_slug", slug);
   history.pushState(null, null, `/anime/${slug}`);
 
   const data = await fetchData(`/anime/${slug}`);
   const display = document.getElementById("content-display");
+  if (display) display.innerHTML = "";
 
   if (!data) {
     display.innerHTML = `<div class="text-center py-20 text-red-500 font-bold uppercase tracking-widest text-[10px]">Gagal memuat detail anime.</div>`;
     showLoading(false);
     return;
   }
+
+  // 2. TENTUKAN GAMBAR (Prioritas: API -> Cache LocalStorage -> Loading Placeholder)
+  let thumb =
+    data.thumb ||
+    data.thumbnail ||
+    localStorage.getItem(`saved_thumb_${slug}`) ||
+    "https://via.placeholder.com/300x400?text=Loading+Image...";
+
+  // --- PENGAMBILAN DATA LAINNYA ---
+  const title = data.title || "Unknown Title";
+  const sinopsis =
+    data.sinopsis || data.synopsis || "Tidak ada sinopsis tersedia.";
+  const rating = data.score || data.rating || "N/A";
+  const type = data.type || "TV";
 
   // --- LOGIKA STATUS DINAMIS ---
   const statusVal = data.status || "";
@@ -44,28 +61,27 @@ export async function loadDetail(slug, thumbFromHome = null) {
     });
   }
 
-  // --- LOGIKA TOTAL EPISODE DINAMIS ---
   const totalEps =
     regularEpisodes.length > 0
       ? regularEpisodes.length
       : data.total_episodes || data.total_episode || "?";
 
+  // RENDER HTML SECARA INSTAN
   display.innerHTML = `
     <div class="animate-fadeIn relative">
-        
         <button onclick="window.history.back()" class="flex items-center gap-2 text-gray-300 hover:text-white font-bold text-sm mb-6 transition-colors w-fit group">
             <i class="fas fa-arrow-left group-hover:-translate-x-1 transition-transform"></i> Back
         </button>
 
         <div class="flex flex-col md:flex-row gap-6 md:gap-8 mb-10">
             <div class="w-48 sm:w-56 md:w-72 mx-auto md:mx-0 flex-shrink-0">
-                <img src="${data.thumb || thumbFromHome}" 
-                     class="w-full rounded-2xl shadow-2xl border border-gray-800 object-cover aspect-[3/4]" 
+                <img id="detail-poster" src="${thumb}" 
+                     class="w-full rounded-2xl shadow-2xl border border-gray-800 object-cover aspect-[3/4] transition-all duration-500" 
                      onerror="this.onerror=null; this.src='https://via.placeholder.com/300x400?text=No+Image';">
             </div>
             
             <div class="flex-grow text-center md:text-left">
-                <h1 class="text-3xl md:text-5xl font-black mb-4 tracking-tighter leading-none">${data.title}</h1>
+                <h1 class="text-3xl md:text-5xl font-black mb-4 tracking-tighter leading-none">${title}</h1>
                 <div class="flex flex-wrap justify-center md:justify-start gap-2 mb-6">
                     ${
                       data.genres
@@ -89,7 +105,7 @@ export async function loadDetail(slug, thumbFromHome = null) {
                     </div>
                     <div class="bg-gray-900/50 p-4 rounded-2xl border border-gray-800">
                         <p class="text-[9px] font-black text-gray-500 uppercase mb-1">Rating</p>
-                        <p class="text-xs font-bold text-yellow-500"><i class="fas fa-star mr-1"></i> ${data.score || "N/A"}</p>
+                        <p class="text-xs font-bold text-yellow-500"><i class="fas fa-star mr-1"></i> ${rating}</p>
                     </div>
                     <div class="bg-gray-900/50 p-4 rounded-2xl border border-gray-800">
                         <p class="text-[9px] font-black text-gray-500 uppercase mb-1">Total Episode</p>
@@ -97,12 +113,12 @@ export async function loadDetail(slug, thumbFromHome = null) {
                     </div>
                     <div class="bg-gray-900/50 p-4 rounded-2xl border border-gray-800">
                         <p class="text-[9px] font-black text-gray-500 uppercase mb-1">Type</p>
-                        <p class="text-xs font-bold text-white">${data.type || "TV"}</p>
+                        <p class="text-xs font-bold text-white">${type}</p>
                     </div>
                 </div>
 
                 <div class="bg-gray-900/30 p-6 rounded-2xl border border-gray-800 italic text-left">
-                    <p class="text-sm text-gray-400 leading-relaxed">"${data.synopsis || data.sinopsis || "Tidak ada sinopsis tersedia."}"</p>
+                    <p class="text-sm text-gray-400 leading-relaxed">"${sinopsis}"</p>
                 </div>
             </div>
         </div>
@@ -161,9 +177,54 @@ export async function loadDetail(slug, thumbFromHome = null) {
                     }
                 </div>
             </div>
-
         </div>
     </div>
     `;
+
+  // MATIKAN LOADING SCREEN DISINI (Sehingga web terasa ngebut tanpa menunggu pencarian gambar)
   showLoading(false);
+
+  // 3. JALANKAN PENCARIAN BACKGROUND JIKA GAMBAR BELUM ADA SAMA SEKALI (Kasus Direct Link)
+  if (
+    !data.thumb &&
+    !data.thumbnail &&
+    !localStorage.getItem(`saved_thumb_${slug}`)
+  ) {
+    fetchThumbBackground(slug);
+  }
+}
+
+// Fungsi pencarian mandiri yang tidak nge-block UI
+async function fetchThumbBackground(slug) {
+  try {
+    // Membersihkan slug dari kata pengganggu agar hasil search lebih akurat
+    // Misal: "wandance-episode-12-sub-indo" jadi "wandance"
+    const query = slug
+      .replace(/-episode-\d+|-sub-indo|-batch/g, "")
+      .replace(/-/g, " ")
+      .trim();
+
+    const searchData = await fetchData(`/search/${query}`);
+
+    if (searchData && searchData.length > 0) {
+      // Coba cari yang judulnya mirip, atau ambil hasil paling atas
+      const match =
+        searchData.find(
+          (item) => item.slug.includes(slug) || slug.includes(item.slug),
+        ) || searchData[0];
+      const realThumb = match.thumb || match.thumbnail;
+
+      if (realThumb) {
+        // Update elemen <img> secara live!
+        const posterEl = document.getElementById("detail-poster");
+        if (posterEl) {
+          posterEl.src = realThumb;
+        }
+        // Simpan cache agar kedepannya langsung muncul
+        localStorage.setItem(`saved_thumb_${slug}`, realThumb);
+      }
+    }
+  } catch (e) {
+    console.log("Background thumb fetch failed");
+  }
 }

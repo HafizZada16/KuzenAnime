@@ -9,6 +9,7 @@ export async function loadSchedule() {
 
   const data = await fetchData(`/schedule`);
   const display = document.getElementById("content-display");
+  if (display) display.innerHTML = "";
 
   if (!data || data.length === 0) {
     display.innerHTML = `<div class="text-center py-20 text-red-500 font-bold uppercase tracking-widest text-[10px]">Gagal memuat jadwal rilis.</div>`;

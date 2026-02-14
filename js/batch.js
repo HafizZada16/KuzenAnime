@@ -11,6 +11,7 @@ export async function loadBatch(slug) {
   // Fetch data ke endpoint batch
   const data = await fetchData(`/batch/${slug}`);
   const display = document.getElementById("content-display");
+  if (display) display.innerHTML = "";
 
   if (!data) {
     display.innerHTML = `<div class="text-center py-20 text-red-500 font-bold uppercase tracking-widest text-[10px]">Gagal memuat data batch.</div>`;

@@ -9,6 +9,7 @@ export async function loadPlayer(epSlug) {
 
   const data = await fetchData(`/episode/${epSlug}`);
   const display = document.getElementById("content-display");
+  if (display) display.innerHTML = "";
 
   if (!data || !data.mirrors) {
     display.innerHTML = `<div class="text-center py-20 text-red-500 font-bold uppercase text-[10px]">Gagal memuat data episode.</div>`;

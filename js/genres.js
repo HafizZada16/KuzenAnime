@@ -11,6 +11,7 @@ export async function loadGenres(selectedGenreSlug = null, page = 1) {
   history.pushState(null, null, url);
 
   const display = document.getElementById("content-display");
+  if (display) display.innerHTML = "";
 
   // Ambil daftar genre dari API (atau gunakan list manual agar cepat)
   const genres = [
