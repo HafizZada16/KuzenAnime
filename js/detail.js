@@ -1,82 +1,177 @@
-import { fetchData } from "./api.js";
-import { showLoading } from "./utils.js";
+import { fetchData } from "/js/api.js";
+import { showLoading } from "/js/utils.js";
 
 export async function loadDetail(slug, thumbFromHome = null) {
   showLoading(true);
 
-  // WAJIB: Ganti URL browser
+  // Simpan slug anime ke localStorage
+  localStorage.setItem("current_anime_slug", slug);
+
+  // Update URL browser
   history.pushState(null, null, `/anime/${slug}`);
 
   const data = await fetchData(`/anime/${slug}`);
   const display = document.getElementById("content-display");
-  const poster =
-    data.thumb || thumbFromHome || "https://via.placeholder.com/300x450";
 
-  localStorage.setItem("current_anime_slug", slug);
+  if (!data) {
+    display.innerHTML = `<div class="text-center py-20 text-red-500 font-bold uppercase tracking-widest text-[10px]">Gagal memuat detail anime.</div>`;
+    showLoading(false);
+    return;
+  }
+
+  // --- PENGAMBILAN DATA DASAR ---
+  const thumb =
+    data.thumbnail ||
+    data.thumb ||
+    thumbFromHome ||
+    "https://via.placeholder.com/300x400";
+  const title = data.title || "Unknown Title";
+  const sinopsis =
+    data.sinopsis || data.synopsis || "Tidak ada sinopsis tersedia.";
+  const rating = data.rating || data.score || "N/A";
+  const type = data.type || "TV";
+
+  // Handle Genres
+  const genresData = data.genre || data.genres || [];
+  const genresHtml =
+    genresData.length > 0
+      ? genresData
+          .map((g) => {
+            const genreName = typeof g === "string" ? g : g.name;
+            return genreName
+              ? `<span class="bg-gray-800/50 border border-gray-700 px-3 py-1 rounded-lg text-[10px] font-bold text-gray-400 cursor-default">${genreName}</span>`
+              : "";
+          })
+          .join("")
+      : '<span class="text-[10px] text-gray-600 font-bold">Genre tidak diketahui</span>';
+
+  // --- LOGIKA STATUS DINAMIS ---
+  const statusVal = data.status || "";
+  const isCompleted =
+    statusVal.toLowerCase().includes("lengkap") ||
+    statusVal.toLowerCase().includes("complete") ||
+    statusVal.toLowerCase().includes("tamat");
+
+  const statusText = isCompleted ? "Completed" : "Ongoing";
+  const statusTextColor = isCompleted ? "text-blue-400" : "text-purple-400";
+
+  // --- LOGIKA FILTER BATCH & EPISODE REGULER ---
+  const batchEpisodes = [];
+  const regularEpisodes = [];
+
+  if (data.episodes) {
+    data.episodes.forEach((ep) => {
+      const titleLower = ep.title.toLowerCase();
+      if (titleLower.includes("batch") || titleLower.includes("sub indo :")) {
+        batchEpisodes.push(ep);
+      } else {
+        regularEpisodes.push(ep);
+      }
+    });
+  }
+
+  // --- LOGIKA TOTAL EPISODE DINAMIS ---
+  // Jika ada episode reguler, gunakan jumlahnya. Jika tidak ada, gunakan dari API atau fallback "?"
+  const totalEps =
+    regularEpisodes.length > 0
+      ? regularEpisodes.length
+      : data.total_episodes || data.total_episode || "?";
 
   display.innerHTML = `
-        <div class="animate-fadeIn px-1">
-            <span onclick="history.back()" class="text-[10px] font-bold text-gray-500 hover:text-white cursor-pointer mb-6 inline-block uppercase tracking-wider"><i class="fas fa-arrow-left mr-2"></i> Back</span>
+    <div class="animate-fadeIn">
+        <div class="flex flex-col md:flex-row gap-8 mb-10">
+            <div class="w-full md:w-72 flex-shrink-0">
+                <img src="${thumb}" class="w-full rounded-2xl shadow-2xl border border-gray-800 object-cover" onerror="this.src='https://via.placeholder.com/300x400'">
+            </div>
             
-            <div class="flex flex-col md:flex-row gap-6 md:gap-10 mb-10">
-                <div class="w-48 mx-auto md:mx-0 md:w-72 flex-shrink-0">
-                    <img src="${poster}" class="w-full rounded-2xl shadow-2xl border border-gray-800 aspect-[3/4] object-cover">
+            <div class="flex-grow">
+                <h1 class="text-3xl md:text-5xl font-black mb-4 tracking-tighter leading-none">${title}</h1>
+                <div class="flex flex-wrap gap-2 mb-6">
+                    ${genresHtml}
                 </div>
-                <div class="flex-grow pt-2 text-center md:text-left">
-                    <div class="text-[9px] font-bold text-gray-500 mb-2 uppercase tracking-[0.2em]">TV • ONGOING • JAN 08, 2026</div>
-                    <h1 class="text-2xl md:text-5xl font-black mb-2 tracking-tight">${data.title}</h1>
-                    <p class="text-lg text-gray-400 italic mb-6">${data.japanese || ""}</p>
-                    <div class="flex flex-wrap justify-center md:justify-start gap-2 mb-8">
-                        ${data.genres.map((g) => `<span class="bg-gray-900 border border-gray-800 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase">${g}</span>`).join("")}
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    <div class="bg-gray-900/50 p-4 rounded-2xl border border-gray-800">
+                        <p class="text-[9px] font-black text-gray-500 uppercase mb-1">Status</p>
+                        <p class="text-xs font-bold ${statusTextColor}">${statusText}</p>
                     </div>
-                    <div class="flex flex-col sm:flex-row gap-3">
-                        <button onclick="app.loadPlayer('${data.episodes[0]?.slug}')" class="bg-red-600 hover:bg-red-700 px-8 py-3 rounded-xl font-black transition flex items-center justify-center gap-3 text-sm"><i class="fas fa-play"></i> Watch Now</button>
-                        <button class="bg-gray-900 border border-gray-800 px-6 py-3 rounded-xl font-black transition flex items-center justify-center gap-3 text-sm"><i class="fas fa-heart text-red-500"></i> Add to List</button>
+                    <div class="bg-gray-900/50 p-4 rounded-2xl border border-gray-800">
+                        <p class="text-[9px] font-black text-gray-500 uppercase mb-1">Rating</p>
+                        <p class="text-xs font-bold text-yellow-500"><i class="fas fa-star mr-1"></i> ${rating}</p>
                     </div>
+                    <div class="bg-gray-900/50 p-4 rounded-2xl border border-gray-800">
+                        <p class="text-[9px] font-black text-gray-500 uppercase mb-1">Total Episode</p>
+                        <p class="text-xs font-bold text-white">${totalEps}</p>
+                    </div>
+                    <div class="bg-gray-900/50 p-4 rounded-2xl border border-gray-800">
+                        <p class="text-[9px] font-black text-gray-500 uppercase mb-1">Type</p>
+                        <p class="text-xs font-bold text-white">${type}</p>
+                    </div>
+                </div>
+
+                <div class="bg-gray-900/30 p-6 rounded-2xl border border-gray-800 italic">
+                    <p class="text-sm text-gray-400 leading-relaxed">"${sinopsis}"</p>
                 </div>
             </div>
+        </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
-                <div class="lg:col-span-2">
-                    <h3 class="text-xl font-bold mb-4 border-l-4 border-purple-500 pl-3 uppercase tracking-tighter">Synopsis</h3>
-                    <div class="bg-gray-900/40 border border-gray-800 p-6 rounded-2xl text-gray-400 text-sm leading-relaxed mb-10">
-                        Menceritakan tentang perjalanan seru di dunia anime... (Gunakan data sinopsis jika ada).
-                    </div>
-                    
-                    <h3 class="text-xl font-bold mb-6 border-l-4 border-purple-500 pl-3 uppercase tracking-tighter">Episodes <span class="text-xs text-gray-500 ml-2 font-normal lowercase">${data.episodes.length} items</span></h3>
-                    <div class="space-y-3">
-                        ${data.episodes
+        <div class="bg-[#121212] border border-gray-800 rounded-3xl p-6 md:p-8 shadow-inner">
+            <h2 class="text-xl font-black mb-6 flex items-center gap-3 uppercase tracking-tighter">
+                <i class="fas fa-list-ul text-purple-500"></i> Episode List
+            </h2>
+
+            ${
+              batchEpisodes.length > 0
+                ? `
+                <div class="mb-8 bg-orange-900/10 border border-orange-900/30 p-5 rounded-2xl">
+                    <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4 flex items-center gap-2">
+                        <i class="fas fa-box-open text-orange-500"></i> Download Batch & Lengkap
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        ${batchEpisodes
                           .map(
                             (ep) => `
-                            <div onclick="app.loadPlayer('${ep.slug}')" class="bg-gray-900/60 p-4 rounded-2xl border border-gray-800 hover:bg-purple-600/10 cursor-pointer flex justify-between items-center group transition">
-                                <div class="flex items-center gap-4 text-white">
-                                    <div class="w-10 h-10 bg-gray-800 rounded-xl flex items-center justify-center group-hover:bg-purple-600 transition"><i class="fas fa-play text-xs"></i></div>
-                                    <div>
-                                        <h4 class="text-sm font-bold group-hover:text-purple-500 transition">${ep.title}</h4>
-                                        <span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">${ep.date}</span>
-                                    </div>
+                            <div onclick="app.loadBatch('${ep.slug}')" class="bg-orange-900/20 hover:bg-orange-600 border border-orange-700/50 hover:border-orange-400 p-4 rounded-xl cursor-pointer transition-all group shadow-sm">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs font-bold text-orange-400 group-hover:text-white transition truncate pr-4">${ep.title}</span>
+                                    <i class="fas fa-download text-orange-600 group-hover:text-white transition text-lg"></i>
                                 </div>
-                                <i class="fas fa-chevron-right text-gray-700"></i>
                             </div>
                         `,
                           )
                           .join("")}
                     </div>
                 </div>
-                
-                <div class="space-y-10">
-                    <div class="bg-gray-900/40 p-6 rounded-2xl border border-gray-800 text-white">
-                        <h3 class="font-bold mb-5 border-b border-gray-800 pb-3 text-xs uppercase tracking-widest text-purple-500">Info Anime</h3>
-                        <div class="space-y-4 text-[10px] font-bold uppercase tracking-widest">
-                            <div class="flex justify-between"><span class="text-gray-500">Type</span><span>TV</span></div>
-                            <div class="flex justify-between"><span class="text-gray-500">Status</span><span class="text-purple-500">Ongoing</span></div>
-                            <div class="flex justify-between"><span class="text-gray-500">Duration</span><span>23 Min.</span></div>
-                            <div class="flex justify-between"><span class="text-gray-500">Studio</span><span>Ashi Productions</span></div>
+            `
+                : ""
+            }
+
+            <div>
+                <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4 flex items-center gap-2">
+                    <i class="fas fa-play text-purple-500"></i> Streaming Reguler
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    ${
+                      regularEpisodes.length > 0
+                        ? regularEpisodes
+                            .map(
+                              (ep) => `
+                        <div onclick="app.loadPlayer('${ep.slug}')" class="bg-gray-900/50 hover:bg-purple-600 border border-gray-800 hover:border-purple-400 p-4 rounded-xl cursor-pointer transition-all group">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-bold group-hover:text-white transition truncate pr-4">${ep.title}</span>
+                                <i class="fas fa-play-circle text-gray-700 group-hover:text-white transition text-lg"></i>
+                            </div>
                         </div>
-                    </div>
+                    `,
+                            )
+                            .join("")
+                        : '<p class="text-gray-500 text-[10px] uppercase font-bold tracking-widest ml-1">Belum ada episode reguler.</p>'
+                    }
                 </div>
             </div>
+
         </div>
+    </div>
     `;
   showLoading(false);
 }
