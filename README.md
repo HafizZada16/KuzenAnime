@@ -18,4 +18,4 @@ Web streaming anime modern bergaya *Single Page Application* (SPA) yang ringan, 
 ## 🚀 Cara Menjalankan (Local)
 1. *Clone* repositori: 
    ```bash
-   git clone [https://github.com/HafizZada16/KuzenAnime.git](https://github.com/HafizZada16/KuzenAnime.git)
+   git clone https://github.com/HafizZada16/KuzenAnime.git
