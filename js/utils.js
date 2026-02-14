@@ -1,31 +1,72 @@
-export function showLoading(status) {
+// Fungsi Loading (Biarkan seperti semula)
+export function showLoading(show) {
   const loader = document.getElementById("loading");
-  const display = document.getElementById("content-display");
-  if (loader) loader.style.display = status ? "block" : "none";
-  if (display) display.style.display = status ? "none" : "block";
+  if (loader) {
+    if (show) loader.classList.remove("hidden");
+    else loader.classList.add("hidden");
+  }
 }
 
+// Fungsi Render Card Dinamis untuk SEMUA Halaman
 export function createAnimeCard(anime, onClick) {
-  // Logika penentuan status secara dinamis
-  // Biasanya API Otakudesu memberikan info status di property 'status' atau kita bisa cek dari 'type'
-  const isCompleted =
-    anime.status?.toLowerCase() === "complete" ||
-    anime.type?.toLowerCase() === "complete";
-  const statusText = isCompleted ? "COMPLETED" : "ONGOING";
-  const statusColor = isCompleted ? "bg-blue-600" : "bg-purple-600";
+  let topLeftBadge = "";
+
+  // 1. PRIORITAS UTAMA: Cek apakah ada properti 'extra' (Biasanya dari page Completed)
+  if (anime.extra) {
+    topLeftBadge = `
+            <div class="absolute top-2 left-2 bg-gray-900/90 backdrop-blur-md border border-gray-700 text-yellow-500 text-[8px] md:text-[9px] font-black px-2 py-0.5 rounded shadow-lg flex items-center gap-1 z-10">
+                <i class="fas fa-star text-[8px]"></i> ${anime.extra}
+            </div>
+        `;
+  }
+  // 2. FALLBACK: Jika tidak ada 'extra', gunakan logika Ongoing / Completed
+  else {
+    const statusVal = (anime.status || "").toLowerCase();
+    const epText = (anime.episode || anime.eps || "").toLowerCase();
+
+    const isCompleted =
+      statusVal.includes("complete") ||
+      statusVal.includes("tamat") ||
+      statusVal.includes("lengkap") ||
+      epText.includes("end") ||
+      epText.includes("tamat");
+
+    if (isCompleted) {
+      const ratingScore = anime.score || anime.rating || "N/A";
+      topLeftBadge = `
+                <div class="absolute top-2 left-2 bg-gray-900/90 backdrop-blur-md border border-gray-700 text-yellow-500 text-[8px] md:text-[9px] font-black px-2 py-0.5 rounded shadow-lg flex items-center gap-1 z-10">
+                    <i class="fas fa-star text-[8px]"></i> ${ratingScore}
+                </div>
+            `;
+    } else {
+      topLeftBadge = `
+                <div class="absolute top-2 left-2 bg-purple-600 text-white text-[8px] md:text-[9px] font-black px-2 py-0.5 rounded shadow-lg uppercase tracking-widest z-10">
+                    ONGOING
+                </div>
+            `;
+    }
+  }
+
+  // Teks episode di pojok kanan atas
+  const displayEp = anime.episode || anime.eps || "?";
 
   return `
         <div class="cursor-pointer group animate-fadeIn" onclick="${onClick}">
             <div class="relative overflow-hidden rounded-xl aspect-[3/4] bg-gray-900 mb-2 shadow-lg">
-                <img src="${anime.thumb}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500" onerror="this.src='https://via.placeholder.com/300x400'">
-                <div class="absolute top-2 left-2 ${statusColor} text-[9px] font-black px-2 py-0.5 rounded text-white shadow-md uppercase">
-                    ${statusText}
-                </div>
-                <div class="absolute top-2 right-2 bg-black/60 text-white font-bold text-[9px] px-2 py-0.5 rounded backdrop-blur-sm">
-                    ${anime.episode || anime.eps || "?"}
+                <img src="${anime.thumb || anime.thumbnail}" 
+                     class="w-full h-full object-cover group-hover:scale-110 transition duration-500" 
+                     onerror="this.onerror=null; this.src='https://via.placeholder.com/300x400?text=No+Image';">
+                
+                ${topLeftBadge}
+                
+                <div class="absolute top-2 right-2 bg-black/80 text-white font-bold text-[8px] md:text-[9px] px-2 py-0.5 rounded backdrop-blur-sm z-10 border border-gray-800">
+                    ${displayEp}
                 </div>
             </div>
-            <h3 class="text-sm font-bold group-hover:text-purple-500 line-clamp-2 leading-tight">${anime.title}</h3>
+            
+            <h3 class="text-xs md:text-sm font-bold group-hover:text-purple-400 line-clamp-2 leading-tight text-gray-200 transition-colors">
+                ${anime.title}
+            </h3>
         </div>
     `;
 }
