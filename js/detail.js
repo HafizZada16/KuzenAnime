@@ -78,7 +78,12 @@ export async function loadDetail(slug, thumbFromHome = null) {
       : data.total_episodes || data.total_episode || "?";
 
   display.innerHTML = `
-    <div class="animate-fadeIn">
+    <div class="animate-fadeIn relative">
+        
+        <button onclick="window.history.back()" class="flex items-center gap-2 text-gray-300 hover:text-white font-bold text-sm mb-6 transition-colors w-fit group">
+            <i class="fas fa-arrow-left group-hover:-translate-x-1 transition-transform"></i> Back
+        </button>
+        
         <div class="flex flex-col md:flex-row gap-8 mb-10">
             <div class="w-full md:w-72 flex-shrink-0">
                 <img src="${thumb}" class="w-full rounded-2xl shadow-2xl border border-gray-800 object-cover" onerror="this.src='https://via.placeholder.com/300x400'">

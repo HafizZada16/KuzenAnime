@@ -16,7 +16,7 @@ export async function loadPlayer(epSlug) {
     return;
   }
 
-  // Mengambil slug anime dari localStorage (disimpan saat di detail.js)
+  // Mengambil slug anime dari localStorage
   let animeSlug = localStorage.getItem("current_anime_slug");
 
   if (!animeSlug) {
@@ -28,7 +28,21 @@ export async function loadPlayer(epSlug) {
   }
 
   const animeData = await fetchData(`/anime/${animeSlug}`);
-  const episodes = animeData?.episodes ? [...animeData.episodes].reverse() : [];
+
+  // --- LOGIKA FILTER EPISODE REGULER ---
+  // Menyaring episode Batch / Lengkap agar tidak merusak urutan angka tombol
+  let regularEpisodes = [];
+  if (animeData?.episodes) {
+    regularEpisodes = animeData.episodes
+      .filter((ep) => {
+        const titleLower = ep.title.toLowerCase();
+        // Hanya kembalikan episode yang TIDAK mengandung kata "batch" dan "sub indo :"
+        return (
+          !titleLower.includes("batch") && !titleLower.includes("sub indo :")
+        );
+      })
+      .reverse(); // Dibalik agar urutan dimulai dari Episode 1
+  }
 
   const homeData = await fetchData("/home");
   const recommendations = homeData?.ongoing?.slice(0, 10) || [];
@@ -86,11 +100,11 @@ export async function loadPlayer(epSlug) {
                     <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-2">
                         <i class="fas fa-th-large text-purple-500"></i> Pilih Episode
                     </h3>
-                    <span class="text-[9px] text-gray-600 font-black uppercase">Total: ${episodes.length}</span>
+                    <span class="text-[9px] text-gray-600 font-black uppercase">Total: ${regularEpisodes.length}</span>
                 </div>
                 
                 <div class="flex flex-wrap gap-2">
-                    ${episodes
+                    ${regularEpisodes
                       .map((ep, index) => {
                         const isCurrent = ep.slug === epSlug;
                         return `
