@@ -1,97 +1,58 @@
-
----
-
-# 🚀 KuzenAnime - Streaming Anime Indonesia
+# 🎬 KuzenAnime - Modern Anime Streaming Web
 
 * **Link Website**: https://anime.hapizweb.my.id
 
-Aplikasi web streaming anime modern yang dibangun dengan **Vanilla JavaScript (ES6+)** dan **Tailwind CSS**. Website ini mengambil data secara real-time dari API Otakudesu untuk menyajikan informasi anime ongoing, complete, jadwal rilis, hingga pencarian berdasarkan genre.
+Sebuah aplikasi web *Single Page Application* (SPA) modern, ringan, dan responsif untuk *streaming* anime. Project ini dibangun menggunakan Vanilla JavaScript (ES6 Modules) dan Tailwind CSS, serta mengkonsumsi REST API dari Kanata (Otakudesu).
+
+Fokus utama dari *project* KuzenAnime adalah memberikan *User Experience* (UX) yang sangat mulus dengan performa tinggi, menghindari masalah umum pada web *streaming* bajakan seperti *infinite loop* pada gambar, *render-blocking*, dan *spam request* API.
+
+## ✨ Fitur & Optimasi Utama
+
+* **⚡ Smooth SPA Navigation:** Transisi antar halaman yang instan tanpa *full-page reload*. Dilengkapi dengan *custom buffering overlay* elegan untuk UX yang lebih baik saat *fetching* data.
+* **🎬 Smart Video Player:** * Pemfilteran otomatis yang memisahkan episode reguler dari file *Batch/Lengkap* pada navigasi *player*.
+    * Dukungan multi-resolusi dan pergantian server (mirror) yang dinamis.
+    * Iframe dioptimalkan dengan `referrerpolicy="no-referrer"` untuk memblokir pelacak pihak ketiga dan menghindari *error spam* di *console browser*.
+* **🖼️ Intelligent Detail Page (Anti-Direct Link Issue):**
+    * Jika *thumbnail* gagal dimuat dari API detail, sistem akan melakukan **background fetching** (menggunakan *slug*) ke API pencarian untuk mencari gambar tanpa memblokir proses *render* antarmuka (Non-blocking UI).
+    * Implementasi **Smart Caching** menggunakan `localStorage` agar gambar yang sudah di-*load* dari halaman *Home* tidak perlu di-*request* ulang.
+    * Penanganan *infinite loop error* bawaan *browser* pada *fallback image* (`this.onerror=null`).
+* **📅 Lightweight Schedule Menu:** Menghindari limitasi API (Rate Limit/Error 429) dengan menggunakan metode **Initial Avatar** (huruf pertama judul) sebagai pengganti *thumbnail* massal. Ini membuat halaman jadwal berisi puluhan anime termuat secara instan tanpa membebani server.
+* **🃏 Dynamic Anime Cards:** Komponen UI cerdas yang mendeteksi status anime (Ongoing/Completed) dan secara otomatis merender *badge rating* berdasarkan *extra data* dari API.
 
 ## 🛠️ Tech Stack
 
-* **Frontend**: HTML5, Tailwind CSS (via CDN).
-* **Logic**: Vanilla JavaScript Modules (ESM).
-* **Backend/Server**: Node.js (Internal HTTP Server).
-* **Iconography**: Font Awesome 6.0.0.
+* **Frontend:** HTML5, Vanilla JavaScript (ES6 Modules, Async/Await)
+* **Styling:** Tailwind CSS (via CDN), FontAwesome (Icons)
+* **Data Fetching:** Fetch API 
+* **State/Cache Management:** LocalStorage, History API (pushState)
 
----
+## 🚀 Cara Menjalankan Project (Local Development)
 
-## 📂 Struktur Proyek
+Karena project ini menggunakan arsitektur ES6 Modules (`import/export`), Anda tidak bisa sekadar mengklik dua kali file `index.html`. Anda memerlukan *local web server*.
+
+1.  **Clone repositori ini:**
+    ```bash
+    git clone [https://github.com/HafizZada16/KuzenAnime.git](https://github.com/HafizZada16/KuzenAnime.git)
+    cd KuzenAnime
+    ```
+2.  **Jalankan menggunakan Live Server:**
+    * Jika menggunakan editor **VS Code**, instal ekstensi **Live Server** dan klik tombol "Go Live" di pojok kanan bawah.
+    * Atau jika menggunakan Node.js (`http-server`):
+        ```bash
+        npx http-server .
+        ```
+3.  Buka browser Anda di `http://localhost:8080` (atau port yang diberikan oleh *local server* Anda).
+
+## 📂 Struktur Direktori
 
 ```text
-web_anime2/
-├── css/
-│   └── style.css      # Animasi FadeIn & Glassmorphism
-├── js/
-│   ├── api.js         # Konfigurasi Fetch & BASE_URL
-│   ├── home.js        # Logika Home, Category, & Search
-│   ├── detail.js      # Halaman Informasi & Daftar Episode
-│   ├── player.js      # Pemutar Video & Switch Server
-│   ├── schedule.js    # Halaman Jadwal Rilis (Release Schedule)
-│   ├── genres.js      # Halaman Filter Genre
-│   └── utils.js       # Helper UI (Loading, Card, Pagination)
-├── index.html         # Main Entry & Client-side Router
-├── server.js          # Node.js Static File Server
-└── package.json       # Konfigurasi Project & Scripts
-
-```
-
----
-
-## 📡 Detail API (Otakudesu Wrapper)
-
-Aplikasi ini menggunakan API pihak ketiga sebagai sumber data.
-
-* **Base URL**: `https://api.kanata.web.id/otakudesu`
-* **Endpoints Utama**:
-* `GET /home`: Mengambil data anime ongoing dan complete terbaru.
-* `GET /anime/{slug}`: Mengambil detail informasi anime, genre, dan list episode.
-* `GET /episode/{slug}`: Mengambil data streaming dan mirror server untuk episode tertentu.
-* `GET /search?q={query}`: Melakukan pencarian anime berdasarkan judul.
-* `GET /schedule`: Mengambil jadwal rilis anime mingguan.
-* `GET /genres/{slug}?page={n}`: Mengambil daftar anime berdasarkan genre tertentu.
-* `POST /stream`: Endpoint untuk menukar payload mirror menjadi iframe video aktif.
-
-
-
----
-
-## 🚀 Cara Menjalankan
-
-1. **Instalasi**: Pastikan Anda memiliki Node.js terinstal.
-2. **Jalankan Server**:
-Buka terminal di dalam folder proyek dan jalankan:
-```bash
-npm start
-
-```
-
-
-atau
-```bash
-node server.js
-
-```
-
-
-3. **Akses Web**: Buka browser dan arahkan ke `http://localhost:3000`.
-
----
-
-## 📝 Fitur Unggulan
-
-* **Client-Side Routing**: Perpindahan halaman mulus tanpa reload menggunakan `history.pushState`.
-* **Responsive Card**: Grid sistem yang menyesuaikan ukuran layar (2 kolom mobile, 6 kolom desktop).
-* **Quality Selector**: Memungkinkan pengguna memilih resolusi video (360p, 480p, 720p) sesuai ketersediaan.
-* **Auto-Synced Header**: Navigasi sticky dengan efek blur (Glassmorphism).
-
----
-
-## ⚠️ Catatan Penting untuk Developer
-
-* **Path Absolut**: Selalu gunakan `/js/...` atau `/css/...` (dengan awalan slash) saat mengimpor file agar tidak terjadi error 404 saat berada di sub-path seperti `/anime/slug` atau `/genres/slug`.
-* **Referrer Policy**: Tag `<meta name="referrer" content="no-referrer">` sangat penting agar gambar poster dari server Otakudesu dapat dimuat dengan benar.
-
----
-
-Apakah Anda ingin saya menambahkan bagian khusus mengenai cara melakukan *deployment* ke VPS atau hosting seperti Vercel/Netlify?
+📁 KuzenAnime/
+├── 📄 index.html        # Entry point utama & struktur layout dasar (Overlay loading)
+├── 📄 main.js           # Router & inisialisasi aplikasi SPA
+└── 📁 js/
+    ├── 📄 api.js        # Konfigurasi Fetch & Base URL API (Kanata/Otakudesu)
+    ├── 📄 utils.js      # Utility functions (Loading UI, Card Renderer dinamis)
+    ├── 📄 home.js       # Logika halaman Home & Category (Ongoing/Complete)
+    ├── 📄 detail.js     # Halaman detail anime, background fetching & caching
+    ├── 📄 player.js     # Logika streaming, filter episode reguler, dan iframe
+    └── 📄 schedule.js   # Jadwal rilis dengan optimasi Initial Avatar UX
