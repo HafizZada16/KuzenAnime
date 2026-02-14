@@ -155,7 +155,7 @@ export async function loadDetail(slug, thumbFromHome = null) {
                 <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4 flex items-center gap-2">
                     <i class="fas fa-play text-purple-500"></i> Streaming Reguler
                 </h3>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div class="flex flex-col gap-3">
                     ${
                       regularEpisodes.length > 0
                         ? regularEpisodes
