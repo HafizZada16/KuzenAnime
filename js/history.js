@@ -1,6 +1,6 @@
 import { showLoading } from "./utils.js";
 
-const API_URL = "http://localhost:3000/api";
+import { USER_API } from "./config.js";
 
 export async function loadHistory() {
   showLoading(true);
@@ -31,7 +31,7 @@ export async function loadHistory() {
 
   try {
     // Ambil data dari server.js
-    const res = await fetch(`${API_URL}/history`, {
+    const res = await fetch(`${USER_API}/history`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const result = await res.json();

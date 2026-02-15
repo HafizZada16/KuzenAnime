@@ -2,7 +2,7 @@
 import { showLoading } from "./utils.js";
 
 // URL Backend (Sesuaikan jika nanti online)
-const API_URL = "http://localhost:3000/api";
+import { USER_API } from "./config.js";
 
 // Fungsi untuk memunculkan Popup Login / Register
 export function showAuthModal(isLogin = true) {
@@ -90,7 +90,7 @@ export async function handleRegister() {
 
   showLoading(true);
   try {
-    const res = await fetch(`${API_URL}/register`, {
+    const res = await fetch(`${USER_API}/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, email, password }),
@@ -119,7 +119,7 @@ export async function handleLogin() {
 
   showLoading(true);
   try {
-    const res = await fetch(`${API_URL}/login`, {
+    const res = await fetch(`${USER_API}/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),

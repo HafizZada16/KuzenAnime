@@ -2,7 +2,7 @@ import { fetchData } from "/js/api.js";
 import { showLoading } from "/js/utils.js";
 
 // URL Backend untuk fitur Bookmark
-const API_URL = "http://localhost:3000/api";
+const API_URL = "https://anime.hapizweb.my.id/api";
 
 export async function loadDetail(slug, thumbFromHome = null) {
   showLoading(true);

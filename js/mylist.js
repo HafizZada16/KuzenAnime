@@ -1,6 +1,6 @@
 import { showLoading } from "./utils.js";
 
-const API_URL = "http://localhost:3000/api";
+import { USER_API } from "./config.js";
 
 export async function loadMyList() {
   showLoading(true);
@@ -30,7 +30,7 @@ export async function loadMyList() {
   }
 
   try {
-    const res = await fetch(`${API_URL}/bookmarks`, {
+    const res = await fetch(`${USER_API}/bookmarks`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const result = await res.json();
@@ -94,7 +94,7 @@ window.deleteBookmark = async (slug) => {
 
   const token = localStorage.getItem("kuzen_token");
   try {
-    const res = await fetch(`${API_URL}/bookmarks/toggle`, {
+    const res = await fetch(`${USER_API}/bookmarks/toggle`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -1,7 +1,7 @@
 import { fetchData } from "/js/api.js";
 import { showLoading } from "/js/utils.js";
 
-const API_URL = "http://localhost:3000/api";
+import { USER_API } from "./config.js";
 
 export async function loadPlayer(epSlug) {
   if (!epSlug) return;
@@ -230,7 +230,7 @@ async function saveToHistory(episodeData, animeData, animeSlug, epSlug) {
   if (!token) return;
 
   try {
-    const res = await fetch("http://localhost:3000/api/history", {
+    const res = await fetch(`${USER_API}/history`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
