@@ -35,8 +35,11 @@
                     <span onclick="app.navigateTo('/mylist')" class="hover:text-purple-500 cursor-pointer whitespace-nowrap transition flex items-center gap-1">
                         <i class="fas fa-heart text-[8px] text-purple-500"></i> My List
                     </span>
+                    <span onclick="app.navigateTo('/history')" class="hover:text-purple-500 cursor-pointer whitespace-nowrap transition flex items-center gap-1">
+                        <i class="fas fa-history text-[8px] text-purple-500"></i> History
+                    </span>
                     
-                    <div class="relative w-48 ml-2">
+                    <div class="relative w-40 ml-2">
                         <input type="text" id="search-input-desktop" placeholder="Cari anime..." 
                             class="bg-gray-900 border border-gray-700 rounded-full px-4 py-1.5 text-[10px] outline-none focus:border-purple-500 w-full text-white transition">
                         <i class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 text-[8px]"></i>
@@ -68,29 +71,29 @@
     <nav class="fixed bottom-0 left-0 w-full bg-[#0b0b0b]/95 backdrop-blur-md border-t border-gray-800 z-50 md:hidden">
         <div class="flex justify-between items-center px-1 py-2">
             
-            <a href="#" onclick="event.preventDefault(); window.app.navigateTo('/')" class="flex flex-col items-center p-2 flex-1 text-gray-500 hover:text-purple-500 active:text-purple-400 group transition-colors">
-                <i class="fas fa-home text-[18px] mb-1 group-hover:-translate-y-1 transition-transform"></i>
+            <a href="#" onclick="event.preventDefault(); window.app.navigateTo('/')" class="flex flex-col items-center p-2 flex-1 text-gray-500 hover:text-purple-500 group transition-colors">
+                <i class="fas fa-home text-[18px] mb-1"></i>
                 <span class="text-[8px] font-black uppercase tracking-wider">Home</span>
             </a>
 
-            <a href="#" onclick="event.preventDefault(); window.app.navigateTo('/ongoing')" class="flex flex-col items-center p-2 flex-1 text-gray-500 hover:text-purple-500 active:text-purple-400 group transition-colors">
-                <i class="fas fa-play-circle text-[18px] mb-1 group-hover:-translate-y-1 transition-transform"></i>
+            <a href="#" onclick="event.preventDefault(); window.app.navigateTo('/ongoing')" class="flex flex-col items-center p-2 flex-1 text-gray-500 hover:text-purple-500 group transition-colors">
+                <i class="fas fa-play-circle text-[18px] mb-1"></i>
                 <span class="text-[8px] font-black uppercase tracking-wider">Ongoing</span>
             </a>
 
-            <a href="#" onclick="event.preventDefault(); window.app.navigateTo('/complete')" class="flex flex-col items-center p-2 flex-1 text-gray-500 hover:text-purple-500 active:text-purple-400 group transition-colors">
-                <i class="fas fa-check-circle text-[18px] mb-1 group-hover:-translate-y-1 transition-transform"></i>
-                <span class="text-[8px] font-black uppercase tracking-wider">Complete</span>
-            </a>
-
-            <a href="#" onclick="event.preventDefault(); window.app.navigateTo('/schedule')" class="flex flex-col items-center p-2 flex-1 text-gray-500 hover:text-purple-500 active:text-purple-400 group transition-colors">
-                <i class="fas fa-calendar-alt text-[18px] mb-1 group-hover:-translate-y-1 transition-transform"></i>
+            <a href="#" onclick="event.preventDefault(); window.app.navigateTo('/schedule')" class="flex flex-col items-center p-2 flex-1 text-gray-500 hover:text-purple-500 group transition-colors">
+                <i class="fas fa-calendar-alt text-[18px] mb-1"></i>
                 <span class="text-[8px] font-black uppercase tracking-wider">Schedule</span>
             </a>
 
-            <a href="#" onclick="event.preventDefault(); window.app.navigateTo('/mylist')" class="flex flex-col items-center p-2 flex-1 text-gray-500 hover:text-purple-500 active:text-purple-400 group transition-colors">
-                <i class="fas fa-heart text-[18px] mb-1 text-purple-500 group-hover:-translate-y-1 transition-transform"></i>
+            <a href="#" onclick="event.preventDefault(); window.app.navigateTo('/mylist')" class="flex flex-col items-center p-2 flex-1 text-gray-500 hover:text-purple-500 group transition-colors">
+                <i class="fas fa-heart text-[18px] mb-1 text-purple-500"></i>
                 <span class="text-[8px] font-black uppercase tracking-wider">My List</span>
+            </a>
+
+            <a href="#" onclick="event.preventDefault(); window.app.navigateTo('/history')" class="flex flex-col items-center p-2 flex-1 text-gray-500 hover:text-purple-500 group transition-colors">
+                <i class="fas fa-history text-[18px] mb-1 text-purple-500"></i>
+                <span class="text-[8px] font-black uppercase tracking-wider">History</span>
             </a>
 
         </div>
@@ -105,11 +108,9 @@
         import { loadGenres } from '/js/genres.js';
         import { loadBatch } from '/js/batch.js';
         import { loadMyList } from '/js/mylist.js';
+        import { loadHistory } from '/js/history.js'; // Import History
 
-        const navigateTo = (path) => { 
-            history.pushState(null, null, path); 
-            router(); 
-        };
+        const navigateTo = (path) => { history.pushState(null, null, path); router(); };
         
         const router = async () => {
             const path = window.location.pathname;
@@ -127,8 +128,9 @@
             else if (path === '/ongoing') await loadCategory('ongoing', page);
             else if (path === '/complete') await loadCategory('complete', page);
             else if (path === '/schedule') await loadSchedule();
-            else if (path === '/genres') await loadGenres(); // Genres tetap bisa diakses router
-            else if (path === '/mylist') await loadMyList(); // My List aktif di router
+            else if (path === '/genres') await loadGenres();
+            else if (path === '/mylist') await loadMyList();
+            else if (path === '/history') await loadHistory(); // Router History
             else if (path.startsWith('/anime/')) await loadDetail(path.split('/')[2]);
             else if (path.startsWith('/episode/')) await loadPlayer(path.split('/')[2]);
             else if (path.startsWith('/genres/')) await loadGenres(path.split('/')[2]);
@@ -138,17 +140,17 @@
         window.app = { 
             showAuthModal, handleLogin, handleRegister, navigateTo, loadCategory, 
             handleSearch, loadDetail, loadPlayer, switchServer, changeQuality, 
-            loadSchedule, loadGenres, loadBatch, loadMyList 
+            loadSchedule, loadGenres, loadBatch, loadMyList, loadHistory 
         };
-
+        
         window.addEventListener('DOMContentLoaded', () => {
-            checkAuthUI(); 
+            checkAuthUI();
             router();
         });
-
+        
         window.addEventListener('popstate', router); 
 
-        // Event Listener Search (Enter)
+        // Sinkronisasi Search
         document.getElementById('search-input-mobile').onkeypress = (e) => { 
             if(e.key === 'Enter') {
                 document.getElementById('search-input-desktop').value = e.target.value;

@@ -1,6 +1,8 @@
 import { fetchData } from "/js/api.js";
 import { showLoading } from "/js/utils.js";
 
+const API_URL = "http://localhost:3000/api";
+
 export async function loadPlayer(epSlug) {
   if (!epSlug) return;
   showLoading(true);
@@ -17,7 +19,6 @@ export async function loadPlayer(epSlug) {
     return;
   }
 
-  // Mengambil slug anime dari localStorage
   let animeSlug = localStorage.getItem("current_anime_slug");
 
   if (!animeSlug) {
@@ -30,7 +31,8 @@ export async function loadPlayer(epSlug) {
 
   const animeData = await fetchData(`/anime/${animeSlug}`);
 
-  // --- LOGIKA FILTER EPISODE REGULER ---
+  saveToHistory(data, animeData, animeSlug, epSlug);
+
   let regularEpisodes = [];
   if (animeData?.episodes) {
     regularEpisodes = animeData.episodes
@@ -204,7 +206,6 @@ export async function switchServer(encodedPayload) {
     const data = await res.json();
 
     if (data && data.iframe) {
-      // Sama seperti di atas, tambahkan referrerpolicy
       wrapper.innerHTML = `
         <iframe src="${data.iframe}" 
             allowfullscreen="true" 
@@ -220,5 +221,33 @@ export async function switchServer(encodedPayload) {
     }
   } catch (err) {
     wrapper.innerHTML = `<div class="flex items-center justify-center h-full text-red-500 text-[10px] font-bold uppercase">Gagal memuat server.</div>`;
+  }
+}
+
+// Fungsi Simpan Riwayat (Sedikit disesuaikan parameter agar data akurat)
+async function saveToHistory(episodeData, animeData, animeSlug, epSlug) {
+  const token = localStorage.getItem("kuzen_token");
+  if (!token) return;
+
+  try {
+    const res = await fetch("http://localhost:3000/api/history", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        anime_slug: animeSlug,
+        anime_title: animeData?.title || "Unknown Anime",
+        anime_thumb:
+          localStorage.getItem(`saved_thumb_${animeSlug}`) || animeData?.thumb,
+        episode_slug: epSlug,
+        episode_title: episodeData.title,
+      }),
+    });
+    if (!res.ok) throw new Error("Server bermasalah");
+  } catch (err) {
+    console.error("🚨 DETAIL ERROR:", err);
+    console.log("Gagal auto-save history");
   }
 }

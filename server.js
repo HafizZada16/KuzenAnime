@@ -150,12 +150,10 @@ const authenticateToken = (req, res, next) => {
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
     if (err)
-      return res
-        .status(403)
-        .json({
-          status: "error",
-          message: "Sesi berakhir, silakan Login ulang.",
-        });
+      return res.status(403).json({
+        status: "error",
+        message: "Sesi berakhir, silakan Login ulang.",
+      });
     req.user = user;
     next();
   });
@@ -225,6 +223,77 @@ app.post("/api/bookmarks/toggle", authenticateToken, async (req, res) => {
     res
       .status(500)
       .json({ status: "error", message: "Gagal memproses bookmark." });
+  }
+});
+
+// ==========================================
+// 4. ENDPOINT RIWAYAT NONTON (WATCH HISTORY)
+// ==========================================
+
+// Ambil Riwayat Nonton User
+app.get("/api/history", authenticateToken, async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      "SELECT * FROM watch_history WHERE user_id = ? ORDER BY updated_at DESC LIMIT 20",
+      [req.user.id],
+    );
+    res.json({ status: "success", data: rows });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ status: "error", message: "Gagal mengambil riwayat." });
+  }
+});
+
+// Simpan/Update Riwayat Nonton
+// Simpan atau Update Riwayat Nonton
+app.post("/api/history", authenticateToken, async (req, res) => {
+  try {
+    const {
+      anime_slug,
+      anime_title,
+      anime_thumb,
+      episode_slug,
+      episode_title,
+    } = req.body;
+
+    // 1. CARI BERDASARKAN ANIME_SLUG (Bukan episode_slug)
+    // Ini supaya satu anime cuma punya satu baris di history per user
+    const [existing] = await db.query(
+      "SELECT id FROM watch_history WHERE user_id = ? AND anime_slug = ?",
+      [req.user.id, anime_slug],
+    );
+
+    if (existing.length > 0) {
+      // 2. JIKA SUDAH ADA, UPDATE KE EPISODE TERBARU
+      await db.query(
+        "UPDATE watch_history SET episode_slug = ?, episode_title = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+        [episode_slug, episode_title, existing[0].id],
+      );
+      return res.json({ status: "success", message: "Riwayat diperbarui" });
+    } else {
+      // 3. JIKA BELUM ADA, BARU INSERT DATA BARU
+      await db.query(
+        "INSERT INTO watch_history (user_id, anime_slug, anime_title, anime_thumb, episode_slug, episode_title) VALUES (?, ?, ?, ?, ?, ?)",
+        [
+          req.user.id,
+          anime_slug,
+          anime_title,
+          anime_thumb,
+          episode_slug,
+          episode_title,
+        ],
+      );
+      return res.json({
+        status: "success",
+        message: "Riwayat baru ditambahkan",
+      });
+    }
+  } catch (error) {
+    console.error("🚨 DETAIL ERROR HISTORY:", error);
+    res
+      .status(500)
+      .json({ status: "error", message: "Gagal memproses riwayat." });
   }
 });
 
