@@ -1,3 +1,4 @@
+import { USER_API } from "./config";
 import { fetchData } from "/js/api.js";
 import { showLoading } from "/js/utils.js";
 
@@ -222,7 +223,7 @@ async function initBookmarkButton(animeData) {
   }
 
   try {
-    const res = await fetch(`${API_URL}/bookmarks/check/${animeData.slug}`, {
+    const res = await fetch(`${USER_API}/bookmarks/check/${animeData.slug}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const result = await res.json();
