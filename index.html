@@ -32,6 +32,9 @@
                     <span onclick="app.navigateTo('/genres')" class="hover:text-purple-500 cursor-pointer whitespace-nowrap transition flex items-center gap-1">
                         <i class="fas fa-ghost text-[8px]"></i> Genres
                     </span>
+                    <span onclick="app.navigateTo('/mylist')" class="hover:text-purple-500 cursor-pointer whitespace-nowrap transition flex items-center gap-1">
+                        <i class="fas fa-heart text-[8px] text-purple-500"></i> My List
+                    </span>
                     
                     <div class="relative w-48 ml-2">
                         <input type="text" id="search-input-desktop" placeholder="Cari anime..." 
@@ -85,9 +88,9 @@
                 <span class="text-[8px] font-black uppercase tracking-wider">Schedule</span>
             </a>
 
-            <a href="#" onclick="event.preventDefault(); window.app.navigateTo('/genres')" class="flex flex-col items-center p-2 flex-1 text-gray-500 hover:text-purple-500 active:text-purple-400 group transition-colors">
-                <i class="fas fa-th-large text-[18px] mb-1 group-hover:-translate-y-1 transition-transform"></i>
-                <span class="text-[8px] font-black uppercase tracking-wider">Genres</span>
+            <a href="#" onclick="event.preventDefault(); window.app.navigateTo('/mylist')" class="flex flex-col items-center p-2 flex-1 text-gray-500 hover:text-purple-500 active:text-purple-400 group transition-colors">
+                <i class="fas fa-heart text-[18px] mb-1 text-purple-500 group-hover:-translate-y-1 transition-transform"></i>
+                <span class="text-[8px] font-black uppercase tracking-wider">My List</span>
             </a>
 
         </div>
@@ -101,48 +104,51 @@
         import { loadSchedule } from '/js/schedule.js';
         import { loadGenres } from '/js/genres.js';
         import { loadBatch } from '/js/batch.js';
+        import { loadMyList } from '/js/mylist.js';
 
-        const navigateTo = (path) => { history.pushState(null, null, path); router(); };
+        const navigateTo = (path) => { 
+            history.pushState(null, null, path); 
+            router(); 
+        };
         
         const router = async () => {
-        const path = window.location.pathname;
-        const params = new URLSearchParams(window.location.search);
-        const page = parseInt(params.get('page')) || 1;
-        const query = params.get('q');
-        
-        if (path === '/search' && query) {
-            // Pastikan search-input terisi saat loading dari URL
-            const mobileInput = document.getElementById('search-input-mobile');
-            if(mobileInput) mobileInput.value = query;
-            await handleSearch();
-        }
+            const path = window.location.pathname;
+            const params = new URLSearchParams(window.location.search);
+            const page = parseInt(params.get('page')) || 1;
+            const query = params.get('q');
             
+            if (path === '/search' && query) {
+                const mobileInput = document.getElementById('search-input-mobile');
+                if(mobileInput) mobileInput.value = query;
+                await handleSearch();
+            }
+                
             if (path === '/' || path === '/home') await loadHome();
             else if (path === '/ongoing') await loadCategory('ongoing', page);
             else if (path === '/complete') await loadCategory('complete', page);
             else if (path === '/schedule') await loadSchedule();
-            else if (path === '/genres') await loadGenres();
+            else if (path === '/genres') await loadGenres(); // Genres tetap bisa diakses router
+            else if (path === '/mylist') await loadMyList(); // My List aktif di router
             else if (path.startsWith('/anime/')) await loadDetail(path.split('/')[2]);
             else if (path.startsWith('/episode/')) await loadPlayer(path.split('/')[2]);
             else if (path.startsWith('/genres/')) await loadGenres(path.split('/')[2]);
             else if (path.startsWith('/batch/')) await loadBatch(path.split('/')[2]);
-        };
- 
-        window.app = { showAuthModal, handleLogin, handleRegister, navigateTo, loadCategory, handleSearch, loadDetail, loadPlayer, switchServer, changeQuality, loadSchedule, loadGenres, loadBatch };
-        window.addEventListener('DOMContentLoaded', () => {
-            checkAuthUI(); // <-- Cek login saat web dibuka
-            router();
-        });
-        window.addEventListener('popstate', router);    
-        
-        // Fungsi Helper untuk mengambil nilai dari salah satu input yang tersedia
-        const getSearchQuery = () => {
-            const mobileInp = document.getElementById('search-input-mobile');
-            const desktopInp = document.getElementById('search-input-desktop');
-            return (mobileInp && mobileInp.value) || (desktopInp && desktopInp.value) || "";
+        }
+
+        window.app = { 
+            showAuthModal, handleLogin, handleRegister, navigateTo, loadCategory, 
+            handleSearch, loadDetail, loadPlayer, switchServer, changeQuality, 
+            loadSchedule, loadGenres, loadBatch, loadMyList 
         };
 
-        // Update handleSearch agar sinkron
+        window.addEventListener('DOMContentLoaded', () => {
+            checkAuthUI(); 
+            router();
+        });
+
+        window.addEventListener('popstate', router); 
+
+        // Event Listener Search (Enter)
         document.getElementById('search-input-mobile').onkeypress = (e) => { 
             if(e.key === 'Enter') {
                 document.getElementById('search-input-desktop').value = e.target.value;

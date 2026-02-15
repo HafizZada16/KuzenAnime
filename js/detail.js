@@ -1,6 +1,9 @@
 import { fetchData } from "/js/api.js";
 import { showLoading } from "/js/utils.js";
 
+// URL Backend untuk fitur Bookmark
+const API_URL = "http://localhost:3000/api";
+
 export async function loadDetail(slug, thumbFromHome = null) {
   showLoading(true);
 
@@ -29,7 +32,6 @@ export async function loadDetail(slug, thumbFromHome = null) {
     localStorage.getItem(`saved_thumb_${slug}`) ||
     "https://via.placeholder.com/300x400?text=Loading+Image...";
 
-  // --- PENGAMBILAN DATA LAINNYA ---
   const title = data.title || "Unknown Title";
   const sinopsis =
     data.sinopsis || data.synopsis || "Tidak ada sinopsis tersedia.";
@@ -66,7 +68,7 @@ export async function loadDetail(slug, thumbFromHome = null) {
       ? regularEpisodes.length
       : data.total_episodes || data.total_episode || "?";
 
-  // RENDER HTML SECARA INSTAN
+  // RENDER HTML
   display.innerHTML = `
     <div class="animate-fadeIn relative">
         <button onclick="window.history.back()" class="flex items-center gap-2 text-gray-300 hover:text-white font-bold text-sm mb-6 transition-colors w-fit group">
@@ -82,6 +84,9 @@ export async function loadDetail(slug, thumbFromHome = null) {
             
             <div class="flex-grow text-center md:text-left">
                 <h1 class="text-3xl md:text-5xl font-black mb-4 tracking-tighter leading-none">${title}</h1>
+                
+                <div id="bookmark-container" class="flex justify-center md:justify-start mb-6"></div>
+
                 <div class="flex flex-wrap justify-center md:justify-start gap-2 mb-6">
                     ${
                       data.genres
@@ -181,10 +186,15 @@ export async function loadDetail(slug, thumbFromHome = null) {
     </div>
     `;
 
-  // MATIKAN LOADING SCREEN DISINI (Sehingga web terasa ngebut tanpa menunggu pencarian gambar)
   showLoading(false);
 
-  // 3. JALANKAN PENCARIAN BACKGROUND JIKA GAMBAR BELUM ADA SAMA SEKALI (Kasus Direct Link)
+  // Jalankan Inisialisasi Bookmark
+  initBookmarkButton({
+    slug: slug,
+    title: title,
+    thumb: thumb,
+  });
+
   if (
     !data.thumb &&
     !data.thumbnail &&
@@ -194,33 +204,91 @@ export async function loadDetail(slug, thumbFromHome = null) {
   }
 }
 
-// Fungsi pencarian mandiri yang tidak nge-block UI
+// ==========================================
+// LOGIKA BOOKMARK (MY LIST)
+// ==========================================
+
+async function initBookmarkButton(animeData) {
+  const token = localStorage.getItem("kuzen_token");
+  const container = document.getElementById("bookmark-container");
+  if (!container) return;
+
+  if (!token) {
+    container.innerHTML = `
+            <button onclick="window.app.showAuthModal(true)" class="bg-gray-800/50 hover:bg-gray-700 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 border border-gray-700">
+                <i class="far fa-heart text-purple-500"></i> Login to Add My List
+            </button>`;
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/bookmarks/check/${animeData.slug}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const result = await res.json();
+    renderBookmarkButton(result.isBookmarked, animeData);
+  } catch (err) {
+    console.error("Gagal cek status bookmark:", err);
+  }
+}
+
+function renderBookmarkButton(isBookmarked, animeData) {
+  const container = document.getElementById("bookmark-container");
+  const titleClean = animeData.title.replace(/'/g, "\\'");
+
+  container.innerHTML = `
+        <button onclick="handleBookmarkToggle('${animeData.slug}', '${titleClean}', '${animeData.thumb}')" 
+            class="${isBookmarked ? "bg-purple-600 shadow-purple-600/30" : "bg-gray-800/80"} hover:scale-105 text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-lg border border-white/5">
+            <i class="${isBookmarked ? "fas text-white" : "far text-purple-500"} fa-heart ${isBookmarked ? "animate-pulse" : ""}"></i> 
+            ${isBookmarked ? "Saved to My List" : "Add to My List"}
+        </button>
+    `;
+}
+
+window.handleBookmarkToggle = async (slug, title, thumb) => {
+  const token = localStorage.getItem("kuzen_token");
+  if (!token) return window.app.showAuthModal(true);
+
+  try {
+    const res = await fetch(`${API_URL}/bookmarks/toggle`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        anime_slug: slug,
+        anime_title: title,
+        anime_thumb: thumb,
+      }),
+    });
+    const result = await res.json();
+
+    if (result.status === "success") {
+      initBookmarkButton({ slug, title, thumb });
+    }
+  } catch (err) {
+    console.error("Error toggle bookmark:", err);
+  }
+};
+
+// Fungsi Background Fetch
 async function fetchThumbBackground(slug) {
   try {
-    // Membersihkan slug dari kata pengganggu agar hasil search lebih akurat
-    // Misal: "wandance-episode-12-sub-indo" jadi "wandance"
     const query = slug
       .replace(/-episode-\d+|-sub-indo|-batch/g, "")
       .replace(/-/g, " ")
       .trim();
-
     const searchData = await fetchData(`/search/${query}`);
-
     if (searchData && searchData.length > 0) {
-      // Coba cari yang judulnya mirip, atau ambil hasil paling atas
       const match =
         searchData.find(
           (item) => item.slug.includes(slug) || slug.includes(item.slug),
         ) || searchData[0];
       const realThumb = match.thumb || match.thumbnail;
-
       if (realThumb) {
-        // Update elemen <img> secara live!
         const posterEl = document.getElementById("detail-poster");
-        if (posterEl) {
-          posterEl.src = realThumb;
-        }
-        // Simpan cache agar kedepannya langsung muncul
+        if (posterEl) posterEl.src = realThumb;
         localStorage.setItem(`saved_thumb_${slug}`, realThumb);
       }
     }

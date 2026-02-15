@@ -136,8 +136,98 @@ app.post("/api/login", async (req, res) => {
 });
 
 // ==========================================
-// 3. PENGATURAN FRONTEND (SPA)
+// 3. MIDDLEWARE & ENDPOINT BOOKMARK
 // ==========================================
+
+// Fungsi Satpam (Cek Token JWT)
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+  if (!token)
+    return res
+      .status(401)
+      .json({ status: "error", message: "Silakan Login dulu!" });
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err)
+      return res
+        .status(403)
+        .json({
+          status: "error",
+          message: "Sesi berakhir, silakan Login ulang.",
+        });
+    req.user = user;
+    next();
+  });
+};
+
+// Ambil Semua Bookmark User
+app.get("/api/bookmarks", authenticateToken, async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      "SELECT * FROM bookmarks WHERE user_id = ? ORDER BY created_at DESC",
+      [req.user.id],
+    );
+    res.json({ status: "success", data: rows });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ status: "error", message: "Gagal mengambil bookmark." });
+  }
+});
+
+// Cek Status Bookmark (Apakah anime ini sudah di-bookmark?)
+app.get("/api/bookmarks/check/:slug", authenticateToken, async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      "SELECT id FROM bookmarks WHERE user_id = ? AND anime_slug = ?",
+      [req.user.id, req.params.slug],
+    );
+    res.json({ status: "success", isBookmarked: rows.length > 0 });
+  } catch (error) {
+    res.status(500).json({ status: "error", message: "Gagal cek status." });
+  }
+});
+
+// Tambah atau Hapus Bookmark (Toggle)
+app.post("/api/bookmarks/toggle", authenticateToken, async (req, res) => {
+  try {
+    const { anime_slug, anime_title, anime_thumb } = req.body;
+    const [existing] = await db.query(
+      "SELECT id FROM bookmarks WHERE user_id = ? AND anime_slug = ?",
+      [req.user.id, anime_slug],
+    );
+
+    if (existing.length > 0) {
+      // Jika sudah ada, maka HAPUS
+      await db.query(
+        "DELETE FROM bookmarks WHERE user_id = ? AND anime_slug = ?",
+        [req.user.id, anime_slug],
+      );
+      res.json({
+        status: "success",
+        message: "Dihapus dari My List",
+        action: "removed",
+      });
+    } else {
+      // Jika belum ada, maka TAMBAH
+      await db.query(
+        "INSERT INTO bookmarks (user_id, anime_slug, anime_title, anime_thumb) VALUES (?, ?, ?, ?)",
+        [req.user.id, anime_slug, anime_title, anime_thumb],
+      );
+      res.json({
+        status: "success",
+        message: "Berhasil disimpan ke My List",
+        action: "added",
+      });
+    }
+  } catch (error) {
+    res
+      .status(500)
+      .json({ status: "error", message: "Gagal memproses bookmark." });
+  }
+});
+
 app.use(express.static(__dirname));
 
 app.use((req, res) => {
