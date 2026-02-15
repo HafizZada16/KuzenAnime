@@ -1,9 +1,6 @@
-import { USER_API } from "./config";
+import { USER_API } from "./config.js";
 import { fetchData } from "/js/api.js";
 import { showLoading } from "/js/utils.js";
-
-// URL Backend untuk fitur Bookmark
-const API_URL = "https://anime.hapizweb.my.id/api";
 
 export async function loadDetail(slug, thumbFromHome = null) {
   showLoading(true);
