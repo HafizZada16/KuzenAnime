@@ -248,7 +248,7 @@ window.handleBookmarkToggle = async (slug, title, thumb) => {
   if (!token) return window.app.showAuthModal(true);
 
   try {
-    const res = await fetch(`${API_URL}/bookmarks/toggle`, {
+    const res = await fetch(`${USER_API}/bookmarks/toggle`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
