@@ -1,8 +1,9 @@
-<IfModule mod_rewrite.c>
-  RewriteEngine On
-  RewriteBase /
-  RewriteRule ^index\.html$ - [L]
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule . /index.html [L]
-</IfModule>
+# Jangan arahkan folder api ke index.html
+RewriteEngine On
+RewriteCond %{REQUEST_URI} ^/api [NC]
+RewriteRule .* - [L]
+
+# Sisanya baru arahkan ke index.html (untuk SPA)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.html [L]
