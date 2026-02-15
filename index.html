@@ -10,9 +10,11 @@
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body class="bg-[#0b0b0b] text-white">
+    
     <nav class="sticky top-0 z-50 glass border-b border-gray-800/50 p-3">
         <div class="container mx-auto">
             <div class="flex flex-row justify-between items-center gap-3">
+                
                 <div class="flex items-center gap-2 cursor-pointer" onclick="app.navigateTo('/')">
                     <div class="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center shadow-lg shadow-purple-600/20">
                         <i class="fas fa-play text-white text-xs"></i>
@@ -20,7 +22,7 @@
                     <h1 class="text-xl font-black tracking-tighter uppercase">Kuzen<span class="text-purple-500">Anime</span></h1>
                 </div>
                 
-                <div class="flex gap-5 text-[10px] font-bold items-center uppercase tracking-wider overflow-x-auto no-scrollbar py-1">
+                <div class="hidden md:flex gap-5 text-[10px] font-bold items-center uppercase tracking-wider overflow-x-auto no-scrollbar py-1">
                     <span onclick="app.navigateTo('/')" class="hover:text-purple-500 cursor-pointer whitespace-nowrap transition">Home</span>
                     <span onclick="app.navigateTo('/ongoing')" class="hover:text-purple-500 cursor-pointer whitespace-nowrap transition">Ongoing</span>
                     <span onclick="app.navigateTo('/complete')" class="hover:text-purple-500 cursor-pointer whitespace-nowrap transition">Complete</span>
@@ -31,7 +33,7 @@
                         <i class="fas fa-ghost text-[8px]"></i> Genres
                     </span>
                     
-                    <div class="relative hidden md:block w-48 ml-2">
+                    <div class="relative w-48 ml-2">
                         <input type="text" id="search-input-desktop" placeholder="Cari anime..." 
                             class="bg-gray-900 border border-gray-700 rounded-full px-4 py-1.5 text-[10px] outline-none focus:border-purple-500 w-full text-white transition">
                         <i class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 text-[8px]"></i>
@@ -49,12 +51,43 @@
         </div>
     </nav>
 
-    <main class="container mx-auto px-4 py-6">
+    <main class="container mx-auto px-4 py-6 pb-24 md:pb-6">
         <div id="loading" class="hidden py-40 text-center">
             <div class="inline-block w-10 h-10 border-4 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
         </div>
         <div id="content-display"></div>
     </main>
+
+    <nav class="fixed bottom-0 left-0 w-full bg-[#0b0b0b]/95 backdrop-blur-md border-t border-gray-800 z-50 md:hidden">
+        <div class="flex justify-between items-center px-1 py-2">
+            
+            <a href="#" onclick="event.preventDefault(); window.app.navigateTo('/')" class="flex flex-col items-center p-2 flex-1 text-gray-500 hover:text-purple-500 active:text-purple-400 group transition-colors">
+                <i class="fas fa-home text-[18px] mb-1 group-hover:-translate-y-1 transition-transform"></i>
+                <span class="text-[8px] font-black uppercase tracking-wider">Home</span>
+            </a>
+
+            <a href="#" onclick="event.preventDefault(); window.app.navigateTo('/ongoing')" class="flex flex-col items-center p-2 flex-1 text-gray-500 hover:text-purple-500 active:text-purple-400 group transition-colors">
+                <i class="fas fa-play-circle text-[18px] mb-1 group-hover:-translate-y-1 transition-transform"></i>
+                <span class="text-[8px] font-black uppercase tracking-wider">Ongoing</span>
+            </a>
+
+            <a href="#" onclick="event.preventDefault(); window.app.navigateTo('/complete')" class="flex flex-col items-center p-2 flex-1 text-gray-500 hover:text-purple-500 active:text-purple-400 group transition-colors">
+                <i class="fas fa-check-circle text-[18px] mb-1 group-hover:-translate-y-1 transition-transform"></i>
+                <span class="text-[8px] font-black uppercase tracking-wider">Complete</span>
+            </a>
+
+            <a href="#" onclick="event.preventDefault(); window.app.navigateTo('/schedule')" class="flex flex-col items-center p-2 flex-1 text-gray-500 hover:text-purple-500 active:text-purple-400 group transition-colors">
+                <i class="fas fa-calendar-alt text-[18px] mb-1 group-hover:-translate-y-1 transition-transform"></i>
+                <span class="text-[8px] font-black uppercase tracking-wider">Schedule</span>
+            </a>
+
+            <a href="#" onclick="event.preventDefault(); window.app.navigateTo('/genres')" class="flex flex-col items-center p-2 flex-1 text-gray-500 hover:text-purple-500 active:text-purple-400 group transition-colors">
+                <i class="fas fa-th-large text-[18px] mb-1 group-hover:-translate-y-1 transition-transform"></i>
+                <span class="text-[8px] font-black uppercase tracking-wider">Genres</span>
+            </a>
+
+        </div>
+    </nav>
 
     <script type="module">
         import { loadHome, loadCategory, handleSearch } from '/js/home.js';
@@ -74,7 +107,8 @@
         
         if (path === '/search' && query) {
             // Pastikan search-input terisi saat loading dari URL
-            document.getElementById('search-input').value = query;
+            const mobileInput = document.getElementById('search-input-mobile');
+            if(mobileInput) mobileInput.value = query;
             await handleSearch();
         }
             
@@ -100,10 +134,9 @@
             return (mobileInp && mobileInp.value) || (desktopInp && desktopInp.value) || "";
         };
 
-        // Update handleSearch di home.js agar mengambil data global atau lewat parameter
+        // Update handleSearch agar sinkron
         document.getElementById('search-input-mobile').onkeypress = (e) => { 
             if(e.key === 'Enter') {
-                // Set nilai ke input satunya agar sinkron (opsional)
                 document.getElementById('search-input-desktop').value = e.target.value;
                 app.handleSearch(); 
             }
@@ -115,7 +148,6 @@
                 app.handleSearch(); 
             }
         };
-
     </script>
 </body>
 </html>
