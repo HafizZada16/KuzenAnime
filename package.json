@@ -3,12 +3,20 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.html",
-  "type":"module",
+  "type": "module",
   "scripts": {
     "start": "node server.js ",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mysql2": "^3.17.1"
+  }
 }
