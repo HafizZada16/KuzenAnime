@@ -329,3 +329,13 @@ app.listen(PORT, () => {
   console.log(`🚀 KuzenAnime API & Web live at http://localhost:${PORT}`);
   console.log(`-------------------------------------------`);
 });
+
+export default app;
+
+// Jika ingin tetap bisa testing lokal, bungkus listen-nya:
+if (process.env.NODE_ENV !== "production") {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Server jalan di http://localhost:${PORT}`);
+  });
+}
