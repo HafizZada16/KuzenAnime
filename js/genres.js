@@ -102,7 +102,18 @@ export async function loadGenres(selectedGenreSlug = null, page = 1) {
       `;
 
       data.forEach((anime) => {
-        // Menggunakan createAnimeCard dari utils agar konsisten
+        const ratingVal = anime.rating || anime.score;
+
+        // Cek apakah rating valid (ada isinya dan bukan tanda strip)
+        if (ratingVal && ratingVal.trim() !== "" && ratingVal !== "-") {
+          // Jika ada rating, tampilkan angkanya (misal: 8.5)
+          anime.extra = ratingVal;
+        } else {
+          // Jika data rating kosong/tidak ada, tampilkan teks "Completed"
+          anime.extra = "Completed";
+        }
+
+        // Render kartunya
         html += createAnimeCard(anime, `app.loadDetail('${anime.slug}')`);
       });
 
