@@ -17,21 +17,28 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.use(express.static(path.join(__dirname)));
+
 const allowedOrigins = [
-  "https://anime.hapizweb.my.id",
-  "https://kuzenanime-production.up.railway.app",
-  "http://localhost:5500", // Tetap izinkan lokal untuk testing
+  "http://localhost:5500", // Masih izinkan lokal untuk kamu testing
+  "https://anime.hapizweb.my.id", // Domain utama kamu
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
+      // Izinkan jika origin ada di daftar atau jika tidak ada origin (seperti alat testing Postman)
       if (!origin || allowedOrigins.indexOf(origin) !== -1) {
         callback(null, true);
       } else {
-        callback(new Error("Akses ditolak oleh kebijakan CORS KuzenAnime"));
+        callback(
+          new Error(
+            "Maaf, domain Anda tidak diizinkan oleh sistem CORS KuzenAnime",
+          ),
+        );
       }
     },
+    credentials: true, // Penting jika kamu nanti pakai Cookie/Session
   }),
 );
 
@@ -329,13 +336,3 @@ app.listen(PORT, () => {
   console.log(`🚀 KuzenAnime API & Web live at http://localhost:${PORT}`);
   console.log(`-------------------------------------------`);
 });
-
-export default app;
-
-// Jika ingin tetap bisa testing lokal, bungkus listen-nya:
-if (process.env.NODE_ENV !== "production") {
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
-    console.log(`Server jalan di http://localhost:${PORT}`);
-  });
-}
