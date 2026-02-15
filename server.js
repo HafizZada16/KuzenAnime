@@ -18,7 +18,8 @@ app.use(cors());
 app.use(express.json());
 
 const allowedOrigins = [
-  "https://anime.hapizweb.my.id", // Domain frontend kamu
+  "https://anime.hapizweb.my.id",
+  "https://kuzenanime-production.up.railway.app",
   "http://localhost:5500", // Tetap izinkan lokal untuk testing
 ];
 
