@@ -114,7 +114,11 @@ export async function loadGenres(selectedGenreSlug = null, page = 1) {
         }
 
         // Render kartunya
-        html += createAnimeCard(anime, `app.loadDetail('${anime.slug}')`);
+        const imageUrl = anime.thumb || anime.thumbnail || "";
+        html += createAnimeCard(
+          anime,
+          `app.loadDetail('${anime.slug}', '${imageUrl}')`,
+        );
       });
 
       html += `</div>`;

@@ -93,7 +93,11 @@ export async function handleSearch() {
         let html = "";
         data.forEach((anime) => {
           // Gunakan app.loadDetail agar konsisten dengan kartu lainnya
-          html += createAnimeCard(anime, `app.loadDetail('${anime.slug}')`);
+          const imageUrl = anime.thumb || anime.thumbnail || "";
+          html += createAnimeCard(
+            anime,
+            `app.loadDetail('${anime.slug}', '${imageUrl}')`,
+          );
         });
         grid.innerHTML = html;
       } else {
