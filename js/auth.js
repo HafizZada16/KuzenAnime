@@ -177,46 +177,66 @@ export async function handleLogin() {
   showLoading(false);
 }
 
-// Cek apakah user sudah login untuk mengubah tombol di Navbar
+// Cek apakah user sudah login untuk mengubah tombol di Navbar Desktop & Mobile
 export function checkAuthUI() {
   const user = JSON.parse(localStorage.getItem("kuzen_user"));
   const loginBtnDesktop = document.getElementById("nav-login-btn");
+  const loginBtnMobile = document.getElementById("nav-login-btn-mobile"); // Ambil elemen dropdown mobile
+
+  const handleLogoutClick = () => {
+    Swal.fire({
+      title: "Konfirmasi Logout",
+      text: "Apakah kamu yakin ingin keluar?",
+      icon: "warning",
+      background: "#1a1a1a",
+      color: "#ffffff",
+      showCancelButton: true,
+      confirmButtonColor: "#ff6600",
+      cancelButtonColor: "#444",
+      confirmButtonText: "Ya, Logout!",
+      cancelButtonText: "Batal",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        localStorage.removeItem("kuzen_token");
+        localStorage.removeItem("kuzen_user");
+        checkAuthUI();
+        showPopup(
+          "Logout Berhasil",
+          "Sampai jumpa lagi di KuzenAnime!",
+          "info",
+        );
+      }
+    });
+  };
 
   if (user) {
+    // 1. Update Desktop Button
     if (loginBtnDesktop) {
-      // Ganti icon user di navbar menjadi warna orange juga
       loginBtnDesktop.innerHTML = `<i class="fas fa-user-circle text-lg text-[#ff6600]"></i> <span class="ml-1">${user.username}</span>`;
-      loginBtnDesktop.onclick = () => {
-        // Ganti Confirm bawaan dengan SweetAlert2
-        Swal.fire({
-          title: "Konfirmasi Logout",
-          text: "Apakah kamu yakin ingin keluar?",
-          icon: "warning",
-          background: "#1a1a1a",
-          color: "#ffffff",
-          showCancelButton: true,
-          confirmButtonColor: "#ff6600",
-          cancelButtonColor: "#444",
-          confirmButtonText: "Ya, Logout!",
-          cancelButtonText: "Batal",
-        }).then((result) => {
-          if (result.isConfirmed) {
-            localStorage.removeItem("kuzen_token");
-            localStorage.removeItem("kuzen_user");
-            checkAuthUI();
-            showPopup(
-              "Logout Berhasil",
-              "Sampai jumpa lagi di KuzenAnime!",
-              "info",
-            );
-          }
-        });
-      };
+      loginBtnDesktop.onclick = handleLogoutClick;
+    }
+
+    // 2. Update Mobile Button (Jadikan Logout)
+    if (loginBtnMobile) {
+      loginBtnMobile.innerHTML = `<i class="fas fa-sign-out-alt w-5 text-center mr-1"></i> Logout`;
+      loginBtnMobile.classList.replace("text-[#ff6600]", "text-red-500"); // Ganti warna jadi merah
+      loginBtnMobile.onclick = handleLogoutClick;
     }
   } else {
+    // Jika belum login
     if (loginBtnDesktop) {
       loginBtnDesktop.innerHTML = `<i class="fas fa-sign-in-alt mr-1"></i> Login`;
       loginBtnDesktop.onclick = () => window.app.showAuthModal(true);
+    }
+
+    if (loginBtnMobile) {
+      loginBtnMobile.innerHTML = `<i class="fas fa-sign-in-alt w-5 text-center mr-1"></i> Login`;
+      loginBtnMobile.classList.replace("text-red-500", "text-[#ff6600]"); // Kembalikan ke warna orange
+      loginBtnMobile.onclick = () => {
+        window.app.showAuthModal(true);
+        // Tutup otomatis dropdown saat klik login
+        document.getElementById("mobile-menu-btn").click();
+      };
     }
   }
 }
