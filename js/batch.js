@@ -29,7 +29,7 @@ export async function loadBatch(slug) {
   display.innerHTML = `
     <div class="animate-fadeIn max-w-4xl mx-auto">
         <button onclick="${animeSlug ? `app.loadDetail('${animeSlug}')` : `app.navigateTo('/')`}" 
-            class="mb-6 bg-gray-900 border border-gray-800 hover:bg-purple-600 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-white transition-all shadow-sm group">
+            class="mb-6 bg-gray-900 border border-gray-800 hover:bg-[#ff6600] px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-white transition-all shadow-sm group">
             <i class="fas fa-arrow-left mr-2 group-hover:-translate-x-1 transition-transform"></i> Kembali
         </button>
 
@@ -44,7 +44,7 @@ export async function loadBatch(slug) {
                     <span class="text-orange-500 bg-orange-900/10 px-3 py-1.5 rounded-lg border border-orange-900/30">
                         <i class="fas fa-file-archive mr-1"></i> BATCH EPISODES
                     </span>
-                    <span class="text-purple-400 bg-purple-900/10 px-3 py-1.5 rounded-lg border border-purple-900/30">
+                    <span class="text-[#ff6600] bg-orange-900/10 px-3 py-1.5 rounded-lg border border-orange-900/30">
                         <i class="fas fa-download mr-1"></i> MULTIPLE RESOLUTIONS
                     </span>
                 </div>
@@ -87,7 +87,7 @@ function renderDownloadLinks(downloadList) {
             <div class="bg-gray-900/30 hover:bg-gray-900/80 border border-gray-800 hover:border-gray-700 p-5 rounded-2xl transition duration-300">
                 
                 <div class="mb-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                    <span class="bg-purple-600 text-white text-[10px] font-black px-4 py-1.5 rounded-lg shadow-lg shadow-purple-600/20 uppercase tracking-widest">
+                    <span class="bg-[#ff6600] text-white text-[10px] font-black px-4 py-1.5 rounded-lg shadow-lg shadow-orange-600/20 uppercase tracking-widest">
                         <i class="fas fa-video mr-1"></i> ${qualityName}
                     </span>
                     <span class="bg-gray-800 border border-gray-700 text-gray-400 text-[10px] font-black px-3 py-1.5 rounded-lg uppercase tracking-widest">

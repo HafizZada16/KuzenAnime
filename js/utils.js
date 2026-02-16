@@ -20,7 +20,7 @@ export function showLoading(show) {
 export function createAnimeCard(anime, onClick) {
   let topLeftBadge = "";
 
-  // 1. PRIORITAS UTAMA: Cek apakah ada properti 'extra' (Biasanya dari page Completed)border-[#ff6600]
+  // 1. PRIORITAS UTAMA: Cek apakah ada properti 'extra' (Biasanya dari page Completed)
   if (anime.extra) {
     topLeftBadge = `
             <div class="absolute top-2 left-2 bg-gray-900/90 backdrop-blur-md border border-gray-700 text-yellow-500 text-[8px] md:text-[9px] font-black px-2 py-0.5 rounded shadow-lg flex items-center gap-1 z-10">

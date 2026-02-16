@@ -73,7 +73,7 @@ export async function loadPlayer(epSlug) {
             <div class="mb-8">
                 <h1 class="text-xl md:text-2xl font-black mb-2 tracking-tight text-white">${data.title}</h1>
                 <div class="flex items-center gap-4 text-[10px] text-gray-500 font-bold uppercase tracking-widest">
-                    <span class="text-purple-500"><i class="fas fa-tv mr-1"></i> ${animeData?.title || "Streaming"}</span>
+                    <span class="text-[#ff6600]"><i class="fas fa-tv mr-1"></i> ${animeData?.title || "Streaming"}</span>
                     <span><i class="fas fa-clock mr-1"></i> ${data.posted || "Updated"}</span>
                 </div>
             </div>
@@ -82,7 +82,7 @@ export async function loadPlayer(epSlug) {
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div class="flex-grow w-full">
                         <h3 class="text-[10px] font-black mb-4 flex items-center gap-2 uppercase tracking-[0.2em] text-gray-400">
-                            <i class="fas fa-server text-purple-500"></i> Pilih Server
+                            <i class="fas fa-server text-[#ff6600]"></i> Pilih Server
                         </h3>
                         <div id="mirror-list" class="flex flex-wrap gap-2"></div>
                     </div>
@@ -107,7 +107,7 @@ export async function loadPlayer(epSlug) {
             <div class="bg-[#121212] border border-gray-800 p-5 rounded-2xl mb-8 shadow-sm">
                 <div class="flex justify-between items-center mb-5">
                     <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-2">
-                        <i class="fas fa-th-large text-purple-500"></i> Pilih Episode
+                        <i class="fas fa-th-large text-[#ff6600]"></i> Pilih Episode
                     </h3>
                     <span class="text-[9px] text-gray-600 font-black uppercase">Total: ${regularEpisodes.length}</span>
                 </div>
@@ -119,7 +119,7 @@ export async function loadPlayer(epSlug) {
                         return `
                             <button onclick="app.loadPlayer('${ep.slug}')" 
                                 class="px-3 py-1.5 min-w-[32px] rounded-lg text-[10px] font-black transition-all duration-300 uppercase
-                                ${isCurrent ? "bg-pink-500 text-white shadow-lg shadow-pink-500/30 ring-1 ring-pink-400" : "bg-gray-800/60 text-gray-400 border border-gray-700/50 hover:bg-gray-700 hover:text-white"}">
+                                ${isCurrent ? "bg-[#ff6600] text-white shadow-lg shadow-orange-500/30 ring-1 ring-orange-400" : "bg-gray-800/60 text-gray-400 border border-gray-700/50 hover:bg-gray-700 hover:text-white"}">
                                 ${index + 1}
                             </button>
                         `;
@@ -143,7 +143,7 @@ export async function loadPlayer(epSlug) {
                                 <img src="${anime.thumb}" class="w-full h-full object-cover group-hover:scale-110 transition duration-300" onerror="this.onerror=null; this.src='https://via.placeholder.com/150x200?text=No+Image';">
                             </div>
                             <div class="flex flex-col justify-center min-w-0">
-                                <h4 class="text-[10px] font-bold line-clamp-2 group-hover:text-purple-500 transition-colors leading-tight">${anime.title}</h4>
+                                <h4 class="text-[10px] font-bold line-clamp-2 group-hover:text-[#ff6600] transition-colors leading-tight">${anime.title}</h4>
                                 <span class="text-[8px] text-gray-500 mt-1 font-black uppercase tracking-tighter">${anime.episode || "Ongoing"}</span>
                             </div>
                         </div>`,
@@ -182,7 +182,7 @@ export const changeQuality = (selectedQ, encodedMirrors) => {
       .map(
         (m) => `
         <button onclick="app.switchServer('${btoa(JSON.stringify(m.payload))}')" 
-            class="bg-gray-800/80 hover:bg-purple-600 border border-gray-700 px-4 py-2 rounded-lg text-[10px] font-black transition uppercase text-white active:scale-95 shadow-sm">
+            class="bg-gray-800/80 hover:bg-[#ff6600] border border-gray-700 px-4 py-2 rounded-lg text-[10px] font-black transition uppercase text-white active:scale-95 shadow-sm">
             ${m.name}
         </button>`,
       )
@@ -195,7 +195,7 @@ export const changeQuality = (selectedQ, encodedMirrors) => {
 export async function switchServer(encodedPayload) {
   const payload = JSON.parse(atob(encodedPayload));
   const wrapper = document.getElementById("video-wrapper");
-  wrapper.innerHTML = `<div class="flex items-center justify-center h-full text-white bg-black/50"><i class="fas fa-circle-notch animate-spin text-4xl text-purple-600"></i></div>`;
+  wrapper.innerHTML = `<div class="flex items-center justify-center h-full text-white bg-black/50"><i class="fas fa-circle-notch animate-spin text-4xl text-[#ff6600]"></i></div>`;
 
   try {
     const res = await fetch(`https://api.kanata.web.id/otakudesu/stream`, {
