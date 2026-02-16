@@ -2,10 +2,43 @@ import { USER_API } from "./config.js";
 import { fetchData } from "/js/api.js";
 import { showLoading } from "/js/utils.js";
 
+// Fungsi rahasia mengambil sinopsis dari API Sanka menggunakan "slug" yang sama
+async function fetchSynopsisFromSanka(slug) {
+  try {
+    const response = await fetch(
+      `https://www.sankavollerei.com/anime/anime/${slug}`,
+    );
+
+    if (!response.ok) throw new Error("Gagal mengambil data dari Sanka");
+
+    const result = await response.json();
+
+    // 1. Cek apakah ada data synopsis dan paragraphs-nya
+    if (
+      result.data &&
+      result.data.synopsis &&
+      result.data.synopsis.paragraphs
+    ) {
+      const paragraphsArray = result.data.synopsis.paragraphs;
+
+      // 2. Gabungkan array paragraf menjadi satu teks panjang
+      // (Dipisahkan dengan dua kali enter <br><br> agar ada jeda antar paragraf)
+      if (paragraphsArray.length > 0) {
+        const joinedSynopsis = paragraphsArray.join("<br><br>");
+        return joinedSynopsis;
+      }
+    }
+
+    return "Sinopsis belum tersedia untuk anime ini.";
+  } catch (error) {
+    console.warn("Sanka API Error, menggunakan teks default:", error);
+    return "Sinopsis resmi belum tersedia. Selamat menonton!";
+  }
+}
+
 export async function loadDetail(slug, thumbFromHome = null) {
   showLoading(true);
 
-  // 1. SIMPAN THUMBNAIL DARI HALAMAN SEBELUMNYA KE LOCALSTORAGE (CACHING)
   if (thumbFromHome) {
     localStorage.setItem(`saved_thumb_${slug}`, thumbFromHome);
   }
@@ -13,6 +46,7 @@ export async function loadDetail(slug, thumbFromHome = null) {
   localStorage.setItem("current_anime_slug", slug);
   history.pushState(null, null, `/anime/${slug}`);
 
+  // 1. Ambil data utama dari API Kanata
   const data = await fetchData(`/anime/${slug}`);
   const display = document.getElementById("content-display");
   if (display) display.innerHTML = "";
@@ -23,7 +57,7 @@ export async function loadDetail(slug, thumbFromHome = null) {
     return;
   }
 
-  // 2. TENTUKAN GAMBAR (Prioritas: API -> Cache LocalStorage -> Loading Placeholder)
+  // 2. TENTUKAN GAMBAR & INFO DASAR
   let thumb =
     data.thumb ||
     data.thumbnail ||
@@ -31,8 +65,6 @@ export async function loadDetail(slug, thumbFromHome = null) {
     "https://via.placeholder.com/300x400?text=Loading+Image...";
 
   const title = data.title || "Unknown Title";
-  const sinopsis =
-    data.sinopsis || data.synopsis || "Tidak ada sinopsis tersedia.";
   const rating = data.score || data.rating || "N/A";
   const type = data.type || "TV";
 
@@ -66,7 +98,7 @@ export async function loadDetail(slug, thumbFromHome = null) {
       ? regularEpisodes.length
       : data.total_episodes || data.total_episode || "?";
 
-  // RENDER HTML
+  // 3. RENDER HTML TERLEBIH DAHULU (Pasang ID anime-synopsis dan loading text di sini)
   display.innerHTML = `
     <div class="animate-fadeIn relative">
         <button onclick="window.history.back()" class="flex items-center gap-2 text-gray-300 hover:text-white font-bold text-sm mb-6 transition-colors w-fit group">
@@ -121,7 +153,9 @@ export async function loadDetail(slug, thumbFromHome = null) {
                 </div>
 
                 <div class="bg-gray-900/30 p-6 rounded-2xl border border-gray-800 italic text-left">
-                    <p class="text-sm text-gray-400 leading-relaxed">"${sinopsis}"</p>
+                    <p id="anime-synopsis" class="text-sm text-gray-400 leading-relaxed">
+                        <span class="animate-pulse text-gray-500">Menarik data sinopsis...</span>
+                    </p>
                 </div>
             </div>
         </div>
@@ -185,6 +219,16 @@ export async function loadDetail(slug, thumbFromHome = null) {
     `;
 
   showLoading(false);
+
+  // ==========================================
+  // 4. EKSEKUSI API SANKA (Setelah HTML Tampil)
+  // ==========================================
+  const synopsisEl = document.getElementById("anime-synopsis");
+  if (synopsisEl) {
+    const sinopsisAsli = await fetchSynopsisFromSanka(slug);
+
+    synopsisEl.innerHTML = sinopsisAsli;
+  }
 
   // Jalankan Inisialisasi Bookmark
   initBookmarkButton({

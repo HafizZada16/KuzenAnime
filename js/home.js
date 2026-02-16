@@ -45,10 +45,6 @@ function renderHeroSlider(animeList) {
           
           <div class="absolute bottom-5 left-4 md:bottom-12 md:left-12 z-20 w-[90%] md:w-1/2 animate-slideUp">
               
-              <span class="bg-[#ff6600] text-white text-[8px] md:text-xs font-black px-1.5 py-0.5 md:px-3 md:py-1 rounded shadow-lg uppercase tracking-widest mb-1.5 md:mb-3 inline-block">
-                <i class="fas fa-fire mr-1"></i> Trending
-              </span>
-              
               <h2 class="text-sm md:text-4xl font-black text-white leading-tight mb-1.5 md:mb-2 drop-shadow-2xl line-clamp-2">${anime.title}</h2>
               
               <div class="flex items-center gap-3 text-[10px] md:text-sm text-gray-300 font-bold mb-3 md:mb-5">
