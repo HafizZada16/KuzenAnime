@@ -26,9 +26,14 @@
                     <h1 class="text-xl font-black tracking-tighter uppercase">Kuzen<span class="text-[#ff6600]">Anime</span></h1>
                 </div>
                 
-                <button id="mobile-menu-btn" class="md:hidden text-gray-400 hover:text-[#ff6600] text-xl focus:outline-none transition ml-auto">
-                    <i class="fas fa-bars"></i>
-                </button>
+                <div class="flex items-center gap-4 ml-auto md:hidden">
+                    <button id="mobile-search-toggle" class="text-gray-400 hover:text-[#ff6600] text-lg focus:outline-none transition">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <button id="mobile-menu-btn" class="text-gray-400 hover:text-[#ff6600] text-xl focus:outline-none transition">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
 
                 <div class="hidden md:flex gap-5 text-[10px] font-bold items-center uppercase tracking-wider overflow-x-auto no-scrollbar py-1">
                     <span onclick="app.navigateTo('/')" class="hover:text-[#ff6600] cursor-pointer whitespace-nowrap transition">Home</span>
@@ -66,11 +71,9 @@
                 <a href="#" onclick="event.preventDefault(); window.app.navigateTo('/ongoing'); document.getElementById('mobile-menu-btn').click();" class="py-3 px-5 text-gray-300 hover:bg-gray-800 hover:text-white border-b border-gray-800">
                     <i class="fas fa-play-circle w-5 text-center mr-1"></i> Ongoing
                 </a>
-                
                 <a href="#" onclick="event.preventDefault(); window.app.navigateTo('/complete'); document.getElementById('mobile-menu-btn').click();" class="py-3 px-5 text-gray-300 hover:bg-gray-800 hover:text-white border-b border-gray-800">
                     <i class="fas fa-check-circle w-5 text-center mr-1"></i> Complete
                 </a>
-
                 <a href="#" onclick="event.preventDefault(); window.app.navigateTo('/schedule'); document.getElementById('mobile-menu-btn').click();" class="py-3 px-5 text-gray-300 hover:bg-gray-800 hover:text-white border-b border-gray-800">
                     <i class="far fa-calendar-alt w-5 text-center mr-1"></i> Schedule
                 </a>
@@ -83,17 +86,18 @@
                 <a href="#" onclick="event.preventDefault(); window.app.navigateTo('/history'); document.getElementById('mobile-menu-btn').click();" class="py-3 px-5 text-gray-300 hover:bg-gray-800 hover:text-white border-b border-gray-800">
                     <i class="fas fa-history w-5 text-center mr-1 text-[#ff6600]"></i> History
                 </a>
-                
                 <button id="nav-login-btn-mobile" class="w-full text-left text-[#ff6600] py-3 px-5 hover:bg-gray-800 transition">
                     <i class="fas fa-sign-in-alt w-5 text-center mr-1"></i> Login
                 </button>
             </div>
 
-            <div class="mt-3 md:hidden">
-                <div class="relative w-full">
-                    <input type="text" id="search-input-mobile" placeholder="Cari anime favoritmu..." 
+            <div id="mobile-search-container" class="hidden mt-3 md:hidden transition-all duration-300 animate-slideDown">
+                <div class="relative w-full flex gap-2">
+                    <input type="text" id="search-input-mobile" placeholder="Cari anime..." 
                         class="bg-gray-900/50 border border-gray-800 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-[#ff6600] w-full text-white transition">
-                    <i class="fas fa-search absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-xs"></i>
+                    <button onclick="window.app.handleSearch()" class="bg-[#ff6600] hover:bg-[#e65c00] text-white px-4 rounded-xl text-xs transition shadow-lg shadow-[#ff6600]/20">
+                        <i class="fas fa-search"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -212,6 +216,62 @@
         window.addEventListener('DOMContentLoaded', () => {
             checkAuthUI();
             router();
+            const searchToggleBtn = document.getElementById('mobile-search-toggle');
+            const searchContainer = document.getElementById('mobile-search-container');
+            const searchInputMobile = document.getElementById('search-input-mobile');
+            
+            let searchTimeout; // Variabel untuk menyimpan timer hantu
+
+            // Fungsi untuk mulai/reset hitung mundur 5 detik
+            const startSearchTimer = () => {
+                clearTimeout(searchTimeout); // Hapus timer lama
+                if (!searchContainer.classList.contains('hidden')) {
+                    searchTimeout = setTimeout(() => {
+                        searchContainer.classList.add('hidden'); // Tutup otomatis setelah 5 detik
+                    }, 10000);
+                }
+            };
+
+            if (searchToggleBtn && searchContainer) {
+                searchToggleBtn.addEventListener('click', (e) => {
+                    searchContainer.classList.toggle('hidden');
+                    
+                    if (!searchContainer.classList.contains('hidden')) {
+                        setTimeout(() => searchInputMobile.focus(), 100);
+                        startSearchTimer(); // Mulai hitungan 5 detik saat dibuka
+                    } else {
+                        clearTimeout(searchTimeout); // Matikan timer jika ditutup manual
+                    }
+                });
+            }
+
+            if (searchInputMobile) {
+                // Kalau user lagi ngetik, timer 5 detiknya di-reset biar nggak tiba-tiba ketutup
+                searchInputMobile.addEventListener('input', startSearchTimer);
+                searchInputMobile.addEventListener('click', startSearchTimer);
+
+                // Eksekusi saat Enter
+                searchInputMobile.addEventListener('keypress', function (e) {
+                    if (e.key === 'Enter') {
+                        window.app.handleSearch();
+                        searchContainer.classList.add('hidden'); 
+                        clearTimeout(searchTimeout);
+                    }
+                });
+            }
+
+            // ==========================================
+            // 3. AUTO-CLOSE SAAT KLIK LUAR / GANTI HALAMAN
+            // ==========================================
+            document.addEventListener('click', (e) => {
+                if (searchContainer && !searchContainer.classList.contains('hidden')) {
+                    // Jika yang diklik BUKAN kotak search dan BUKAN tombol ikon kaca pembesar
+                    if (!searchContainer.contains(e.target) && !searchToggleBtn.contains(e.target)) {
+                        searchContainer.classList.add('hidden'); // Langsung tutup!
+                        clearTimeout(searchTimeout);
+                    }
+                }
+            });
         });
         
         window.addEventListener('popstate', router); 
