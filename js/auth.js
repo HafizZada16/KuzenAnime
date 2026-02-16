@@ -105,11 +105,46 @@ export function showAuthModal(isLogin = true) {
 
 // Logika Proses Register
 export async function handleRegister() {
-  const username = document.getElementById("auth-username").value;
-  const email = document.getElementById("auth-email").value;
+  // Tambahkan .trim() untuk membuang spasi kosong di awal/akhir teks
+  const username = document.getElementById("auth-username").value.trim();
+  const email = document.getElementById("auth-email").value.trim();
   const password = document.getElementById("auth-password").value;
   const errorEl = document.getElementById("auth-error");
 
+  // ==========================================
+  // 1. VALIDASI FRONTEND SEBELUM HIT API
+  // ==========================================
+
+  // A. Validasi Username (Minimal 3 karakter)
+  if (username.length < 3) {
+    errorEl.innerText = "Username minimal harus terdiri dari 3 karakter!";
+    errorEl.classList.remove("hidden");
+    return; // Hentikan proses eksekusi
+  }
+
+  // B. Validasi Email (Format standar: nama@domain.com)
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    errorEl.innerText = "Format email tidak valid (contoh: kuzen@gmail.com)!";
+    errorEl.classList.remove("hidden");
+    return;
+  }
+
+  // C. Validasi Password (Min 8 karakter, minimal 1 huruf & 1 angka)
+  const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d).{8,}$/;
+  if (!passwordRegex.test(password)) {
+    errorEl.innerText =
+      "Password minimal 8 karakter, harus mengandung huruf dan angka!";
+    errorEl.classList.remove("hidden");
+    return;
+  }
+
+  // Jika semua validasi lolos, pastikan tulisan error disembunyikan
+  errorEl.classList.add("hidden");
+
+  // ==========================================
+  // 2. PROSES KIRIM KE BACKEND (API)
+  // ==========================================
   showLoading(true);
   try {
     const res = await fetch(`${USER_API}/register`, {
@@ -122,10 +157,10 @@ export async function handleRegister() {
     if (data.status === "success") {
       showPopup(
         "Registrasi Berhasil!",
-        "Silakan Login dengan akun baru.",
+        "Silakan Login dengan akun barumu.",
         "success",
       );
-      showAuthModal(true); // Lempar ke form login
+      showAuthModal(true); // Lempar user ke form login
     } else {
       errorEl.innerText = data.message;
       errorEl.classList.remove("hidden");
@@ -160,12 +195,31 @@ export async function handleLogin() {
       document.getElementById("auth-modal").remove();
       checkAuthUI(); // Update tampilan navbar
 
-      // Popup sukses login
-      showPopup(
-        "Selamat Datang!",
-        `Halo ${data.user.username}, selamat menonton!`,
-        "success",
-      );
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        icon: "success",
+        title: "Selamat Datang!",
+        text: `Halo ${data.user.username}, selamat menonton!`,
+        background: "#1a1a1a",
+        color: "#ffffff",
+        customClass: {
+          popup: "border border-gray-800 rounded-2xl shadow-2xl mt-16 md:mt-4",
+        },
+      });
+
+      const currentPath = window.location.pathname;
+      if (currentPath === "/mylist" || currentPath === "/history") {
+        // Muat ulang halaman secara halus menggunakan router bawaan
+        if (window.app && typeof window.app.navigateTo === "function") {
+          window.app.navigateTo(currentPath);
+        } else {
+          window.location.reload(); // Fallback jika router gagal
+        }
+      }
     } else {
       errorEl.innerText = data.message;
       errorEl.classList.remove("hidden");
@@ -200,11 +254,33 @@ export function checkAuthUI() {
         localStorage.removeItem("kuzen_token");
         localStorage.removeItem("kuzen_user");
         checkAuthUI();
-        showPopup(
-          "Logout Berhasil",
-          "Sampai jumpa lagi di KuzenAnime!",
-          "info",
-        );
+
+        Swal.fire({
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+          icon: "info",
+          title: "Logout Berhasil",
+          text: "Sampai jumpa lagi di KuzenAnime!",
+          background: "#1a1a1a",
+          color: "#ffffff",
+          customClass: {
+            popup:
+              "border border-gray-800 rounded-2xl shadow-2xl mt-16 md:mt-4",
+          },
+        });
+
+        const currentPath = window.location.pathname;
+        if (currentPath === "/mylist" || currentPath === "/history") {
+          // Muat ulang halaman secara halus menggunakan router bawaan
+          if (window.app && typeof window.app.navigateTo === "function") {
+            window.app.navigateTo(currentPath);
+          } else {
+            window.location.reload(); // Fallback jika router gagal
+          }
+        }
       }
     });
   };
