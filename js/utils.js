@@ -1,9 +1,18 @@
 // Fungsi Loading (Biarkan seperti semula)
 export function showLoading(show) {
   const loader = document.getElementById("loading");
-  if (loader) {
-    if (show) loader.classList.remove("hidden");
-    else loader.classList.add("hidden");
+  const display = document.getElementById("content-display"); // Ambil elemen tempat anime berada
+
+  if (loader && display) {
+    if (show) {
+      // Saat loading mulai: Munculkan spinner, sembunyikan konten
+      loader.classList.remove("hidden");
+      display.classList.add("hidden");
+    } else {
+      // Saat loading selesai: Sembunyikan spinner, munculkan konten baru
+      loader.classList.add("hidden");
+      display.classList.remove("hidden");
+    }
   }
 }
 
