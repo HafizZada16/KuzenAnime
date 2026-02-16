@@ -4,12 +4,34 @@ import { showLoading } from "./utils.js";
 // URL Backend (Sesuaikan jika nanti online)
 import { USER_API } from "./config.js";
 
+// ==========================================
+// HELPER POPUP TEMA KUZENANIME (ORANGE GELAP)
+// ==========================================
+const showPopup = (title, text, icon = "success") => {
+  Swal.fire({
+    title: title,
+    text: text,
+    icon: icon,
+    width: "320px", // Membuat ukuran popup lebih kecil dan pas
+    background: "#1a1a1a",
+    color: "#ffffff",
+    confirmButtonColor: "#ff6600",
+    // imageUrl dihapus agar lebih bersih tanpa logo
+    customClass: {
+      popup: "rounded-3xl", // Memanfaatkan Tailwind agar pinggirannya melengkung halus (ga lancip)
+    },
+    timer: 3000,
+    timerProgressBar: true,
+  });
+};
+
 // Fungsi untuk memunculkan Popup Login / Register
 export function showAuthModal(isLogin = true) {
   // Hapus modal lama jika ada
   const existingModal = document.getElementById("auth-modal");
   if (existingModal) existingModal.remove();
 
+  // INFO: Mengganti class purple-600/500 menjadi warna hex #ff6600 agar matching dengan logo
   const modalHtml = `
     <div id="auth-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fadeIn p-4">
         <div class="bg-[#121212] border border-gray-800 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden relative">
@@ -20,7 +42,7 @@ export function showAuthModal(isLogin = true) {
 
             <div class="p-8">
                 <div class="text-center mb-8">
-                    <div class="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-purple-600/30">
+                    <div class="w-12 h-12 bg-[#ff6600] rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-[#ff6600]/30">
                         <i class="fas ${isLogin ? "fa-sign-in-alt" : "fa-user-plus"} text-white text-xl"></i>
                     </div>
                     <h2 class="text-2xl font-black uppercase tracking-tighter text-white">${isLogin ? "Welcome Back" : "Create Account"}</h2>
@@ -36,7 +58,7 @@ export function showAuthModal(isLogin = true) {
                         <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Username</label>
                         <div class="relative">
                             <i class="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-gray-600"></i>
-                            <input type="text" id="auth-username" required class="w-full bg-gray-900/50 border border-gray-800 rounded-xl py-3 pl-10 pr-4 text-sm text-white focus:border-purple-500 focus:outline-none transition">
+                            <input type="text" id="auth-username" required class="w-full bg-gray-900/50 border border-gray-800 rounded-xl py-3 pl-10 pr-4 text-sm text-white focus:border-[#ff6600] focus:outline-none transition">
                         </div>
                     </div>
                     `
@@ -47,7 +69,7 @@ export function showAuthModal(isLogin = true) {
                         <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Email Address</label>
                         <div class="relative">
                             <i class="fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-gray-600"></i>
-                            <input type="email" id="auth-email" required class="w-full bg-gray-900/50 border border-gray-800 rounded-xl py-3 pl-10 pr-4 text-sm text-white focus:border-purple-500 focus:outline-none transition">
+                            <input type="email" id="auth-email" required class="w-full bg-gray-900/50 border border-gray-800 rounded-xl py-3 pl-10 pr-4 text-sm text-white focus:border-[#ff6600] focus:outline-none transition">
                         </div>
                     </div>
 
@@ -55,13 +77,13 @@ export function showAuthModal(isLogin = true) {
                         <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Password</label>
                         <div class="relative">
                             <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-gray-600"></i>
-                            <input type="password" id="auth-password" required class="w-full bg-gray-900/50 border border-gray-800 rounded-xl py-3 pl-10 pr-4 text-sm text-white focus:border-purple-500 focus:outline-none transition">
+                            <input type="password" id="auth-password" required class="w-full bg-gray-900/50 border border-gray-800 rounded-xl py-3 pl-10 pr-4 text-sm text-white focus:border-[#ff6600] focus:outline-none transition">
                         </div>
                     </div>
 
                     <p id="auth-error" class="text-red-500 text-[10px] font-bold text-center mb-4 hidden"></p>
 
-                    <button type="submit" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-black py-3 rounded-xl uppercase tracking-widest transition shadow-lg shadow-purple-600/20 text-xs">
+                    <button type="submit" class="w-full bg-[#ff6600] hover:bg-[#e65c00] text-white font-black py-3 rounded-xl uppercase tracking-widest transition shadow-lg shadow-[#ff6600]/20 text-xs">
                         ${isLogin ? "Login Now" : "Register"}
                     </button>
                 </form>
@@ -69,7 +91,7 @@ export function showAuthModal(isLogin = true) {
                 <div class="mt-6 text-center">
                     <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
                         ${isLogin ? "Don't have an account?" : "Already have an account?"} 
-                        <span onclick="window.app.showAuthModal(${!isLogin})" class="text-purple-500 hover:text-white cursor-pointer transition ml-1">
+                        <span onclick="window.app.showAuthModal(${!isLogin})" class="text-[#ff6600] hover:text-white cursor-pointer transition ml-1">
                             ${isLogin ? "Register Here" : "Login Here"}
                         </span>
                     </p>
@@ -98,7 +120,11 @@ export async function handleRegister() {
     const data = await res.json();
 
     if (data.status === "success") {
-      alert("Registrasi Berhasil! Silakan Login.");
+      showPopup(
+        "Registrasi Berhasil!",
+        "Silakan Login dengan akun baru.",
+        "success",
+      );
       showAuthModal(true); // Lempar ke form login
     } else {
       errorEl.innerText = data.message;
@@ -133,7 +159,13 @@ export async function handleLogin() {
 
       document.getElementById("auth-modal").remove();
       checkAuthUI(); // Update tampilan navbar
-      alert(`Selamat datang kembali, ${data.user.username}!`);
+
+      // Popup sukses login
+      showPopup(
+        "Selamat Datang!",
+        `Halo ${data.user.username}, selamat menonton!`,
+        "success",
+      );
     } else {
       errorEl.innerText = data.message;
       errorEl.classList.remove("hidden");
@@ -152,13 +184,33 @@ export function checkAuthUI() {
 
   if (user) {
     if (loginBtnDesktop) {
-      loginBtnDesktop.innerHTML = `<i class="fas fa-user-circle text-lg text-purple-500"></i> <span class="ml-1">${user.username}</span>`;
+      // Ganti icon user di navbar menjadi warna orange juga
+      loginBtnDesktop.innerHTML = `<i class="fas fa-user-circle text-lg text-[#ff6600]"></i> <span class="ml-1">${user.username}</span>`;
       loginBtnDesktop.onclick = () => {
-        if (confirm("Apakah Anda yakin ingin Logout?")) {
-          localStorage.removeItem("kuzen_token");
-          localStorage.removeItem("kuzen_user");
-          checkAuthUI();
-        }
+        // Ganti Confirm bawaan dengan SweetAlert2
+        Swal.fire({
+          title: "Konfirmasi Logout",
+          text: "Apakah kamu yakin ingin keluar?",
+          icon: "warning",
+          background: "#1a1a1a",
+          color: "#ffffff",
+          showCancelButton: true,
+          confirmButtonColor: "#ff6600",
+          cancelButtonColor: "#444",
+          confirmButtonText: "Ya, Logout!",
+          cancelButtonText: "Batal",
+        }).then((result) => {
+          if (result.isConfirmed) {
+            localStorage.removeItem("kuzen_token");
+            localStorage.removeItem("kuzen_user");
+            checkAuthUI();
+            showPopup(
+              "Logout Berhasil",
+              "Sampai jumpa lagi di KuzenAnime!",
+              "info",
+            );
+          }
+        });
       };
     }
   } else {

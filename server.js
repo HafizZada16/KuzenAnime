@@ -20,7 +20,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
 const allowedOrigins = [
-  "http://localhost:5500", // Masih izinkan lokal untuk kamu testing
+  "http://localhost:3000", // Masih izinkan lokal untuk kamu testing
   "https://anime.hapizweb.my.id", // Domain utama kamu
 ];
 
