@@ -3,9 +3,15 @@ import { showLoading } from "/js/utils.js";
 
 import { USER_API } from "./config.js";
 
-export async function loadPlayer(epSlug) {
+export async function loadPlayer(epSlug, forceAnimeSlug = null) {
   if (!epSlug) return;
   showLoading(true);
+
+  // Jika tombol yang diklik (dari History) menitipkan slug anime,
+  // langsung timpa localStorage saat ini juga!
+  if (forceAnimeSlug) {
+    localStorage.setItem("current_anime_slug", forceAnimeSlug);
+  }
 
   history.pushState(null, null, `/episode/${epSlug}`);
 

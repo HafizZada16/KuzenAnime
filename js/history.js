@@ -65,7 +65,7 @@ export async function loadHistory() {
 
         html += `
                     <div class="group flex bg-gray-900/50 border border-gray-800 rounded-2xl overflow-hidden hover:border-[#ff6600] transition-all cursor-pointer shadow-lg" 
-                         onclick="app.loadPlayer('${item.episode_slug}')">
+                         onclick="app.loadPlayer('${item.episode_slug}', '${item.anime_slug}')">
                         
                         <div class="w-24 h-32 flex-shrink-0 relative">
                             <img src="${item.anime_thumb}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
