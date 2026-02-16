@@ -90,23 +90,59 @@ export async function loadMyList() {
 
 // Fungsi Hapus dari My List (Global agar bisa dipanggil onclick)
 window.deleteBookmark = async (slug) => {
-  if (!confirm("Hapus anime ini dari My List?")) return;
+  // Ganti confirm() bawaan dengan SweetAlert2 Konfirmasi
+  Swal.fire({
+    title: "Hapus Anime?",
+    text: "Anime ini akan dihapus dari koleksi My List kamu.",
+    icon: "warning",
+    background: "#1a1a1a",
+    color: "#ffffff",
+    showCancelButton: true,
+    confirmButtonColor: "#ff6600",
+    cancelButtonColor: "#444",
+    confirmButtonText: "Ya, Hapus!",
+    cancelButtonText: "Batal",
+    customClass: { popup: "rounded-3xl" }, // Sudut melengkung
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      const token = localStorage.getItem("kuzen_token");
+      try {
+        const res = await fetch(`${USER_API}/bookmarks/toggle`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ anime_slug: slug }),
+        });
+        const apiResult = await res.json();
 
-  const token = localStorage.getItem("kuzen_token");
-  try {
-    const res = await fetch(`${USER_API}/bookmarks/toggle`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ anime_slug: slug }),
-    });
-    const result = await res.json();
-    if (result.status === "success") {
-      loadMyList(); // Refresh halaman
+        if (apiResult.status === "success") {
+          // Popup Sukses Dihapus (Kecil & Rapi)
+          Swal.fire({
+            title: "Dihapus!",
+            text: "Anime telah dihapus dari My List.",
+            icon: "info",
+            width: "320px",
+            background: "#1a1a1a",
+            color: "#ffffff",
+            confirmButtonColor: "#ff6600",
+            customClass: { popup: "rounded-3xl" },
+            timer: 3000,
+            timerProgressBar: true,
+          });
+          loadMyList(); // Refresh halaman agar kartu anime menghilang
+        }
+      } catch (err) {
+        Swal.fire({
+          title: "Error!",
+          text: "Gagal menghapus anime karena masalah server.",
+          icon: "error",
+          background: "#1a1a1a",
+          color: "#ffffff",
+          confirmButtonColor: "#ff6600",
+        });
+      }
     }
-  } catch (err) {
-    alert("Gagal menghapus");
-  }
+  });
 };

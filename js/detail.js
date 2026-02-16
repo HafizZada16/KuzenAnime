@@ -263,7 +263,25 @@ window.handleBookmarkToggle = async (slug, title, thumb) => {
     const result = await res.json();
 
     if (result.status === "success") {
-      initBookmarkButton({ slug, title, thumb });
+      initBookmarkButton({ slug, title, thumb }); // Ubah warna tombol Heart
+
+      // Munculkan Toast SweetAlert2 (Notif kecil di pojok kanan atas)
+      const isAdded = result.action === "added";
+      Swal.fire({
+        toast: true, // Ini sihirnya biar jadi notif kecil
+        position: "top-end", // Muncul di pojok kanan atas
+        showConfirmButton: false, // Hilangkan tombol "OK"
+        timer: 3000, // Hilang otomatis dalam 3 detik
+        timerProgressBar: true, // Garis waktu di bawah notif
+        icon: isAdded ? "success" : "info",
+        title: isAdded ? "Tersimpan!" : "Dihapus!",
+        text: result.message,
+        background: "#1a1a1a",
+        color: "#ffffff",
+        customClass: {
+          popup: "border border-gray-800 rounded-2xl shadow-2xl mt-16 md:mt-4",
+        }, // mt-16 biar tidak ketutup navbar di HP
+      });
     }
   } catch (err) {
     console.error("Error toggle bookmark:", err);
