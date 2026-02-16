@@ -44,7 +44,7 @@ export async function loadDetail(slug, thumbFromHome = null) {
     statusVal.toLowerCase().includes("tamat");
 
   const statusText = isCompleted ? "Completed" : "Ongoing";
-  const statusTextColor = isCompleted ? "text-blue-400" : "text-purple-400";
+  const statusTextColor = isCompleted ? "text-blue-400" : "text-[#ff6600]";
 
   // --- LOGIKA FILTER BATCH & EPISODE REGULER ---
   const batchEpisodes = [];
@@ -128,7 +128,7 @@ export async function loadDetail(slug, thumbFromHome = null) {
 
         <div class="bg-[#121212] border border-gray-800 rounded-3xl p-6 md:p-8 shadow-inner">
             <h2 class="text-xl font-black mb-6 flex items-center gap-3 uppercase tracking-tighter">
-                <i class="fas fa-list-ul text-purple-500"></i> Episode List
+                <i class="fas fa-list-ul text-[#ff6600]"></i> Episode List
             </h2>
 
             ${
@@ -159,7 +159,7 @@ export async function loadDetail(slug, thumbFromHome = null) {
 
             <div>
                 <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4 flex items-center gap-2">
-                    <i class="fas fa-play text-purple-500"></i> Streaming Reguler
+                    <i class="fas fa-play text-[#ff6600]"></i> Streaming Reguler
                 </h3>
                 <div class="flex flex-col gap-3">
                     ${
@@ -167,7 +167,7 @@ export async function loadDetail(slug, thumbFromHome = null) {
                         ? regularEpisodes
                             .map(
                               (ep) => `
-                        <div onclick="app.loadPlayer('${ep.slug}')" class="bg-gray-900/50 hover:bg-purple-600 border border-gray-800 hover:border-purple-400 p-4 rounded-xl cursor-pointer transition-all group">
+                        <div onclick="app.loadPlayer('${ep.slug}')" class="bg-gray-900/50 hover:bg-[#ff6600] border border-gray-800 hover:border-[#ff6600] p-4 rounded-xl cursor-pointer transition-all group">
                             <div class="flex justify-between items-center">
                                 <span class="text-xs font-bold group-hover:text-white transition truncate pr-4 text-gray-300">${ep.title}</span>
                                 <i class="fas fa-play-circle text-gray-700 group-hover:text-white transition text-lg"></i>
@@ -214,7 +214,7 @@ async function initBookmarkButton(animeData) {
   if (!token) {
     container.innerHTML = `
             <button onclick="window.app.showAuthModal(true)" class="bg-gray-800/50 hover:bg-gray-700 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 border border-gray-700">
-                <i class="far fa-heart text-purple-500"></i> Login to Add My List
+                <i class="far fa-heart text-[#ff6600]"></i> Login to Add My List
             </button>`;
     return;
   }
@@ -236,8 +236,8 @@ function renderBookmarkButton(isBookmarked, animeData) {
 
   container.innerHTML = `
         <button onclick="handleBookmarkToggle('${animeData.slug}', '${titleClean}', '${animeData.thumb}')" 
-            class="${isBookmarked ? "bg-purple-600 shadow-purple-600/30" : "bg-gray-800/80"} hover:scale-105 text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-lg border border-white/5">
-            <i class="${isBookmarked ? "fas text-white" : "far text-purple-500"} fa-heart ${isBookmarked ? "animate-pulse" : ""}"></i> 
+            class="${isBookmarked ? "bg-[#ff6600] shadow-[#ff6600]/30" : "bg-gray-800/80"} hover:scale-105 text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-lg border border-white/5">
+            <i class="${isBookmarked ? "fas text-white" : "far text-[#ff6600]"} fa-heart ${isBookmarked ? "animate-pulse" : ""}"></i> 
             ${isBookmarked ? "Saved to My List" : "Add to My List"}
         </button>
     `;

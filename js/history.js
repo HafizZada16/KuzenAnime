@@ -16,11 +16,11 @@ export async function loadHistory() {
     content.innerHTML = `
             <div class="flex flex-col items-center justify-center py-20 animate-fadeIn">
                 <div class="w-20 h-20 bg-gray-900 rounded-full flex items-center justify-center mb-6 border border-gray-800">
-                    <i class="fas fa-history text-purple-500 text-3xl"></i>
+                    <i class="fas fa-history text-[#ff6600] text-3xl"></i>
                 </div>
                 <h2 class="text-xl font-black uppercase tracking-tighter mb-2">Riwayat Terkunci</h2>
                 <p class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-6">Login untuk melihat apa yang terakhir Anda tonton</p>
-                <button onclick="window.app.showAuthModal(true)" class="bg-purple-600 hover:bg-purple-500 text-white px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition shadow-lg shadow-purple-600/20">
+                <button onclick="window.app.showAuthModal(true)" class="bg-[#ff6600] hover:bg-[#ff5500] text-white px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition shadow-lg shadow-[#ff6600]/20">
                     Login Sekarang
                 </button>
             </div>
@@ -41,7 +41,7 @@ export async function loadHistory() {
                 <div class="flex items-center justify-between mb-8">
                     <div>
                         <h2 class="text-2xl md:text-4xl font-black uppercase tracking-tighter italic">Recent Activity</h2>
-                        <p class="text-[10px] text-purple-500 font-black uppercase tracking-[0.3em]">Lanjutkan tontonan Anda</p>
+                        <p class="text-[10px] text-[#ff6600] font-black uppercase tracking-[0.3em]">Lanjutkan tontonan Anda</p>
                     </div>
                 </div>
         `;
@@ -64,23 +64,23 @@ export async function loadHistory() {
         );
 
         html += `
-                    <div class="group flex bg-gray-900/50 border border-gray-800 rounded-2xl overflow-hidden hover:border-purple-500 transition-all cursor-pointer shadow-lg" 
+                    <div class="group flex bg-gray-900/50 border border-gray-800 rounded-2xl overflow-hidden hover:border-[#ff6600] transition-all cursor-pointer shadow-lg" 
                          onclick="app.loadPlayer('${item.episode_slug}')">
                         
                         <div class="w-24 h-32 flex-shrink-0 relative">
                             <img src="${item.anime_thumb}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                            <div class="absolute inset-0 bg-purple-600/20 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                            <div class="absolute inset-0 bg-[#ff6600]/20 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
                                 <i class="fas fa-play text-white text-xs"></i>
                             </div>
                         </div>
 
                         <div class="p-4 flex flex-col justify-center flex-1 min-w-0">
-                            <p class="text-[9px] font-black text-purple-500 uppercase tracking-widest mb-1">${watchDate}</p>
+                            <p class="text-[9px] font-black text-[#ff6600] uppercase tracking-widest mb-1">${watchDate}</p>
                             <h3 class="text-xs font-black text-white truncate uppercase tracking-tighter mb-1">${item.anime_title}</h3>
                             <p class="text-[10px] text-gray-500 font-bold truncate italic">Terakhir: ${item.episode_title.replace("Episode", "EP")}</p>
                             
                             <div class="mt-3 w-full bg-gray-800 h-1 rounded-full overflow-hidden">
-                                <div class="bg-purple-600 h-full w-full opacity-50"></div>
+                                <div class="bg-[#ff6600] h-full w-full opacity-50"></div>
                             </div>
                         </div>
                     </div>

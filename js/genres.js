@@ -56,7 +56,7 @@ export async function loadGenres(selectedGenreSlug = null, page = 1) {
   let html = `
     <div class="animate-fadeIn">
         <div class="flex items-center gap-4 mb-8">
-            <div class="w-12 h-12 bg-purple-600/20 rounded-2xl flex items-center justify-center text-purple-500 shadow-xl">
+            <div class="w-12 h-12 bg-[#ff6600]/20 rounded-2xl flex items-center justify-center text-[#ff6600] shadow-xl">
                 <i class="fas fa-filter text-xl"></i>
             </div>
             <div>
@@ -67,7 +67,7 @@ export async function loadGenres(selectedGenreSlug = null, page = 1) {
 
         <div class="bg-[#121212] border border-gray-800 p-6 rounded-2xl mb-10 shadow-inner">
             <h3 class="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-                <i class="fas fa-layer-group text-purple-500"></i> Available Categories
+                <i class="fas fa-layer-group text-[#ff6600]"></i> Available Categories
             </h3>
             <div class="flex flex-wrap gap-2">
                 ${genres
@@ -76,7 +76,7 @@ export async function loadGenres(selectedGenreSlug = null, page = 1) {
                     return `
                         <button onclick="app.loadGenres('${g.slug}', 1)" 
                             class="px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all duration-300 
-                            ${isSelected ? "bg-purple-600 text-white shadow-lg shadow-purple-600/20" : "bg-gray-900 text-gray-400 border border-gray-800 hover:border-purple-500 hover:text-white"}">
+                            ${isSelected ? "bg-[#ff6600] text-white shadow-lg shadow-[#ff6600]/20" : "bg-gray-900 text-gray-400 border border-gray-800 hover:border-[#ff6600] hover:text-white"}">
                             ${g.name}
                         </button>
                     `;
@@ -147,10 +147,10 @@ function createPaginationGenre(slug, currentPage) {
   return `
     <div class="flex justify-center items-center gap-4 mt-12 mb-8">
         <button onclick="app.loadGenres('${slug}', ${currentPage - 1})" 
-            ${currentPage <= 1 ? 'disabled class="opacity-20 cursor-not-allowed"' : 'class="bg-gray-800 hover:bg-purple-600 px-6 py-2 rounded-xl text-[10px] font-black transition uppercase"'}>Prev</button>
-        <span class="bg-purple-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase shadow-lg shadow-purple-600/20">Page ${currentPage}</span>
+            ${currentPage <= 1 ? 'disabled class="opacity-20 cursor-not-allowed"' : 'class="bg-gray-800 hover:bg-[#ff6600] px-6 py-2 rounded-xl text-[10px] font-black transition uppercase"'}>Prev</button>
+        <span class="bg-[#ff6600] px-4 py-2 rounded-xl text-[10px] font-black uppercase shadow-lg shadow-[#ff6600]/20">Page ${currentPage}</span>
         <button onclick="app.loadGenres('${slug}', ${currentPage + 1})" 
-            class="bg-gray-800 hover:bg-purple-600 px-6 py-2 rounded-xl text-[10px] font-black transition uppercase">Next</button>
+            class="bg-gray-800 hover:bg-[#ff6600] px-6 py-2 rounded-xl text-[10px] font-black transition uppercase">Next</button>
     </div>
   `;
 }
