@@ -61,6 +61,40 @@ export async function loadPlayer(epSlug, forceAnimeSlug = null) {
     ? "720p"
     : qualities[0] || "";
 
+  // 1. Cari posisi/index episode yang sedang ditonton saat ini
+  const currentIndex = regularEpisodes.findIndex((ep) => ep.slug === epSlug);
+
+  // 2. Tentukan episode sebelumnya (jika bukan episode pertama)
+  const prevEp = currentIndex > 0 ? regularEpisodes[currentIndex - 1] : null;
+
+  // 3. Tentukan episode selanjutnya (jika bukan episode terakhir)
+  const nextEp =
+    currentIndex !== -1 && currentIndex < regularEpisodes.length - 1
+      ? regularEpisodes[currentIndex + 1]
+      : null;
+
+  // 4. Rakit HTML Tombol Navigasinya
+  // Kita passing juga `animeSlug` agar masalah "Stale State" History kemarin tidak kumat
+  const navigationHtml = `
+      <div class="flex justify-end items-center gap-2 md:gap-3 mb-6 w-full animate-fadeIn">
+          ${
+            prevEp
+              ? `<button onclick="app.loadPlayer('${prevEp.slug}', '${animeSlug}')" class="bg-gray-800/60 hover:bg-[#ff6600] text-gray-400 hover:text-white py-1.5 px-3 md:px-4 rounded-lg text-[9px] md:text-[10px] font-black uppercase tracking-widest transition flex items-center gap-1.5 border border-gray-700/50 hover:border-[#ff6600] group shadow-sm">
+                  <i class="fas fa-chevron-left text-[8px] group-hover:-translate-x-0.5 transition-transform"></i> <span>Prev</span>
+                 </button>`
+              : `` // Dikosongkan saja jika tidak ada episode sebelumnya
+          }
+          
+          ${
+            nextEp
+              ? `<button onclick="app.loadPlayer('${nextEp.slug}', '${animeSlug}')" class="bg-[#ff6600] hover:bg-[#e65c00] text-white py-1.5 px-3 md:px-4 rounded-lg text-[9px] md:text-[10px] font-black uppercase tracking-widest transition flex items-center gap-1.5 shadow-md shadow-[#ff6600]/20 group border border-[#ff6600]">
+                  <span>Next</span> <i class="fas fa-chevron-right text-[8px] group-hover:translate-x-0.5 transition-transform"></i>
+                 </button>`
+              : `` // Dikosongkan saja jika ini sudah episode terakhir
+          }
+      </div>
+  `;
+
   display.innerHTML = `
     <div class="flex flex-col lg:flex-row gap-6 animate-fadeIn px-1">
         <div class="lg:w-[75%]">
@@ -83,6 +117,8 @@ export async function loadPlayer(epSlug, forceAnimeSlug = null) {
                     <span><i class="fas fa-clock mr-1"></i> ${data.posted || "Updated"}</span>
                 </div>
             </div>
+
+            ${navigationHtml}
 
             <div class="bg-[#121212] border border-gray-800 p-5 rounded-2xl mb-6 shadow-sm">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
