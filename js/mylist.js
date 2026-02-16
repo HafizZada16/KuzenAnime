@@ -16,11 +16,11 @@ export async function loadMyList() {
     content.innerHTML = `
             <div class="flex flex-col items-center justify-center py-20 animate-fadeIn">
                 <div class="w-20 h-20 bg-gray-900 rounded-full flex items-center justify-center mb-6 border border-gray-800">
-                    <i class="fas fa-lock text-purple-500 text-3xl"></i>
+                    <i class="fas fa-lock text-[#ff6600] text-3xl"></i>
                 </div>
                 <h2 class="text-xl font-black uppercase tracking-tighter mb-2">Halaman Terkunci</h2>
                 <p class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-6">Silakan login untuk melihat My List Anda</p>
-                <button onclick="window.app.showAuthModal(true)" class="bg-purple-600 hover:bg-purple-500 text-white px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition shadow-lg shadow-purple-600/20">
+                <button onclick="window.app.showAuthModal(true)" class="bg-[#ff6600] hover:bg-[#ff5500] text-white px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition shadow-lg shadow-[#ff6600]/20">
                     Login Sekarang
                 </button>
             </div>
@@ -40,7 +40,7 @@ export async function loadMyList() {
                 <div class="flex items-center justify-between mb-8">
                     <div>
                         <h2 class="text-2xl md:text-4xl font-black uppercase tracking-tighter italic">My List</h2>
-                        <p class="text-[10px] text-purple-500 font-black uppercase tracking-[0.3em]">Koleksi Anime Favorit Anda</p>
+                        <p class="text-[10px] text-[#ff6600] font-black uppercase tracking-[0.3em]">Koleksi Anime Favorit Anda</p>
                     </div>
                     <div class="bg-gray-900 border border-gray-800 px-4 py-2 rounded-2xl">
                         <span class="text-xs font-black text-white">${result.data.length}</span>
@@ -61,7 +61,7 @@ export async function loadMyList() {
 
       result.data.forEach((item) => {
         html += `
-                    <div class="group relative bg-gray-900 rounded-2xl overflow-hidden border border-gray-800 hover:border-purple-500 transition-all duration-300 shadow-lg">
+                    <div class="group relative bg-gray-900 rounded-2xl overflow-hidden border border-gray-800 hover:border-[#ff6600] transition-all duration-300 shadow-lg">
                         <div class="aspect-[3/4] overflow-hidden cursor-pointer" onclick="app.loadDetail('${item.anime_slug}', '${item.anime_thumb}')">
                             <img src="${item.anime_thumb}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
                             <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80"></div>
