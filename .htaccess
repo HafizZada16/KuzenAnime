@@ -1,9 +1,17 @@
-# Jangan arahkan folder api ke index.html
 RewriteEngine On
+
+# 1. Paksa masuk ke www dan HTTPS (Redirect 301)
+RewriteCond %{HTTP_HOST} ^kuzen\.my\.id [NC]
+RewriteRule ^(.*)$ https://www.kuzen.my.id/$1 [L,R=301]
+
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# 2. Jangan arahkan folder api ke index.html
 RewriteCond %{REQUEST_URI} ^/api [NC]
 RewriteRule .* - [L]
 
-# Sisanya baru arahkan ke index.html (untuk SPA)
+# 3. Sisanya baru arahkan ke index.html (untuk SPA)
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule . /index.html [L]
