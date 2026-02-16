@@ -16,7 +16,7 @@
 <body class="bg-[#0b0b0b] text-white">
     
     <nav class="sticky top-0 z-50 glass border-b border-gray-800/50 p-3">
-        <div class="container mx-auto relative">
+        <div class="container mx-auto relative px-4 md:px-10 lg:px-20">
             <div class="flex flex-row justify-between items-center gap-3">
                 
                 <div class="flex items-center gap-2 cursor-pointer" onclick="app.navigateTo('/')">
@@ -88,7 +88,7 @@
                     <i class="fas fa-sign-in-alt w-5 text-center mr-1"></i> Login
                 </button>
             </div>
-            
+
             <div class="mt-3 md:hidden">
                 <div class="relative w-full">
                     <input type="text" id="search-input-mobile" placeholder="Cari anime favoritmu..." 
@@ -99,7 +99,7 @@
         </div>
     </nav>
 
-    <main class="container mx-auto px-4 py-6 pb-24 md:pb-6">
+    <main class="container mx-auto px-4 md:px-10 lg:px-20 py-6 pb-24 md:pb-6">
         <div id="loading" class="hidden py-40 text-center">
             <div class="inline-block w-10 h-10 border-4 border-[#ff6600] border-t-transparent rounded-full animate-spin"></div>
         </div>
