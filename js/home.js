@@ -8,7 +8,7 @@ export async function loadHome() {
   showLoading(true);
   const data = await fetchData("/home");
   const display = document.getElementById("content-display");
-  display.innerHTML = "";
+  if (display) display.innerHTML = "";
 
   if (data) {
     // 1. Render Hero Slider (Ambil 5 anime pertama dari Ongoing)
@@ -24,7 +24,7 @@ export async function loadHome() {
 }
 
 // ==========================================
-// FITUR BARU: RENDER HERO SLIDER
+// FITUR BARU: RENDER HERO SLIDER (PERBAIKAN DOTS)
 // ==========================================
 function renderHeroSlider(animeList) {
   const display = document.getElementById("content-display");
@@ -33,6 +33,7 @@ function renderHeroSlider(animeList) {
   let dotsHtml = "";
 
   animeList.forEach((anime, index) => {
+    // Slide Aktif Pertama
     const isActive = index === 0 ? "opacity-100 z-10" : "opacity-0 z-0";
 
     slidesHtml += `
@@ -59,10 +60,15 @@ function renderHeroSlider(animeList) {
       </div>
     `;
 
-    // Titik navigasi (dots) - Diperkecil sedikit di HP
-    const dotActive =
-      index === 0 ? "bg-[#ff6600] w-4 md:w-6" : "bg-gray-500 w-1.5 md:w-2";
-    dotsHtml += `<div class="hero-dot h-1.5 md:h-2 rounded-full transition-all duration-300 cursor-pointer ${dotActive}" data-index="${index}"></div>`;
+    // Titik Navigasi (Dots) - PERBAIKAN DI SINI
+    // Jika index 0 (aktif): Lebar (w-6), Warna Orange
+    // Jika index lain: Kecil (w-2), Warna Abu
+    const dotClass =
+      index === 0
+        ? "bg-[#ff6600] w-4 md:w-6"
+        : "bg-gray-500 w-1.5 md:w-2 hover:bg-gray-400";
+
+    dotsHtml += `<div class="hero-dot h-1.5 md:h-2 rounded-full transition-all duration-300 cursor-pointer ${dotClass}" data-index="${index}"></div>`;
   });
 
   const heroContainer = `
@@ -76,7 +82,7 @@ function renderHeroSlider(animeList) {
             <i class="fas fa-chevron-right text-[10px] md:text-lg"></i>
         </button>
 
-        <div class="absolute bottom-2 md:bottom-6 right-3 md:right-6 z-30 flex gap-1.5 md:gap-2">
+        <div class="absolute bottom-2 md:bottom-6 right-3 md:right-6 z-30 flex gap-1.5 md:gap-2 items-center">
             ${dotsHtml}
         </div>
     </div>
@@ -97,31 +103,38 @@ function initHeroSlider(totalSlides) {
 
   if (heroInterval) clearInterval(heroInterval);
 
+  // FUNGSI UPDATE SLIDER (PERBAIKAN LOGIKA DOTS)
   const updateSlider = (newIndex) => {
-    slides[currentSlide].classList.replace("opacity-100", "opacity-0");
-    slides[currentSlide].classList.replace("z-10", "z-0");
-    dots[currentSlide].classList.replace("bg-[#ff6600]", "bg-gray-500");
-    dots[currentSlide].classList.replace("w-6", "w-2");
+    // 1. Matikan Slide & Dot Lama
+    slides[currentSlide].classList.remove("opacity-100", "z-10");
+    slides[currentSlide].classList.add("opacity-0", "z-0");
 
+    // Dot Lama: Jadi Abu & Kecil
+    dots[currentSlide].classList.remove("bg-[#ff6600]", "w-4", "md:w-6");
+    dots[currentSlide].classList.add("bg-gray-500", "w-1.5", "md:w-2");
+
+    // 2. Hitung Index Baru (Looping)
     currentSlide = (newIndex + totalSlides) % totalSlides;
 
-    slides[currentSlide].classList.replace("opacity-0", "opacity-100");
-    slides[currentSlide].classList.replace("z-0", "z-10");
-    dots[currentSlide].classList.replace("bg-gray-500", "bg-[#ff6600]");
-    dots[currentSlide].classList.replace("w-2", "w-6");
+    // 3. Hidupkan Slide & Dot Baru
+    slides[currentSlide].classList.remove("opacity-0", "z-0");
+    slides[currentSlide].classList.add("opacity-100", "z-10");
+
+    // Dot Baru: Jadi Orange & Lebar
+    dots[currentSlide].classList.remove("bg-gray-500", "w-1.5", "md:w-2");
+    dots[currentSlide].classList.add("bg-[#ff6600]", "w-4", "md:w-6");
   };
 
-  const nextSlide = () => updateSlider(currentSlide + 1);
-  const prevSlide = () => updateSlider(currentSlide - 1);
-
+  // Event Listeners
   if (nextBtn)
     nextBtn.addEventListener("click", () => {
-      nextSlide();
+      updateSlider(currentSlide + 1);
       resetInterval();
     });
+
   if (prevBtn)
     prevBtn.addEventListener("click", () => {
-      prevSlide();
+      updateSlider(currentSlide - 1);
       resetInterval();
     });
 
@@ -132,13 +145,15 @@ function initHeroSlider(totalSlides) {
     });
   });
 
+  // Auto Slide
   const startInterval = () => {
     heroInterval = setInterval(() => {
+      // Cek apakah elemen masih ada di DOM (Penting untuk SPA)
       if (!document.querySelector(".hero-slide")) {
         clearInterval(heroInterval);
         return;
       }
-      nextSlide();
+      updateSlider(currentSlide + 1);
     }, 4000);
   };
 
@@ -156,14 +171,17 @@ export async function loadCategory(type, page = 1) {
   history.pushState(null, null, `/${type}?page=${page}`);
   const data = await fetchData(`/${type}?page=${page}`);
   const display = document.getElementById("content-display");
+
   display.innerHTML = `<h2 class="text-xl md:text-2xl font-black mb-6 border-l-4 border-[#ff6600] pl-4 uppercase tracking-tighter">${type} Anime</h2>`;
+
   let html = `<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 md:gap-6">`;
   data.forEach(
     (a) =>
       (html += createAnimeCard(a, `app.loadDetail('${a.slug}', '${a.thumb}')`)),
   );
   html += `</div>` + createPagination(page, type);
-  display.innerHTML = html;
+
+  display.insertAdjacentHTML("beforeend", html); // Pakai insertAdjacentHTML biar judul ga ilang
   showLoading(false);
 }
 
