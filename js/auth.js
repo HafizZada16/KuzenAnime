@@ -1,11 +1,9 @@
 // js/auth.js
 import { showLoading } from "./utils.js";
-
-// URL Backend (Sesuaikan jika nanti online)
 import { USER_API } from "./config.js";
 
 // ==========================================
-// HELPER POPUP TEMA KUZENANIME (ORANGE GELAP)
+// HELPER POPUP TEMA KUZENANIME
 // ==========================================
 const showPopup = (title, text, icon = "success") => {
   Swal.fire({
@@ -16,15 +14,15 @@ const showPopup = (title, text, icon = "success") => {
     background: "#1a1a1a",
     color: "#ffffff",
     confirmButtonColor: "#ff6600",
-    customClass: {
-      popup: "rounded-3xl",
-    },
+    customClass: { popup: "rounded-3xl" },
     timer: 3000,
     timerProgressBar: true,
   });
 };
 
-// Fungsi untuk memunculkan Popup Login / Register
+// ==========================================
+// 1. AUTH MODAL (LOGIN/REGISTER POPUP)
+// ==========================================
 export function showAuthModal(isLogin = true) {
   const existingModal = document.getElementById("auth-modal");
   if (existingModal) existingModal.remove();
@@ -32,10 +30,7 @@ export function showAuthModal(isLogin = true) {
   const modalHtml = `
     <div id="auth-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fadeIn p-4">
         <div class="bg-[#121212] border border-gray-800 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden relative">
-            
-            <button onclick="document.getElementById('auth-modal').remove()" class="absolute top-4 right-4 text-gray-500 hover:text-white transition">
-                <i class="fas fa-times text-xl"></i>
-            </button>
+            <button onclick="document.getElementById('auth-modal').remove()" class="absolute top-4 right-4 text-gray-500 hover:text-white transition"><i class="fas fa-times text-xl"></i></button>
 
             <div class="p-8">
                 <div class="text-center mb-8">
@@ -47,33 +42,28 @@ export function showAuthModal(isLogin = true) {
                 </div>
 
                 <form id="auth-form" onsubmit="event.preventDefault(); window.app.${isLogin ? "handleLogin()" : "handleRegister()"}">
-                    
                     ${
                       !isLogin
                         ? `
                     <div class="mb-4">
                         <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Username</label>
-                        <div class="relative">
-                            <i class="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-gray-600"></i>
+                        <div class="relative"><i class="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-gray-600"></i>
                             <input type="text" id="auth-username" required class="w-full bg-gray-900/50 border border-gray-800 rounded-xl py-3 pl-10 pr-4 text-sm text-white focus:border-[#ff6600] focus:outline-none transition">
                         </div>
-                    </div>
-                    `
+                    </div>`
                         : ""
                     }
 
                     <div class="mb-4">
                         <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Email Address</label>
-                        <div class="relative">
-                            <i class="fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-gray-600"></i>
+                        <div class="relative"><i class="fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-gray-600"></i>
                             <input type="email" id="auth-email" required class="w-full bg-gray-900/50 border border-gray-800 rounded-xl py-3 pl-10 pr-4 text-sm text-white focus:border-[#ff6600] focus:outline-none transition">
                         </div>
                     </div>
 
                     <div class="mb-6">
                         <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Password</label>
-                        <div class="relative">
-                            <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-gray-600"></i>
+                        <div class="relative"><i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-gray-600"></i>
                             <input type="password" id="auth-password" required class="w-full bg-gray-900/50 border border-gray-800 rounded-xl py-3 pl-10 pr-4 text-sm text-white focus:border-[#ff6600] focus:outline-none transition">
                         </div>
                     </div>
@@ -96,41 +86,28 @@ export function showAuthModal(isLogin = true) {
             </div>
         </div>
     </div>`;
-
   document.body.insertAdjacentHTML("beforeend", modalHtml);
 }
 
-// Logika Proses Register
+// ==========================================
+// 2. LOGIKA REGISTER & LOGIN
+// ==========================================
 export async function handleRegister() {
   const username = document.getElementById("auth-username").value.trim();
   const email = document.getElementById("auth-email").value.trim();
   const password = document.getElementById("auth-password").value;
   const errorEl = document.getElementById("auth-error");
 
-  if (username.length < 3) {
-    errorEl.innerText = "Username minimal harus terdiri dari 3 karakter!";
-    errorEl.classList.remove("hidden");
-    return;
-  }
-
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    errorEl.innerText = "Format email tidak valid (contoh: kuzen@gmail.com)!";
-    errorEl.classList.remove("hidden");
-    return;
-  }
-
-  const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d).{8,}$/;
-  if (!passwordRegex.test(password)) {
-    errorEl.innerText =
-      "Password minimal 8 karakter, harus mengandung huruf dan angka!";
-    errorEl.classList.remove("hidden");
-    return;
-  }
+  if (username.length < 3)
+    return showError(errorEl, "Username minimal 3 karakter!");
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+    return showError(errorEl, "Format email tidak valid!");
+  if (!/^(?=.*[a-zA-Z])(?=.*\d).{8,}$/.test(password))
+    return showError(errorEl, "Password min 8 char (Huruf + Angka)!");
 
   errorEl.classList.add("hidden");
-
   showLoading(true);
+
   try {
     const res = await fetch(`${USER_API}/register`, {
       method: "POST",
@@ -140,24 +117,17 @@ export async function handleRegister() {
     const data = await res.json();
 
     if (data.status === "success") {
-      showPopup(
-        "Registrasi Berhasil!",
-        "Silakan Login dengan akun barumu.",
-        "success",
-      );
+      showPopup("Registrasi Berhasil!", "Silakan Login.", "success");
       showAuthModal(true);
     } else {
-      errorEl.innerText = data.message;
-      errorEl.classList.remove("hidden");
+      showError(errorEl, data.message);
     }
   } catch (err) {
-    errorEl.innerText = "Gagal terhubung ke server.";
-    errorEl.classList.remove("hidden");
+    showError(errorEl, "Gagal terhubung ke server.");
   }
   showLoading(false);
 }
 
-// Logika Proses Login
 export async function handleLogin() {
   const email = document.getElementById("auth-email").value;
   const password = document.getElementById("auth-password").value;
@@ -173,10 +143,14 @@ export async function handleLogin() {
     const data = await res.json();
 
     if (data.status === "success") {
+      // 1. Simpan Data
       localStorage.setItem("kuzen_token", data.token);
       localStorage.setItem("kuzen_user", JSON.stringify(data.user));
 
+      // 2. Bersihkan UI
       document.getElementById("auth-modal").remove();
+
+      // 3. Update Navbar (PENTING!)
       checkAuthUI();
 
       Swal.fire({
@@ -187,135 +161,154 @@ export async function handleLogin() {
         timerProgressBar: true,
         icon: "success",
         title: "Selamat Datang!",
-        text: `Halo ${data.user.username}, selamat menonton!`,
+        text: `Halo ${data.user.username}!`,
         background: "#1a1a1a",
         color: "#ffffff",
-        customClass: {
-          popup: "border border-gray-800 rounded-2xl shadow-2xl mt-16 md:mt-4",
-        },
       });
 
+      // 4. Refresh jika di halaman khusus
       const currentPath = window.location.pathname;
       if (currentPath === "/mylist" || currentPath === "/history") {
-        if (window.app && typeof window.app.navigateTo === "function") {
-          window.app.navigateTo(currentPath);
-        } else {
-          window.location.reload();
-        }
+        window.location.reload();
       }
     } else {
-      errorEl.innerText = data.message;
-      errorEl.classList.remove("hidden");
+      showError(errorEl, data.message);
     }
   } catch (err) {
-    errorEl.innerText = "Gagal terhubung ke server.";
-    errorEl.classList.remove("hidden");
+    showError(errorEl, "Gagal terhubung ke server.");
   }
   showLoading(false);
 }
 
+function showError(el, msg) {
+  el.innerText = msg;
+  el.classList.remove("hidden");
+}
+
 // ==========================================
-// FUNGSI LOGOUT GLOBAL
+// 3. LOGIKA LOGOUT (PERBAIKAN UTAMA DI SINI)
 // ==========================================
 window.handleLogout = () => {
   Swal.fire({
-    title: "Konfirmasi Logout",
-    text: "Apakah kamu yakin ingin keluar?",
+    title: "Logout?",
+    text: "Yakin ingin keluar akun?",
     icon: "warning",
     background: "#1a1a1a",
     color: "#ffffff",
     showCancelButton: true,
     confirmButtonColor: "#d33",
     cancelButtonColor: "#444",
-    confirmButtonText: "Ya, Logout!",
+    confirmButtonText: "Ya, Logout",
     cancelButtonText: "Batal",
   }).then((result) => {
     if (result.isConfirmed) {
+      // 1. Hapus Data dari Memory
       localStorage.removeItem("kuzen_token");
       localStorage.removeItem("kuzen_user");
-      checkAuthUI(); // Kembalikan tombol Navbar jadi "Login"
 
+      // 2. PAKSA Reset Tampilan Navbar SEKARANG JUGA
+      checkAuthUI();
+
+      // 3. Notifikasi
       Swal.fire({
         toast: true,
         position: "top-end",
         showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
+        timer: 2000,
         icon: "info",
         title: "Logout Berhasil",
-        text: "Sampai jumpa lagi di KuzenAnime!",
         background: "#1a1a1a",
         color: "#ffffff",
-        customClass: {
-          popup: "border border-gray-800 rounded-2xl shadow-2xl mt-16 md:mt-4",
-        },
       });
 
-      // Kembalikan user ke Home setelah logout
-      if (window.app && typeof window.app.navigateTo === "function") {
-        window.app.navigateTo("/");
-      } else {
-        window.location.href = "/";
-      }
+      // 4. Arahkan ke Home dan RELOAD halaman agar bersih total
+      // Menggunakan replace agar user tidak bisa back ke halaman login
+      setTimeout(() => {
+        window.location.replace("/");
+      }, 500);
     }
   });
 };
 
 // ==========================================
-// LOGIKA RENDER TOMBOL NAVBAR
+// 4. LOGIKA RENDER NAVBAR (ANTI-ZOMBIE)
 // ==========================================
 export function checkAuthUI() {
-  const user = JSON.parse(localStorage.getItem("kuzen_user"));
+  // Cek apakah data user ada dan VALID
+  const userStr = localStorage.getItem("kuzen_user");
+  const token = localStorage.getItem("kuzen_token");
+
+  let user = null;
+  if (userStr && token) {
+    try {
+      user = JSON.parse(userStr);
+    } catch (e) {
+      user = null; // Jika data corrupt, anggap logout
+    }
+  }
+
   const loginBtnDesktop = document.getElementById("nav-login-btn");
   const loginBtnMobile = document.getElementById("nav-login-btn-mobile");
 
-  // Helper untuk membuka halaman profil
+  // Helper pindah halaman
   const goToProfile = () => {
-    if (window.app && typeof window.app.loadProfile === "function") {
+    if (window.app && typeof window.app.loadProfile === "function")
       window.app.loadProfile();
-    } else if (window.app && typeof window.app.navigateTo === "function") {
-      window.app.navigateTo("/profile");
-    }
+    else window.location.href = "/"; // Fallback
   };
 
   if (user) {
-    // 1. JIKA LOGIN: Update Desktop Button -> Arahkan ke Profile
+    // --- MODE LOGIN (Tampilkan Username) ---
+
+    // Desktop
     if (loginBtnDesktop) {
-      loginBtnDesktop.innerHTML = `<i class="fas fa-user-circle text-lg text-[#ff6600]"></i> <span class="ml-1">${user.username}</span>`;
-      loginBtnDesktop.onclick = goToProfile;
+      loginBtnDesktop.innerHTML = `<i class="fas fa-user-circle text-lg text-[#ff6600]"></i> <span class="ml-1 truncate max-w-[100px]">${user.username}</span>`;
+      if (loginBtnDesktop.tagName === "A")
+        loginBtnDesktop.removeAttribute("href");
+      loginBtnDesktop.onclick = (e) => {
+        if (e) e.preventDefault();
+        goToProfile();
+      };
     }
 
-    // 2. JIKA LOGIN: Update Mobile Button -> Arahkan ke Profile
+    // Mobile
     if (loginBtnMobile) {
       loginBtnMobile.innerHTML = `<i class="fas fa-user-circle w-5 text-center mr-1"></i> Profile`;
-      // Kembalikan ke warna orange jika sebelumnya sempat diset merah (saat jadi tombol logout)
       loginBtnMobile.classList.remove("text-red-500");
-      if (!loginBtnMobile.classList.contains("text-[#ff6600]")) {
-        loginBtnMobile.classList.add("text-[#ff6600]");
-      }
-
-      loginBtnMobile.onclick = () => {
+      loginBtnMobile.classList.add("text-[#ff6600]");
+      if (loginBtnMobile.tagName === "A")
+        loginBtnMobile.removeAttribute("href");
+      loginBtnMobile.onclick = (e) => {
+        if (e) e.preventDefault();
         goToProfile();
-        // Tutup otomatis dropdown saat klik profile
         const mobileMenuBtn = document.getElementById("mobile-menu-btn");
         if (mobileMenuBtn) mobileMenuBtn.click();
       };
     }
   } else {
-    // 3. JIKA BELUM LOGIN: Kembalikan tombol ke "Login"
+    // --- MODE LOGOUT (Tampilkan Tombol Login) ---
+    // Pastikan kita MENIMPA konten lama agar tidak ada nama user yang tersisa
+
+    // Desktop
     if (loginBtnDesktop) {
       loginBtnDesktop.innerHTML = `<i class="fas fa-sign-in-alt mr-1"></i> Login`;
-      loginBtnDesktop.onclick = () => window.app.showAuthModal(true);
+      if (loginBtnDesktop.tagName === "A")
+        loginBtnDesktop.removeAttribute("href");
+      loginBtnDesktop.onclick = (e) => {
+        if (e) e.preventDefault();
+        window.app.showAuthModal(true);
+      };
     }
 
+    // Mobile
     if (loginBtnMobile) {
       loginBtnMobile.innerHTML = `<i class="fas fa-sign-in-alt w-5 text-center mr-1"></i> Login`;
       loginBtnMobile.classList.remove("text-red-500");
-      if (!loginBtnMobile.classList.contains("text-[#ff6600]")) {
-        loginBtnMobile.classList.add("text-[#ff6600]");
-      }
-
-      loginBtnMobile.onclick = () => {
+      loginBtnMobile.classList.add("text-[#ff6600]");
+      if (loginBtnMobile.tagName === "A")
+        loginBtnMobile.removeAttribute("href");
+      loginBtnMobile.onclick = (e) => {
+        if (e) e.preventDefault();
         window.app.showAuthModal(true);
         const mobileMenuBtn = document.getElementById("mobile-menu-btn");
         if (mobileMenuBtn) mobileMenuBtn.click();
