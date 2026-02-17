@@ -16,6 +16,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#121212">
+    <link rel="apple-touch-icon" href="/img/icon-192.png">
+
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body class="bg-[#0b0b0b] text-white">
@@ -298,5 +302,16 @@
             }
         };
     </script>
+
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('🔥 KuzenAnime PWA Active! Scope:', reg.scope))
+            .catch(err => console.error('❌ PWA gagal di-load:', err));
+        });
+      }
+    </script>
+
 </body>
 </html>
