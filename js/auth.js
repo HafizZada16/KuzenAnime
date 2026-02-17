@@ -234,7 +234,6 @@ window.handleLogout = () => {
 // 4. LOGIKA RENDER NAVBAR (ANTI-ZOMBIE)
 // ==========================================
 export function checkAuthUI() {
-  // Cek apakah data user ada dan VALID
   const userStr = localStorage.getItem("kuzen_user");
   const token = localStorage.getItem("kuzen_token");
 
@@ -243,18 +242,17 @@ export function checkAuthUI() {
     try {
       user = JSON.parse(userStr);
     } catch (e) {
-      user = null; // Jika data corrupt, anggap logout
+      user = null;
     }
   }
 
   const loginBtnDesktop = document.getElementById("nav-login-btn");
   const loginBtnMobile = document.getElementById("nav-login-btn-mobile");
 
-  // Helper pindah halaman
   const goToProfile = () => {
     if (window.app && typeof window.app.loadProfile === "function")
       window.app.loadProfile();
-    else window.location.href = "/"; // Fallback
+    else window.location.href = "/";
   };
 
   if (user) {
@@ -262,7 +260,12 @@ export function checkAuthUI() {
 
     // Desktop
     if (loginBtnDesktop) {
-      loginBtnDesktop.innerHTML = `<i class="fas fa-user-circle text-lg text-[#ff6600]"></i> <span class="ml-1 truncate max-w-[100px]">${user.username}</span>`;
+      // Hapus uppercase, pakai font Poppins biar estetik
+      loginBtnDesktop.classList.remove("uppercase", "tracking-widest");
+      loginBtnDesktop.classList.add("tracking-wide", "font-['Poppins']");
+
+      loginBtnDesktop.innerHTML = `<i class="fas fa-user-circle text-base text-[#ff6600]"></i> <span class="ml-1.5 truncate max-w-[100px] font-semibold">${user.username}</span>`;
+
       if (loginBtnDesktop.tagName === "A")
         loginBtnDesktop.removeAttribute("href");
       loginBtnDesktop.onclick = (e) => {
@@ -273,9 +276,10 @@ export function checkAuthUI() {
 
     // Mobile
     if (loginBtnMobile) {
-      loginBtnMobile.innerHTML = `<i class="fas fa-user-circle w-5 text-center mr-1"></i> Profile`;
+      loginBtnMobile.innerHTML = `<i class="fas fa-user-circle w-5 text-center mr-1 text-[#ff6600]"></i> <span class="font-['Poppins'] font-semibold truncate max-w-[100px]">${user.username}</span>`;
       loginBtnMobile.classList.remove("text-red-500");
-      loginBtnMobile.classList.add("text-[#ff6600]");
+      loginBtnMobile.classList.add("text-gray-300");
+
       if (loginBtnMobile.tagName === "A")
         loginBtnMobile.removeAttribute("href");
       loginBtnMobile.onclick = (e) => {
@@ -287,11 +291,19 @@ export function checkAuthUI() {
     }
   } else {
     // --- MODE LOGOUT (Tampilkan Tombol Login) ---
-    // Pastikan kita MENIMPA konten lama agar tidak ada nama user yang tersisa
 
     // Desktop
     if (loginBtnDesktop) {
-      loginBtnDesktop.innerHTML = `<i class="fas fa-sign-in-alt mr-1"></i> Login`;
+      // Kembalikan style tombol login
+      loginBtnDesktop.classList.remove("tracking-wide");
+      loginBtnDesktop.classList.add(
+        "uppercase",
+        "tracking-widest",
+        "font-['Poppins']",
+      );
+
+      loginBtnDesktop.innerHTML = `<i class="fas fa-sign-in-alt mr-1"></i> <span class="font-bold">Login</span>`;
+
       if (loginBtnDesktop.tagName === "A")
         loginBtnDesktop.removeAttribute("href");
       loginBtnDesktop.onclick = (e) => {
@@ -302,9 +314,10 @@ export function checkAuthUI() {
 
     // Mobile
     if (loginBtnMobile) {
-      loginBtnMobile.innerHTML = `<i class="fas fa-sign-in-alt w-5 text-center mr-1"></i> Login`;
+      loginBtnMobile.innerHTML = `<i class="fas fa-sign-in-alt w-5 text-center mr-1 text-[#ff6600]"></i> <span class="font-['Poppins'] font-bold uppercase tracking-widest">Login</span>`;
       loginBtnMobile.classList.remove("text-red-500");
-      loginBtnMobile.classList.add("text-[#ff6600]");
+      loginBtnMobile.classList.add("text-gray-300");
+
       if (loginBtnMobile.tagName === "A")
         loginBtnMobile.removeAttribute("href");
       loginBtnMobile.onclick = (e) => {
