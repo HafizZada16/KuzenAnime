@@ -12,13 +12,12 @@ const showPopup = (title, text, icon = "success") => {
     title: title,
     text: text,
     icon: icon,
-    width: "320px", // Membuat ukuran popup lebih kecil dan pas
+    width: "320px",
     background: "#1a1a1a",
     color: "#ffffff",
     confirmButtonColor: "#ff6600",
-    // imageUrl dihapus agar lebih bersih tanpa logo
     customClass: {
-      popup: "rounded-3xl", // Memanfaatkan Tailwind agar pinggirannya melengkung halus (ga lancip)
+      popup: "rounded-3xl",
     },
     timer: 3000,
     timerProgressBar: true,
@@ -27,11 +26,9 @@ const showPopup = (title, text, icon = "success") => {
 
 // Fungsi untuk memunculkan Popup Login / Register
 export function showAuthModal(isLogin = true) {
-  // Hapus modal lama jika ada
   const existingModal = document.getElementById("auth-modal");
   if (existingModal) existingModal.remove();
 
-  // INFO: Mengganti class purple-600/500 menjadi warna hex #ff6600 agar matching dengan logo
   const modalHtml = `
     <div id="auth-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fadeIn p-4">
         <div class="bg-[#121212] border border-gray-800 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden relative">
@@ -105,24 +102,17 @@ export function showAuthModal(isLogin = true) {
 
 // Logika Proses Register
 export async function handleRegister() {
-  // Tambahkan .trim() untuk membuang spasi kosong di awal/akhir teks
   const username = document.getElementById("auth-username").value.trim();
   const email = document.getElementById("auth-email").value.trim();
   const password = document.getElementById("auth-password").value;
   const errorEl = document.getElementById("auth-error");
 
-  // ==========================================
-  // 1. VALIDASI FRONTEND SEBELUM HIT API
-  // ==========================================
-
-  // A. Validasi Username (Minimal 3 karakter)
   if (username.length < 3) {
     errorEl.innerText = "Username minimal harus terdiri dari 3 karakter!";
     errorEl.classList.remove("hidden");
-    return; // Hentikan proses eksekusi
+    return;
   }
 
-  // B. Validasi Email (Format standar: nama@domain.com)
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
     errorEl.innerText = "Format email tidak valid (contoh: kuzen@gmail.com)!";
@@ -130,7 +120,6 @@ export async function handleRegister() {
     return;
   }
 
-  // C. Validasi Password (Min 8 karakter, minimal 1 huruf & 1 angka)
   const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d).{8,}$/;
   if (!passwordRegex.test(password)) {
     errorEl.innerText =
@@ -139,12 +128,8 @@ export async function handleRegister() {
     return;
   }
 
-  // Jika semua validasi lolos, pastikan tulisan error disembunyikan
   errorEl.classList.add("hidden");
 
-  // ==========================================
-  // 2. PROSES KIRIM KE BACKEND (API)
-  // ==========================================
   showLoading(true);
   try {
     const res = await fetch(`${USER_API}/register`, {
@@ -160,7 +145,7 @@ export async function handleRegister() {
         "Silakan Login dengan akun barumu.",
         "success",
       );
-      showAuthModal(true); // Lempar user ke form login
+      showAuthModal(true);
     } else {
       errorEl.innerText = data.message;
       errorEl.classList.remove("hidden");
@@ -188,12 +173,11 @@ export async function handleLogin() {
     const data = await res.json();
 
     if (data.status === "success") {
-      // Simpan token dan data user di LocalStorage
       localStorage.setItem("kuzen_token", data.token);
       localStorage.setItem("kuzen_user", JSON.stringify(data.user));
 
       document.getElementById("auth-modal").remove();
-      checkAuthUI(); // Update tampilan navbar
+      checkAuthUI();
 
       Swal.fire({
         toast: true,
@@ -213,11 +197,10 @@ export async function handleLogin() {
 
       const currentPath = window.location.pathname;
       if (currentPath === "/mylist" || currentPath === "/history") {
-        // Muat ulang halaman secara halus menggunakan router bawaan
         if (window.app && typeof window.app.navigateTo === "function") {
           window.app.navigateTo(currentPath);
         } else {
-          window.location.reload(); // Fallback jika router gagal
+          window.location.reload();
         }
       }
     } else {
@@ -231,75 +214,95 @@ export async function handleLogin() {
   showLoading(false);
 }
 
-// Cek apakah user sudah login untuk mengubah tombol di Navbar Desktop & Mobile
+// ==========================================
+// FUNGSI LOGOUT GLOBAL
+// ==========================================
+window.handleLogout = () => {
+  Swal.fire({
+    title: "Konfirmasi Logout",
+    text: "Apakah kamu yakin ingin keluar?",
+    icon: "warning",
+    background: "#1a1a1a",
+    color: "#ffffff",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#444",
+    confirmButtonText: "Ya, Logout!",
+    cancelButtonText: "Batal",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      localStorage.removeItem("kuzen_token");
+      localStorage.removeItem("kuzen_user");
+      checkAuthUI(); // Kembalikan tombol Navbar jadi "Login"
+
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        icon: "info",
+        title: "Logout Berhasil",
+        text: "Sampai jumpa lagi di KuzenAnime!",
+        background: "#1a1a1a",
+        color: "#ffffff",
+        customClass: {
+          popup: "border border-gray-800 rounded-2xl shadow-2xl mt-16 md:mt-4",
+        },
+      });
+
+      // Kembalikan user ke Home setelah logout
+      if (window.app && typeof window.app.navigateTo === "function") {
+        window.app.navigateTo("/");
+      } else {
+        window.location.href = "/";
+      }
+    }
+  });
+};
+
+// ==========================================
+// LOGIKA RENDER TOMBOL NAVBAR
+// ==========================================
 export function checkAuthUI() {
   const user = JSON.parse(localStorage.getItem("kuzen_user"));
   const loginBtnDesktop = document.getElementById("nav-login-btn");
-  const loginBtnMobile = document.getElementById("nav-login-btn-mobile"); // Ambil elemen dropdown mobile
+  const loginBtnMobile = document.getElementById("nav-login-btn-mobile");
 
-  const handleLogoutClick = () => {
-    Swal.fire({
-      title: "Konfirmasi Logout",
-      text: "Apakah kamu yakin ingin keluar?",
-      icon: "warning",
-      background: "#1a1a1a",
-      color: "#ffffff",
-      showCancelButton: true,
-      confirmButtonColor: "#ff6600",
-      cancelButtonColor: "#444",
-      confirmButtonText: "Ya, Logout!",
-      cancelButtonText: "Batal",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        localStorage.removeItem("kuzen_token");
-        localStorage.removeItem("kuzen_user");
-        checkAuthUI();
-
-        Swal.fire({
-          toast: true,
-          position: "top-end",
-          showConfirmButton: false,
-          timer: 3000,
-          timerProgressBar: true,
-          icon: "info",
-          title: "Logout Berhasil",
-          text: "Sampai jumpa lagi di KuzenAnime!",
-          background: "#1a1a1a",
-          color: "#ffffff",
-          customClass: {
-            popup:
-              "border border-gray-800 rounded-2xl shadow-2xl mt-16 md:mt-4",
-          },
-        });
-
-        const currentPath = window.location.pathname;
-        if (currentPath === "/mylist" || currentPath === "/history") {
-          // Muat ulang halaman secara halus menggunakan router bawaan
-          if (window.app && typeof window.app.navigateTo === "function") {
-            window.app.navigateTo(currentPath);
-          } else {
-            window.location.reload(); // Fallback jika router gagal
-          }
-        }
-      }
-    });
+  // Helper untuk membuka halaman profil
+  const goToProfile = () => {
+    if (window.app && typeof window.app.loadProfile === "function") {
+      window.app.loadProfile();
+    } else if (window.app && typeof window.app.navigateTo === "function") {
+      window.app.navigateTo("/profile");
+    }
   };
 
   if (user) {
-    // 1. Update Desktop Button
+    // 1. JIKA LOGIN: Update Desktop Button -> Arahkan ke Profile
     if (loginBtnDesktop) {
       loginBtnDesktop.innerHTML = `<i class="fas fa-user-circle text-lg text-[#ff6600]"></i> <span class="ml-1">${user.username}</span>`;
-      loginBtnDesktop.onclick = handleLogoutClick;
+      loginBtnDesktop.onclick = goToProfile;
     }
 
-    // 2. Update Mobile Button (Jadikan Logout)
+    // 2. JIKA LOGIN: Update Mobile Button -> Arahkan ke Profile
     if (loginBtnMobile) {
-      loginBtnMobile.innerHTML = `<i class="fas fa-sign-out-alt w-5 text-center mr-1"></i> Logout`;
-      loginBtnMobile.classList.replace("text-[#ff6600]", "text-red-500"); // Ganti warna jadi merah
-      loginBtnMobile.onclick = handleLogoutClick;
+      loginBtnMobile.innerHTML = `<i class="fas fa-user-circle w-5 text-center mr-1"></i> Profile`;
+      // Kembalikan ke warna orange jika sebelumnya sempat diset merah (saat jadi tombol logout)
+      loginBtnMobile.classList.remove("text-red-500");
+      if (!loginBtnMobile.classList.contains("text-[#ff6600]")) {
+        loginBtnMobile.classList.add("text-[#ff6600]");
+      }
+
+      loginBtnMobile.onclick = () => {
+        goToProfile();
+        // Tutup otomatis dropdown saat klik profile
+        const mobileMenuBtn = document.getElementById("mobile-menu-btn");
+        if (mobileMenuBtn) mobileMenuBtn.click();
+      };
     }
   } else {
-    // Jika belum login
+    // 3. JIKA BELUM LOGIN: Kembalikan tombol ke "Login"
     if (loginBtnDesktop) {
       loginBtnDesktop.innerHTML = `<i class="fas fa-sign-in-alt mr-1"></i> Login`;
       loginBtnDesktop.onclick = () => window.app.showAuthModal(true);
@@ -307,11 +310,15 @@ export function checkAuthUI() {
 
     if (loginBtnMobile) {
       loginBtnMobile.innerHTML = `<i class="fas fa-sign-in-alt w-5 text-center mr-1"></i> Login`;
-      loginBtnMobile.classList.replace("text-red-500", "text-[#ff6600]"); // Kembalikan ke warna orange
+      loginBtnMobile.classList.remove("text-red-500");
+      if (!loginBtnMobile.classList.contains("text-[#ff6600]")) {
+        loginBtnMobile.classList.add("text-[#ff6600]");
+      }
+
       loginBtnMobile.onclick = () => {
         window.app.showAuthModal(true);
-        // Tutup otomatis dropdown saat klik login
-        document.getElementById("mobile-menu-btn").click();
+        const mobileMenuBtn = document.getElementById("mobile-menu-btn");
+        if (mobileMenuBtn) mobileMenuBtn.click();
       };
     }
   }

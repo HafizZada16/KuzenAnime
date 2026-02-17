@@ -150,7 +150,8 @@
         import { loadGenres } from '/js/genres.js';
         import { loadBatch } from '/js/batch.js';
         import { loadMyList } from '/js/mylist.js';
-        import { loadHistory } from '/js/history.js'; // Import History
+        import { loadHistory } from '/js/history.js';
+        import { loadProfile } from "/js/profile.js";
 
         const navigateTo = (path) => { history.pushState(null, null, path); router(); };
         
@@ -172,7 +173,8 @@
             else if (path === '/schedule') await loadSchedule();
             else if (path === '/genres') await loadGenres();
             else if (path === '/mylist') await loadMyList();
-            else if (path === '/history') await loadHistory(); // Router History
+            else if (path === '/history') await loadHistory();
+            else if (path === '/profile') await loadProfile();
             else if (path.startsWith('/anime/')) await loadDetail(path.split('/')[2]);
             else if (path.startsWith('/episode/')) await loadPlayer(path.split('/')[2]);
             else if (path.startsWith('/genres/')) await loadGenres(path.split('/')[2]);
@@ -182,7 +184,7 @@
         window.app = { 
             showAuthModal, handleLogin, handleRegister, navigateTo, loadCategory, 
             handleSearch, loadDetail, loadPlayer, switchServer, changeQuality, 
-            loadSchedule, loadGenres, loadBatch, loadMyList, loadHistory 
+            loadSchedule, loadGenres, loadBatch, loadMyList, loadHistory, loadProfile
         };
         
         // LOGIKA MENU HAMBURGER MOBILE

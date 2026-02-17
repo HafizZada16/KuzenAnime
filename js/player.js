@@ -25,7 +25,26 @@ export async function loadPlayer(epSlug, forceAnimeSlug = null) {
     return;
   }
 
-  let animeSlug = localStorage.getItem("current_anime_slug");
+  let animeSlug = forceAnimeSlug;
+
+  // Prioritas 2: Kalau tidak ada titipan (masuk dari Direct Link WA/Share),
+  if (!animeSlug) {
+    try {
+      // Tembak endpoint Sanka khusus episode secara diam-diam
+      const sankaRes = await fetch(
+        `https://www.sankavollerei.com/anime/episode/${epSlug}`,
+      );
+
+      if (sankaRes.ok) {
+        const sankaJson = await sankaRes.json();
+        if (sankaJson.data && sankaJson.data.animeId) {
+          animeSlug = sankaJson.data.animeId;
+        }
+      }
+    } catch (e) {
+      console.warn("Sanka API gagal dihubungi, lanjut pakai fallback.");
+    }
+  }
 
   if (!animeSlug) {
     if (data.anime_url) {
@@ -34,6 +53,8 @@ export async function loadPlayer(epSlug, forceAnimeSlug = null) {
       animeSlug = epSlug.split("-episode-")[0] + "-sub-indo";
     }
   }
+
+  localStorage.setItem("current_anime_slug", animeSlug);
 
   const animeData = await fetchData(`/anime/${animeSlug}`);
 
