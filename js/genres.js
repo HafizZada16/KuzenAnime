@@ -1,19 +1,20 @@
 import { fetchData } from "./api.js";
-import { showLoading, createAnimeCard } from "./utils.js";
+import { showLoading, createAnimeCard, createSkeletonGrid } from "./utils.js"; // Pastikan createSkeletonGrid di-import!
 
 export async function loadGenres(selectedGenreSlug = null, page = 1) {
-  showLoading(true);
+  // 1. Matikan loading spinner bawaan
+  showLoading(false);
 
-  // Update URL browser agar bisa di-bookmark atau back button
+  // Update URL browser
   const url = selectedGenreSlug
     ? `/genres/${selectedGenreSlug}?page=${page}`
     : "/genres";
   history.pushState(null, null, url);
 
   const display = document.getElementById("content-display");
-  if (display) display.innerHTML = "";
+  if (!display) return;
 
-  // Ambil daftar genre dari API (atau gunakan list manual agar cepat)
+  // Daftar genre statis
   const genres = [
     { name: "Action", slug: "action" },
     { name: "Adventure", slug: "adventure" },
@@ -53,14 +54,15 @@ export async function loadGenres(selectedGenreSlug = null, page = 1) {
     { name: "Vampire", slug: "vampire" },
   ];
 
-  let html = `
+  // 2. RENDER HEADER & TOMBOL GENRE SECARA INSTAN (Tanpa nunggu API)
+  let topHtml = `
     <div class="animate-fadeIn">
         <div class="flex items-center gap-4 mb-8">
             <div class="w-12 h-12 bg-[#ff6600]/20 rounded-2xl flex items-center justify-center text-[#ff6600] shadow-xl">
                 <i class="fas fa-filter text-xl"></i>
             </div>
             <div>
-                <h1 class="text-3xl font-black uppercase tracking-tighter">Browse by Genre</h1>
+                <h1 class="text-3xl font-black uppercase tracking-tighter text-white">Browse by Genre</h1>
                 <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Find your favorite categories</p>
             </div>
         </div>
@@ -74,83 +76,106 @@ export async function loadGenres(selectedGenreSlug = null, page = 1) {
                   .map((g) => {
                     const isSelected = selectedGenreSlug === g.slug;
                     return `
-                        <button onclick="app.loadGenres('${g.slug}', 1)" 
-                            class="px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all duration-300 
-                            ${isSelected ? "bg-[#ff6600] text-white shadow-lg shadow-[#ff6600]/20" : "bg-gray-900 text-gray-400 border border-gray-800 hover:border-[#ff6600] hover:text-white"}">
-                            ${g.name}
-                        </button>
-                    `;
+                      <button onclick="app.loadGenres('${g.slug}', 1)" 
+                          class="px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all duration-300 
+                          ${isSelected ? "bg-[#ff6600] text-white shadow-lg shadow-[#ff6600]/20" : "bg-gray-900 text-gray-400 border border-gray-800 hover:border-[#ff6600] hover:text-white"}">
+                          ${g.name}
+                      </button>
+                  `;
                   })
                   .join("")}
             </div>
         </div>
   `;
 
+  // 3. TENTUKAN ISI KONTEN BAWAH (Skeleton atau Teks Kosong)
+  let contentHtml = "";
   if (selectedGenreSlug) {
-    const data = await fetchData(`/genres/${selectedGenreSlug}?page=${page}`);
     const genreName =
       genres.find((g) => g.slug === selectedGenreSlug)?.name ||
       selectedGenreSlug;
 
-    if (data && data.length > 0) {
-      html += `
-        <div class="flex justify-between items-center mb-6 px-1">
-            <h2 class="text-xl font-black uppercase tracking-tighter">${genreName} <span class="text-gray-600 ml-1 font-normal italic text-lg">Anime</span></h2>
-            <span class="bg-gray-900 text-gray-500 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border border-gray-800">PAGE ${page}</span>
+    // TAMPILKAN SKELETON GRID SAAT USER KLIK GENRE TERTENTU
+    contentHtml = `
+        <div id="genre-content-area">
+            <div class="flex justify-between items-center mb-6 px-1">
+                <h2 class="text-xl font-black uppercase tracking-tighter text-white">${genreName} <span class="text-gray-600 ml-1 font-normal italic text-lg">Anime</span></h2>
+                <span class="bg-gray-900 text-gray-500 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border border-gray-800 animate-pulse">MEMUAT...</span>
+            </div>
+            ${createSkeletonGrid(12)}
         </div>
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 md:gap-6">
-      `;
-
-      data.forEach((anime) => {
-        const ratingVal = anime.rating || anime.score;
-
-        // Cek apakah rating valid (ada isinya dan bukan tanda strip)
-        if (ratingVal && ratingVal.trim() !== "" && ratingVal !== "-") {
-          // Jika ada rating, tampilkan angkanya (misal: 8.5)
-          anime.extra = ratingVal;
-        } else {
-          // Jika data rating kosong/tidak ada, tampilkan teks "Completed"
-          anime.extra = "Completed";
-        }
-
-        // Render kartunya
-        const imageUrl = anime.thumb || anime.thumbnail || "";
-        html += createAnimeCard(
-          anime,
-          `app.loadDetail('${anime.slug}', '${imageUrl}')`,
-        );
-      });
-
-      html += `</div>`;
-      html += createPaginationGenre(selectedGenreSlug, page);
-    } else {
-      html += `
-        <div class="text-center py-20 bg-gray-900/20 rounded-3xl border border-dashed border-gray-800">
-            <i class="fas fa-search text-gray-700 text-4xl mb-4"></i>
-            <p class="text-gray-500 font-bold uppercase text-[10px] tracking-widest">No anime found in this category</p>
-        </div>`;
-    }
+    </div>`; // Tutup tag dari topHtml
   } else {
-    // Tampilan awal saat belum pilih genre
-    html += `
-        <div class="text-center py-20">
+    // Tampilan awal sebelum klik apa-apa
+    contentHtml = `
+        <div id="genre-content-area" class="text-center py-20">
             <p class="text-gray-600 font-bold uppercase text-[10px] tracking-[0.3em]">Please select a category above to start browsing</p>
-        </div>`;
+        </div>
+    </div>`;
   }
 
-  html += `</div>`;
-  display.innerHTML = html;
-  showLoading(false);
+  // Masukkan tombol dan skeleton ke layar secara instan!
+  display.innerHTML = topHtml + contentHtml;
+
+  // 4. JIKA ADA GENRE YANG DIKLIK, AMBIL DATA API & TIMPA SKELETON
+  if (selectedGenreSlug) {
+    try {
+      const data = await fetchData(`/genres/${selectedGenreSlug}?page=${page}`);
+      const contentArea = document.getElementById("genre-content-area");
+
+      if (!contentArea) return; // Mencegah error kalau user pindah menu terlalu cepat
+
+      if (data && data.length > 0) {
+        const genreName =
+          genres.find((g) => g.slug === selectedGenreSlug)?.name ||
+          selectedGenreSlug;
+
+        let finalHtml = `
+            <div class="flex justify-between items-center mb-6 px-1 animate-fadeIn">
+                <h2 class="text-xl font-black uppercase tracking-tighter text-white">${genreName} <span class="text-gray-600 ml-1 font-normal italic text-lg">Anime</span></h2>
+                <span class="bg-gray-900 text-gray-500 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border border-gray-800">PAGE ${page}</span>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 md:gap-6 animate-fadeIn">
+        `;
+
+        data.forEach((anime) => {
+          const ratingVal = anime.rating || anime.score;
+          if (ratingVal && ratingVal.trim() !== "" && ratingVal !== "-") {
+            anime.extra = ratingVal;
+          } else {
+            anime.extra = "Completed";
+          }
+
+          const imageUrl = anime.thumb || anime.thumbnail || "";
+          finalHtml += createAnimeCard(
+            anime,
+            `app.loadDetail('${anime.slug}', '${imageUrl}')`,
+          );
+        });
+
+        finalHtml += `</div>` + createPaginationGenre(selectedGenreSlug, page);
+        contentArea.innerHTML = finalHtml; // Menimpa Skeleton dengan data asli
+      } else {
+        contentArea.innerHTML = `
+            <div class="text-center py-20 bg-gray-900/20 rounded-3xl border border-dashed border-gray-800 animate-fadeIn">
+                <i class="fas fa-search text-gray-700 text-4xl mb-4"></i>
+                <p class="text-gray-500 font-bold uppercase text-[10px] tracking-widest">No anime found in this category</p>
+            </div>`;
+      }
+    } catch (error) {
+      console.error("Genre fetch error:", error);
+    }
+  }
 }
 
 function createPaginationGenre(slug, currentPage) {
   return `
     <div class="flex justify-center items-center gap-4 mt-12 mb-8">
         <button onclick="app.loadGenres('${slug}', ${currentPage - 1})" 
-            ${currentPage <= 1 ? 'disabled class="opacity-20 cursor-not-allowed"' : 'class="bg-gray-800 hover:bg-[#ff6600] px-6 py-2 rounded-xl text-[10px] font-black transition uppercase"'}>Prev</button>
-        <span class="bg-[#ff6600] px-4 py-2 rounded-xl text-[10px] font-black uppercase shadow-lg shadow-[#ff6600]/20">Page ${currentPage}</span>
+            ${currentPage <= 1 ? 'disabled class="opacity-20 cursor-not-allowed"' : 'class="bg-gray-800 hover:bg-[#ff6600] text-white px-6 py-2 rounded-xl text-[10px] font-black transition uppercase"'}>Prev</button>
+        <span class="bg-[#ff6600] text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase shadow-lg shadow-[#ff6600]/20">Page ${currentPage}</span>
         <button onclick="app.loadGenres('${slug}', ${currentPage + 1})" 
-            class="bg-gray-800 hover:bg-[#ff6600] px-6 py-2 rounded-xl text-[10px] font-black transition uppercase">Next</button>
+            class="bg-gray-800 hover:bg-[#ff6600] text-white px-6 py-2 rounded-xl text-[10px] font-black transition uppercase">Next</button>
     </div>
   `;
 }

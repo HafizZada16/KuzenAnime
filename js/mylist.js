@@ -1,9 +1,9 @@
-import { showLoading } from "./utils.js";
-
+import { showLoading, createSkeletonGrid } from "./utils.js"; // Pastikan createSkeletonGrid di-import
 import { USER_API } from "./config.js";
 
 export async function loadMyList() {
-  showLoading(true);
+  // 1. Matikan loading spinner bawaan
+  showLoading(false);
 
   // Ubah URL browser tanpa reload
   history.pushState(null, null, "/mylist");
@@ -11,35 +11,52 @@ export async function loadMyList() {
   const content = document.getElementById("content-display");
   const token = localStorage.getItem("kuzen_token");
 
-  // Jika belum login, arahkan ke login
+  // Jika belum login, arahkan ke login (Instan, tanpa skeleton)
   if (!token) {
     content.innerHTML = `
             <div class="flex flex-col items-center justify-center py-20 animate-fadeIn">
                 <div class="w-20 h-20 bg-gray-900 rounded-full flex items-center justify-center mb-6 border border-gray-800">
                     <i class="fas fa-lock text-[#ff6600] text-3xl"></i>
                 </div>
-                <h2 class="text-xl font-black uppercase tracking-tighter mb-2">Halaman Terkunci</h2>
+                <h2 class="text-xl font-black uppercase tracking-tighter mb-2 text-white">Halaman Terkunci</h2>
                 <p class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-6">Silakan login untuk melihat My List Anda</p>
                 <button onclick="window.app.showAuthModal(true)" class="bg-[#ff6600] hover:bg-[#ff5500] text-white px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition shadow-lg shadow-[#ff6600]/20">
                     Login Sekarang
                 </button>
             </div>
         `;
-    showLoading(false);
     return;
   }
 
+  // 2. TAMPILKAN SKELETON JIKA USER SUDAH LOGIN
+  if (content) {
+    content.innerHTML = `
+        <div class="animate-fadeIn">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h2 class="text-2xl md:text-4xl font-black uppercase tracking-tighter italic text-gray-500 animate-pulse">My List</h2>
+                    <p class="text-[10px] text-gray-700 font-black uppercase tracking-[0.3em] animate-pulse">Memuat Koleksi...</p>
+                </div>
+                <div class="bg-gray-900 border border-gray-800 px-4 py-2 rounded-2xl animate-pulse h-10 w-20"></div>
+            </div>
+            ${createSkeletonGrid(10)}
+        </div>
+    `;
+  }
+
   try {
+    // 3. Ambil data asli dari API
     const res = await fetch(`${USER_API}/bookmarks`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const result = await res.json();
 
+    // 4. TIMPA SKELETON DENGAN DATA ASLI
     let html = `
             <div class="animate-fadeIn">
                 <div class="flex items-center justify-between mb-8">
                     <div>
-                        <h2 class="text-2xl md:text-4xl font-black uppercase tracking-tighter italic">My List</h2>
+                        <h2 class="text-2xl md:text-4xl font-black uppercase tracking-tighter italic text-white">My List</h2>
                         <p class="text-[10px] text-[#ff6600] font-black uppercase tracking-[0.3em]">Koleksi Anime Favorit Anda</p>
                     </div>
                     <div class="bg-gray-900 border border-gray-800 px-4 py-2 rounded-2xl">
@@ -57,6 +74,7 @@ export async function loadMyList() {
                 </div>
             `;
     } else {
+      // Wrapper grid ditutup di bawah
       html += `<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">`;
 
       result.data.forEach((item) => {
@@ -81,16 +99,17 @@ export async function loadMyList() {
     }
 
     html += `</div>`;
-    content.innerHTML = html;
+    if (content) content.innerHTML = html;
   } catch (err) {
-    content.innerHTML = `<p class="text-center text-red-500 py-20">Gagal memuat My List.</p>`;
+    if (content)
+      content.innerHTML = `<p class="text-center text-red-500 py-20 font-bold uppercase tracking-widest text-[10px]">Gagal memuat My List.</p>`;
   }
-  showLoading(false);
 }
 
-// Fungsi Hapus dari My List (Global agar bisa dipanggil onclick)
+// ==========================================
+// FUNGSI HAPUS BOOKMARK (Tetap sama)
+// ==========================================
 window.deleteBookmark = async (slug) => {
-  // Ganti confirm() bawaan dengan SweetAlert2 Konfirmasi
   Swal.fire({
     title: "Hapus Anime?",
     text: "Anime ini akan dihapus dari koleksi My List kamu.",
@@ -102,7 +121,7 @@ window.deleteBookmark = async (slug) => {
     cancelButtonColor: "#444",
     confirmButtonText: "Ya, Hapus!",
     cancelButtonText: "Batal",
-    customClass: { popup: "rounded-3xl" }, // Sudut melengkung
+    customClass: { popup: "rounded-3xl" },
   }).then(async (result) => {
     if (result.isConfirmed) {
       const token = localStorage.getItem("kuzen_token");
@@ -118,7 +137,6 @@ window.deleteBookmark = async (slug) => {
         const apiResult = await res.json();
 
         if (apiResult.status === "success") {
-          // Popup Sukses Dihapus (Kecil & Rapi)
           Swal.fire({
             title: "Dihapus!",
             text: "Anime telah dihapus dari My List.",
@@ -131,7 +149,7 @@ window.deleteBookmark = async (slug) => {
             timer: 3000,
             timerProgressBar: true,
           });
-          loadMyList(); // Refresh halaman agar kartu anime menghilang
+          loadMyList(); // Refresh halaman
         }
       } catch (err) {
         Swal.fire({

@@ -1,16 +1,39 @@
 import { fetchData } from "./api.js";
-import { showLoading, createAnimeCard, createPagination } from "./utils.js";
+import {
+  showLoading,
+  createAnimeCard,
+  createPagination,
+  createSkeletonGrid,
+} from "./utils.js";
 
 // Variabel global untuk menyimpan "timer hantu" agar bisa dimatikan
 let heroInterval;
 
 export async function loadHome() {
-  showLoading(true);
-  const data = await fetchData("/home");
-  const display = document.getElementById("content-display");
-  if (display) display.innerHTML = "";
+  // Matikan loading muter-muter bawaan
+  showLoading(false);
 
-  if (data) {
+  const display = document.getElementById("content-display");
+  if (display) {
+    // TAMPILKAN SKELETON HOME (Hero Besar + 2 Baris Kategori)
+    display.innerHTML = `
+      <div class="animate-fadeIn">
+        <div class="w-full h-[200px] md:h-[450px] rounded-2xl md:rounded-3xl bg-gray-800 animate-pulse mb-8 md:mb-10 border border-gray-700"></div>
+        
+        <div class="h-6 md:h-8 w-48 bg-gray-800 rounded animate-pulse mb-4 mt-8"></div>
+        ${createSkeletonGrid(6)}
+        
+        <div class="h-6 md:h-8 w-48 bg-gray-800 rounded animate-pulse mb-4 mt-8"></div>
+        ${createSkeletonGrid(6)}
+      </div>
+    `;
+  }
+
+  const data = await fetchData("/home");
+
+  if (data && display) {
+    display.innerHTML = ""; // Bersihkan skeleton
+
     // 1. Render Hero Slider (Ambil 5 anime pertama dari Ongoing)
     if (data.ongoing && data.ongoing.length > 0) {
       renderHeroSlider(data.ongoing.slice(0, 5));
@@ -20,7 +43,6 @@ export async function loadHome() {
     renderPreview(data.ongoing, "Ongoing Anime", "ongoing");
     renderPreview(data.complete, "Complete Anime", "complete");
   }
-  showLoading(false);
 }
 
 // ==========================================
@@ -167,22 +189,32 @@ function initHeroSlider(totalSlides) {
 // ==========================================
 
 export async function loadCategory(type, page = 1) {
-  showLoading(true);
-  history.pushState(null, null, `/${type}?page=${page}`);
-  const data = await fetchData(`/${type}?page=${page}`);
   const display = document.getElementById("content-display");
 
-  display.innerHTML = `<h2 class="text-xl md:text-2xl font-black mb-6 border-l-4 border-[#ff6600] pl-4 uppercase tracking-tighter">${type} Anime</h2>`;
+  // 1. Matikan loading spinner jadul & ubah URL
+  showLoading(false);
+  history.pushState(null, null, `/${type}?page=${page}`);
 
-  let html = `<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 md:gap-6">`;
+  // 2. TAMPILKAN SKELETON DULU (Tergantung tipe device, kita render 10-12 kotak kosong)
+  display.innerHTML = `
+    <h2 class="text-xl md:text-2xl font-black mb-6 border-l-4 border-[#ff6600] pl-4 tracking-tighter text-gray-700 bg-gray-800/20 w-max rounded-r-md animate-pulse">MEMUAT DATA...</h2>
+    ${createSkeletonGrid(12)}
+  `;
+
+  // 3. Ambil data dari API
+  const data = await fetchData(`/${type}?page=${page}`);
+
+  // 4. Setelah data dapat, TIMPA skeleton dengan data asli
+  display.innerHTML = `<h2 class="text-xl md:text-2xl font-black mb-6 border-l-4 border-[#ff6600] pl-4 uppercase tracking-tighter text-white capitalize">${type} Anime</h2>`;
+
+  let html = `<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-4 md:gap-6">`;
   data.forEach(
     (a) =>
       (html += createAnimeCard(a, `app.loadDetail('${a.slug}', '${a.thumb}')`)),
   );
   html += `</div>` + createPagination(page, type);
 
-  display.insertAdjacentHTML("beforeend", html); // Pakai insertAdjacentHTML biar judul ga ilang
-  showLoading(false);
+  display.insertAdjacentHTML("beforeend", html);
 }
 
 function renderPreview(list, title, type) {
@@ -215,29 +247,45 @@ export async function handleSearch() {
 
   if (!q) return;
 
-  showLoading(true);
+  // Matikan loading muter-muter
+  showLoading(false);
   history.pushState(null, null, `/search?q=${encodeURIComponent(q)}`);
 
+  const display = document.getElementById("content-display");
+
+  if (display) {
+    // TAMPILKAN SKELETON PENCARIAN
+    display.innerHTML = `
+      <div class="animate-fadeIn">
+        <div class="flex items-center gap-3 mb-6 mt-2">
+          <div class="w-1 h-6 bg-gray-700 rounded-full animate-pulse"></div>
+          <h2 class="text-xl font-black uppercase tracking-tighter text-gray-500 animate-pulse">
+            Mencari: "${q}"...
+          </h2>
+        </div>
+        ${createSkeletonGrid(12)}
+      </div>
+    `;
+  }
+
   try {
-    const data = await fetchData(`/search?q=${q}`);
-    const display = document.getElementById("content-display");
+    const data = await fetchData(`/search?q=${encodeURIComponent(q)}`);
 
     if (display) {
-      display.innerHTML = `
-        <div class="animate-fadeIn">
-          <div class="flex items-center gap-3 mb-6 mt-2">
-            <div class="w-1 h-6 bg-[#ff6600] rounded-full"></div>
-            <h2 class="text-xl font-black uppercase tracking-tighter">
-              Search Results: <span class="text-[#ff6600]">"${q}"</span>
-            </h2>
-          </div>
-          <div id="search-results-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 md:gap-6"></div>
-        </div>
-      `;
-
-      const grid = document.getElementById("search-results-grid");
-
       if (data && data.length > 0) {
+        display.innerHTML = `
+          <div class="animate-fadeIn">
+            <div class="flex items-center gap-3 mb-6 mt-2">
+              <div class="w-1 h-6 bg-[#ff6600] rounded-full"></div>
+              <h2 class="text-xl font-black uppercase tracking-tighter text-white">
+                Search Results: <span class="text-[#ff6600]">"${q}"</span>
+              </h2>
+            </div>
+            <div id="search-results-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 md:gap-6"></div>
+          </div>
+        `;
+
+        const grid = document.getElementById("search-results-grid");
         let html = "";
         data.forEach((anime) => {
           const imageUrl = anime.thumb || anime.thumbnail || "";
@@ -248,18 +296,22 @@ export async function handleSearch() {
         });
         grid.innerHTML = html;
       } else {
+        // Tampilan Error Normal
         display.innerHTML = `
           <div class="text-center py-32 opacity-50">
-            <i class="fas fa-search-minus text-5xl mb-4"></i>
-            <p class="font-black uppercase text-xs tracking-[0.2em]">Anime tidak ditemukan</p>
-            <button onclick="app.navigateTo('/')" class="mt-6 text-[10px] bg-gray-900 px-6 py-2 rounded-full font-bold hover:text-[#ff6600] transition">Kembali ke Home</button>
+            <i class="fas fa-search-minus text-5xl mb-4 text-gray-600"></i>
+            <p class="font-bold font-['Poppins'] text-sm text-white">Anime tidak ditemukan</p>
+            <p class="text-[10px] text-gray-400 mt-2 max-w-xs mx-auto">
+              Tidak ada hasil untuk "${q}". Coba gunakan satu atau dua kata kunci utama saja.
+            </p>
+            <button onclick="app.navigateTo('/')" class="mt-6 text-[10px] bg-gray-900 border border-gray-700 px-6 py-2.5 rounded-full font-bold hover:text-[#ff6600] transition uppercase tracking-widest text-white">
+              Kembali ke Home
+            </button>
           </div>
         `;
       }
     }
   } catch (error) {
     console.error("Search Error:", error);
-  } finally {
-    showLoading(false);
   }
 }

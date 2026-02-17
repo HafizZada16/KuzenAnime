@@ -13,7 +13,6 @@ async function fetchSynopsisFromSanka(slug) {
 
     const result = await response.json();
 
-    // 1. Cek apakah ada data synopsis dan paragraphs-nya
     if (
       result.data &&
       result.data.synopsis &&
@@ -21,8 +20,6 @@ async function fetchSynopsisFromSanka(slug) {
     ) {
       const paragraphsArray = result.data.synopsis.paragraphs;
 
-      // 2. Gabungkan array paragraf menjadi satu teks panjang
-      // (Dipisahkan dengan dua kali enter <br><br> agar ada jeda antar paragraf)
       if (paragraphsArray.length > 0) {
         const joinedSynopsis = paragraphsArray.join("<br><br>");
         return joinedSynopsis;
@@ -37,7 +34,8 @@ async function fetchSynopsisFromSanka(slug) {
 }
 
 export async function loadDetail(slug, thumbFromHome = null) {
-  showLoading(true);
+  // 1. Matikan loading spinner bawaan!
+  showLoading(false);
 
   if (thumbFromHome) {
     localStorage.setItem(`saved_thumb_${slug}`, thumbFromHome);
@@ -46,18 +44,67 @@ export async function loadDetail(slug, thumbFromHome = null) {
   localStorage.setItem("current_anime_slug", slug);
   history.pushState(null, null, `/anime/${slug}`);
 
-  // 1. Ambil data utama dari API Kanata
-  const data = await fetchData(`/anime/${slug}`);
   const display = document.getElementById("content-display");
-  if (display) display.innerHTML = "";
+
+  // 2. TAMPILKAN SKELETON DETAIL (Meniru Layout Asli)
+  if (display) {
+    display.innerHTML = `
+      <div class="animate-fadeIn relative">
+          <div class="w-16 h-4 bg-gray-800 rounded animate-pulse mb-6"></div>
+
+          <div class="flex flex-col md:flex-row gap-6 md:gap-8 mb-10">
+              <div class="w-48 sm:w-56 md:w-72 mx-auto md:mx-0 flex-shrink-0">
+                  <div class="w-full aspect-[3/4] bg-gray-800 rounded-2xl animate-pulse border border-gray-700 shadow-2xl"></div>
+              </div>
+              
+              <div class="flex-grow text-center md:text-left flex flex-col items-center md:items-start">
+                  <div class="w-3/4 h-10 md:h-12 bg-gray-800 rounded-lg animate-pulse mb-4"></div>
+                  
+                  <div class="w-32 h-8 bg-gray-800 rounded-xl animate-pulse mb-6"></div>
+
+                  <div class="flex flex-wrap justify-center md:justify-start gap-2 mb-6">
+                      <div class="w-16 h-6 bg-gray-800 rounded-lg animate-pulse"></div>
+                      <div class="w-20 h-6 bg-gray-800 rounded-lg animate-pulse"></div>
+                      <div class="w-14 h-6 bg-gray-800 rounded-lg animate-pulse"></div>
+                  </div>
+                  
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 text-left w-full">
+                      <div class="bg-gray-800/50 h-16 rounded-2xl animate-pulse border border-gray-700"></div>
+                      <div class="bg-gray-800/50 h-16 rounded-2xl animate-pulse border border-gray-700"></div>
+                      <div class="bg-gray-800/50 h-16 rounded-2xl animate-pulse border border-gray-700"></div>
+                      <div class="bg-gray-800/50 h-16 rounded-2xl animate-pulse border border-gray-700"></div>
+                  </div>
+
+                  <div class="bg-gray-900/30 p-6 rounded-2xl border border-gray-800 w-full animate-pulse">
+                      <div class="h-3 w-full bg-gray-700 rounded-full mb-3"></div>
+                      <div class="h-3 w-5/6 bg-gray-700 rounded-full mb-3"></div>
+                      <div class="h-3 w-4/6 bg-gray-700 rounded-full"></div>
+                  </div>
+              </div>
+          </div>
+
+          <div class="bg-[#121212] border border-gray-800 rounded-3xl p-6 md:p-8 shadow-inner">
+              <div class="w-40 h-6 bg-gray-800 rounded-lg animate-pulse mb-6"></div>
+              <div class="flex flex-col gap-3">
+                  <div class="h-14 w-full bg-gray-800/50 rounded-xl animate-pulse border border-gray-700"></div>
+                  <div class="h-14 w-full bg-gray-800/50 rounded-xl animate-pulse border border-gray-700"></div>
+                  <div class="h-14 w-full bg-gray-800/50 rounded-xl animate-pulse border border-gray-700"></div>
+              </div>
+          </div>
+      </div>
+    `;
+  }
+
+  // 3. Ambil data utama dari API Kanata
+  const data = await fetchData(`/anime/${slug}`);
 
   if (!data) {
-    display.innerHTML = `<div class="text-center py-20 text-red-500 font-bold uppercase tracking-widest text-[10px]">Gagal memuat detail anime.</div>`;
-    showLoading(false);
+    if (display)
+      display.innerHTML = `<div class="text-center py-20 text-red-500 font-bold uppercase tracking-widest text-[10px]">Gagal memuat detail anime.</div>`;
     return;
   }
 
-  // 2. TENTUKAN GAMBAR & INFO DASAR
+  // TENTUKAN GAMBAR & INFO DASAR
   let thumb =
     data.thumb ||
     data.thumbnail ||
@@ -98,7 +145,7 @@ export async function loadDetail(slug, thumbFromHome = null) {
       ? regularEpisodes.length
       : data.total_episodes || data.total_episode || "?";
 
-  // 3. RENDER HTML TERLEBIH DAHULU (Pasang ID anime-synopsis dan loading text di sini)
+  // 4. TIMPA SKELETON DENGAN HTML ASLI
   display.innerHTML = `
     <div class="animate-fadeIn relative">
         <button onclick="window.history.back()" class="flex items-center gap-2 text-gray-300 hover:text-white font-bold text-sm mb-6 transition-colors w-fit group">
@@ -113,7 +160,7 @@ export async function loadDetail(slug, thumbFromHome = null) {
             </div>
             
             <div class="flex-grow text-center md:text-left">
-                <h1 class="text-3xl md:text-5xl font-black mb-4 tracking-tighter leading-none">${title}</h1>
+                <h1 class="text-3xl md:text-5xl font-black mb-4 tracking-tighter leading-none text-white">${title}</h1>
                 
                 <div id="bookmark-container" class="flex justify-center md:justify-start mb-6"></div>
 
@@ -125,7 +172,7 @@ export async function loadDetail(slug, thumbFromHome = null) {
                               const genreName =
                                 typeof g === "string" ? g : g.name || "";
                               return genreName
-                                ? `<span class="bg-gray-800/50 border border-gray-700 px-3 py-1 rounded-lg text-[10px] font-bold text-gray-400">${genreName}</span>`
+                                ? `<span class="bg-gray-800/50 border border-gray-700 px-3 py-1 rounded-lg text-[10px] font-bold text-gray-400 uppercase tracking-widest">${genreName}</span>`
                                 : "";
                             })
                             .join("")
@@ -148,7 +195,7 @@ export async function loadDetail(slug, thumbFromHome = null) {
                     </div>
                     <div class="bg-gray-900/50 p-4 rounded-2xl border border-gray-800">
                         <p class="text-[9px] font-black text-gray-500 uppercase mb-1">Type</p>
-                        <p class="text-xs font-bold text-white">${type}</p>
+                        <p class="text-xs font-bold text-white uppercase tracking-widest">${type}</p>
                     </div>
                 </div>
 
@@ -161,7 +208,7 @@ export async function loadDetail(slug, thumbFromHome = null) {
         </div>
 
         <div class="bg-[#121212] border border-gray-800 rounded-3xl p-6 md:p-8 shadow-inner">
-            <h2 class="text-xl font-black mb-6 flex items-center gap-3 uppercase tracking-tighter">
+            <h2 class="text-xl font-black mb-6 flex items-center gap-3 uppercase tracking-tighter text-white">
                 <i class="fas fa-list-ul text-[#ff6600]"></i> Episode List
             </h2>
 
@@ -218,19 +265,13 @@ export async function loadDetail(slug, thumbFromHome = null) {
     </div>
     `;
 
-  showLoading(false);
-
-  // ==========================================
-  // 4. EKSEKUSI API SANKA (Setelah HTML Tampil)
-  // ==========================================
+  // 5. EKSEKUSI API SANKA & BOOKMARK (Setelah HTML Tampil)
   const synopsisEl = document.getElementById("anime-synopsis");
   if (synopsisEl) {
     const sinopsisAsli = await fetchSynopsisFromSanka(slug);
-
     synopsisEl.innerHTML = sinopsisAsli;
   }
 
-  // Jalankan Inisialisasi Bookmark
   initBookmarkButton({
     slug: slug,
     title: title,
@@ -307,16 +348,15 @@ window.handleBookmarkToggle = async (slug, title, thumb) => {
     const result = await res.json();
 
     if (result.status === "success") {
-      initBookmarkButton({ slug, title, thumb }); // Ubah warna tombol Heart
+      initBookmarkButton({ slug, title, thumb });
 
-      // Munculkan Toast SweetAlert2 (Notif kecil di pojok kanan atas)
       const isAdded = result.action === "added";
       Swal.fire({
-        toast: true, // Ini sihirnya biar jadi notif kecil
-        position: "top-end", // Muncul di pojok kanan atas
-        showConfirmButton: false, // Hilangkan tombol "OK"
-        timer: 3000, // Hilang otomatis dalam 3 detik
-        timerProgressBar: true, // Garis waktu di bawah notif
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
         icon: isAdded ? "success" : "info",
         title: isAdded ? "Tersimpan!" : "Dihapus!",
         text: result.message,
@@ -324,7 +364,7 @@ window.handleBookmarkToggle = async (slug, title, thumb) => {
         color: "#ffffff",
         customClass: {
           popup: "border border-gray-800 rounded-2xl shadow-2xl mt-16 md:mt-4",
-        }, // mt-16 biar tidak ketutup navbar di HP
+        },
       });
     }
   } catch (err) {
@@ -332,7 +372,6 @@ window.handleBookmarkToggle = async (slug, title, thumb) => {
   }
 };
 
-// Fungsi Background Fetch
 async function fetchThumbBackground(slug) {
   try {
     const query = slug

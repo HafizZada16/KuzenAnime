@@ -91,3 +91,40 @@ export function createPagination(currentPage, type) {
         </div>
     `;
 }
+
+export function createSkeletonGrid(count = 10) {
+  let skeletons = "";
+  for (let i = 0; i < count; i++) {
+    skeletons += `
+            <div class="relative w-full rounded-lg overflow-hidden aspect-[3/4] bg-gray-800 animate-pulse border border-gray-700">
+                <div class="w-full h-full bg-gray-700/50"></div>
+                
+                <div class="absolute bottom-0 left-0 w-full p-2 md:p-3 bg-gradient-to-t from-black via-black/80 to-transparent">
+                    <div class="h-2.5 md:h-3 bg-gray-500 rounded-full w-3/4 mb-2"></div>
+                    <div class="h-2 bg-gray-600 rounded-full w-1/2"></div>
+                </div>
+                
+                <div class="absolute top-2 left-2 w-10 h-4 bg-gray-600 rounded-sm"></div>
+                <div class="absolute top-2 right-2 w-8 h-4 bg-gray-600 rounded-sm"></div>
+            </div>
+        `;
+  }
+  return `<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-4 md:gap-6 animate-fadeIn">${skeletons}</div>`;
+}
+
+export function createSkeletonList(count = 5) {
+  let skeletons = "";
+  for (let i = 0; i < count; i++) {
+    skeletons += `
+            <div class="bg-gray-900/50 border border-gray-800 p-3 rounded-xl flex items-center gap-4 animate-pulse">
+                <div class="w-10 h-10 flex-shrink-0 rounded-lg bg-gray-700"></div>
+                
+                <div class="flex-grow">
+                    <div class="h-3 bg-gray-700 rounded w-3/4 mb-2"></div>
+                    <div class="h-2 bg-gray-800 rounded w-1/2"></div>
+                </div>
+            </div>
+        `;
+  }
+  return skeletons;
+}
