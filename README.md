@@ -2,7 +2,7 @@
 
 Web streaming anime modern bergaya *Single Page Application* (SPA) yang ringan, cepat, dan responsif. Dibangun dengan fokus pada *User Experience* (UX) yang mulus dan optimasi performa tingkat tinggi.
 
-🌐 **Coba Langsung:** [https://anime.hapizweb.my.id/](https://anime.hapizweb.my.id/)
+🌐 **Coba Langsung:** [https://kuzen.my.id/](https://kuzen.my.id/)
 
 ## ✨ Fitur Unggulan
 * **⚡ Super Cepat:** Navigasi SPA instan dengan *custom buffering overlay*.
