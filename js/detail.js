@@ -99,18 +99,16 @@ export async function loadDetail(slug, thumbFromHome = null) {
   // 3. Ambil data utama dari API Kanata
   const data = await fetchData(`/anime/${slug}`);
 
-  // PERBAIKAN LOGIKA ERROR
+  // CEK APAKAH DATA ADA (LOGIKA ERROR)
   if (!data) {
     if (display) {
       display.innerHTML = `<div class="text-center py-20 text-red-500 font-bold uppercase tracking-widest text-[10px]">Gagal memuat detail anime.</div>`;
     }
-    // Ganti judul ke pesan error agar user tahu
     document.title = "Gagal Memuat Detail - KuzenAnime";
     return;
   }
 
-  // --- LOGIKA SEO: JALANKAN HANYA JIKA DATA ADA ---
-  // 1. Update Judul Tab Browser Secara Dinamis
+  // --- PINDAHKAN DEKLARASI INI KE ATAS ---
   const title = data.title || "Unknown Title";
   const rating = data.score || data.rating || "N/A";
   const type = data.type || "TV";
@@ -119,9 +117,12 @@ export async function loadDetail(slug, thumbFromHome = null) {
     data.thumbnail ||
     localStorage.getItem(`saved_thumb_${slug}`) ||
     "https://via.placeholder.com/300x400?text=Loading+Image...";
+
+  // --- BARU JALANKAN LOGIKA SEO DI SINI ---
+  // Sekarang variabel 'title' sudah dikenali, judul tab PASTI berubah
   document.title = `${title} Sub Indo - KuzenAnime`;
 
-  // 2. Update Schema Markup untuk Google
+  // Update Schema Markup (KTP Digital buat Google)
   const oldSchema = document.getElementById("anime-schema");
   if (oldSchema) oldSchema.remove();
 
