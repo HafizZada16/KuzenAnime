@@ -99,22 +99,46 @@ export async function loadDetail(slug, thumbFromHome = null) {
   // 3. Ambil data utama dari API Kanata
   const data = await fetchData(`/anime/${slug}`);
 
+  // PERBAIKAN LOGIKA ERROR
   if (!data) {
-    if (display)
+    if (display) {
       display.innerHTML = `<div class="text-center py-20 text-red-500 font-bold uppercase tracking-widest text-[10px]">Gagal memuat detail anime.</div>`;
+    }
+    // Ganti judul ke pesan error agar user tahu
+    document.title = "Gagal Memuat Detail - KuzenAnime";
     return;
   }
 
-  // TENTUKAN GAMBAR & INFO DASAR
+  // --- LOGIKA SEO: JALANKAN HANYA JIKA DATA ADA ---
+  // 1. Update Judul Tab Browser Secara Dinamis
+  const title = data.title || "Unknown Title";
+  const rating = data.score || data.rating || "N/A";
+  const type = data.type || "TV";
   let thumb =
     data.thumb ||
     data.thumbnail ||
     localStorage.getItem(`saved_thumb_${slug}`) ||
     "https://via.placeholder.com/300x400?text=Loading+Image...";
+  document.title = `${title} Sub Indo - KuzenAnime`;
 
-  const title = data.title || "Unknown Title";
-  const rating = data.score || data.rating || "N/A";
-  const type = data.type || "TV";
+  // 2. Update Schema Markup untuk Google
+  const oldSchema = document.getElementById("anime-schema");
+  if (oldSchema) oldSchema.remove();
+
+  const schemaData = {
+    "@context": "https://schema.org",
+    "@type": "Movie",
+    name: title,
+    description: data.synopsis || "Nonton streaming anime gratis di KuzenAnime",
+    image: thumb,
+    url: window.location.href,
+  };
+
+  const script = document.createElement("script");
+  script.id = "anime-schema";
+  script.type = "application/ld+json";
+  script.text = JSON.stringify(schemaData);
+  document.head.appendChild(script);
 
   // --- LOGIKA STATUS DINAMIS ---
   const statusVal = data.status || "";
