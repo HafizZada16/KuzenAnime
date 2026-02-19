@@ -87,6 +87,7 @@ export async function loadPlayer(epSlug, forceAnimeSlug = null) {
     return;
   }
 
+  document.title = `Nonton ${data.title} - KuzenAnime`;
   let animeSlug = forceAnimeSlug;
 
   if (!animeSlug) {

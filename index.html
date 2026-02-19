@@ -197,10 +197,19 @@
                 await handleSearch();
             }
                 
-            if (path === '/' || path === '/home') await loadHome();
-            else if (path === '/ongoing') await loadCategory('ongoing', page);
-            else if (path === '/complete') await loadCategory('complete', page);
-            else if (path === '/schedule') await loadSchedule();
+            if (path === '/' || path === '/home') {
+                document.title = "KuzenAnime - Nonton Anime Sub Indo Gratis & Cepat";
+                await loadHome();
+            } else if (path === '/ongoing') {
+                document.title = "Ongoing Anime Terbaru - KuzenAnime";
+                await loadCategory('ongoing', page);
+            } else if (path === '/complete') {
+                document.title = "Daftar Anime Tamat - KuzenAnime";
+                await loadCategory('complete', page);
+            } else if (path === '/schedule') {
+                document.title = "Jadwal Rilis Anime - KuzenAnime";
+                await loadSchedule();
+            }
             else if (path === '/genres') await loadGenres();
             else if (path === '/mylist') await loadMyList();
             else if (path === '/history') await loadHistory();
