@@ -192,6 +192,7 @@ function initHeroSlider(totalSlides) {
 export async function loadCategory(type, page = 1) {
   const display = document.getElementById("content-display");
 
+  window.scrollTo({ top: 0, behavior: "smooth" });
   // 1. Matikan loading spinner jadul & ubah URL
   showLoading(false);
   history.pushState(null, null, `/${type}?page=${page}`);
