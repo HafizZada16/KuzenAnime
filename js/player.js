@@ -5,6 +5,8 @@ import { USER_API } from "./config.js";
 export async function loadPlayer(epSlug, forceAnimeSlug = null) {
   if (!epSlug) return;
 
+  window.scrollTo({ top: 0, behavior: "smooth" });
+
   // 1. Matikan loading muter-muter jadul!
   showLoading(false);
 

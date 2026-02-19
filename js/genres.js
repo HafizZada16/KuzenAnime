@@ -2,6 +2,7 @@ import { fetchData } from "./api.js";
 import { showLoading, createAnimeCard, createSkeletonGrid } from "./utils.js"; // Pastikan createSkeletonGrid di-import!
 
 export async function loadGenres(selectedGenreSlug = null, page = 1) {
+  window.scrollTo({ top: 0, behavior: "smooth" });
   // 1. Matikan loading spinner bawaan
   showLoading(false);
 

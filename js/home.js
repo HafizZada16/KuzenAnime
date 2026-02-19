@@ -10,6 +10,7 @@ import {
 let heroInterval;
 
 export async function loadHome() {
+  window.scrollTo({ top: 0, behavior: "smooth" });
   // Matikan loading muter-muter bawaan
   showLoading(false);
 

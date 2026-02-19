@@ -2,6 +2,7 @@ import { showLoading } from "./utils.js";
 import { USER_API } from "./config.js";
 
 export async function loadHistory() {
+  window.scrollTo({ top: 0, behavior: "smooth" });
   // 1. Matikan loading spinner bawaan
   showLoading(false);
 

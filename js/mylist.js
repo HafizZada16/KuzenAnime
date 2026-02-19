@@ -2,6 +2,7 @@ import { showLoading, createSkeletonGrid } from "./utils.js"; // Pastikan create
 import { USER_API } from "./config.js";
 
 export async function loadMyList() {
+  window.scrollTo({ top: 0, behavior: "smooth" });
   // 1. Matikan loading spinner bawaan
   showLoading(false);
 

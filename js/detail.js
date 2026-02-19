@@ -34,6 +34,7 @@ async function fetchSynopsisFromSanka(slug) {
 }
 
 export async function loadDetail(slug, thumbFromHome = null) {
+  window.scrollTo({ top: 0, behavior: "smooth" });
   // 1. Matikan loading spinner bawaan!
   showLoading(false);
 

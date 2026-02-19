@@ -2,6 +2,7 @@ import { fetchData } from "./api.js";
 import { showLoading, createSkeletonList } from "./utils.js"; // Pastikan createSkeletonList di-import
 
 export async function loadSchedule() {
+  window.scrollTo({ top: 0, behavior: "smooth" });
   // 1. Matikan loading spinner bawaan
   showLoading(false);
   history.pushState(null, null, `/schedule`);
