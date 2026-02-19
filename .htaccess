@@ -12,6 +12,10 @@ RewriteCond %{REQUEST_URI} ^/api [NC]
 RewriteRule .* - [L]
 
 # 3. Sisanya baru arahkan ke index.html (untuk SPA)
+RewriteCond %{REQUEST_URI} ^/sitemap\.xml$ [NC,OR]
+RewriteCond %{REQUEST_URI} ^/robots\.txt$ [NC]
+RewriteRule .* - [L]
+
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule . /index.html [L]
