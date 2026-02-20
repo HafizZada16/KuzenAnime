@@ -84,9 +84,17 @@
                         <i class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 text-[8px]"></i>
                     </div>
 
-                    <button id="nav-login-btn" class="ml-4 bg-gray-800 hover:bg-[#ff6600] border border-gray-700 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition shadow-sm">
-                        <i class="fas fa-sign-in-alt mr-1"></i> Login
-                    </button>
+                    <div id="nav-user-controls" class="ml-4">
+                        <button id="nav-login-btn" class="bg-gray-800 hover:bg-[#ff6600] border border-gray-700 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition shadow-sm">
+                            <i class="fas fa-sign-in-alt mr-1"></i> Login
+                        </button>
+                        
+                        <div id="nav-profile-section" class="hidden items-center gap-3 cursor-pointer group" onclick="app.loadProfile()">
+                            <span id="nav-user-name" class="hidden lg:block text-[10px] font-black uppercase tracking-widest text-gray-300 group-hover:text-[#ff6600] transition-colors">Username</span>
+                            <div id="nav-user-avatar" class="w-8 h-8 rounded-full overflow-hidden border-2 border-gray-800 group-hover:border-[#ff6600] transition-all bg-gray-800 flex items-center justify-center">
+                                </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -115,9 +123,18 @@
                 <a href="#" onclick="event.preventDefault(); window.app.navigateTo('/donate'); document.getElementById('mobile-menu-btn').click();" class="py-3 px-5 text-gray-300 hover:bg-gray-800 hover:text-white border-b border-gray-800">
                     <i class="fas fa-donate w-5 text-center mr-1 text-[#ff6600]"></i> Donate
                 </a>
-                <button id="nav-login-btn-mobile" class="w-full text-left text-[#ff6600] py-3 px-5 hover:bg-gray-800 transition">
-                    <i class="fas fa-sign-in-alt w-5 text-center mr-1"></i> Login
-                </button>
+                <div id="nav-user-controls-mobile">
+                    <button id="nav-login-btn-mobile" class="w-full text-left text-[#ff6600] py-3 px-5 hover:bg-gray-800 transition">
+                        <i class="fas fa-sign-in-alt w-5 text-center mr-1"></i> Login
+                    </button>
+                    
+                    <div id="nav-profile-section-mobile" class="hidden flex-col">
+                        <a href="#" onclick="event.preventDefault(); window.app.loadProfile(); document.getElementById('mobile-menu-btn').click();" class="py-3 px-5 text-white bg-gray-800/50 flex items-center gap-3 border-b border-gray-800">
+                            <div id="nav-user-avatar-mobile" class="w-7 h-7 rounded-full overflow-hidden bg-[#ff6600] flex items-center justify-center"></div>
+                            <span id="nav-user-name-mobile" class="font-black uppercase tracking-tighter">My Profile</span>
+                        </a>
+                    </div>
+                </div>
             </div>
 
             <div id="mobile-search-container" class="hidden mt-3 md:hidden transition-all duration-300 animate-slideDown">
