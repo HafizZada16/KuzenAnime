@@ -35,7 +35,7 @@
 
     gtag('config', 'G-F3R256S1H4');
     </script>
-
+    
 </head>
 <body class="bg-[#0b0b0b] text-white">
     
@@ -62,7 +62,9 @@
                 <div class="hidden md:flex gap-5 text-[10px] font-bold items-center tracking-wider overflow-x-auto no-scrollbar py-1">
                     <span onclick="app.navigateTo('/')" class="text-gray-300 hover:text-[#ff6600] font-['Poppins'] font-semibold text-[10px] md:text-xs tracking-wide transition-all">Home</span>
                     <span onclick="app.navigateTo('/ongoing')" class="text-gray-300 hover:text-[#ff6600] font-['Poppins'] font-semibold text-[10px] md:text-xs tracking-wide transition-all">Ongoing</span>
-                    <span onclick="app.navigateTo('/complete')" class="text-gray-300 hover:text-[#ff6600] font-['Poppins'] font-semibold text-[10px] md:text-xs tracking-wide transition-all">Complete</span>
+                    <span onclick="app.navigateTo('/complete')" class="text-gray-300 hover:text-[#ff6600] font-['Poppins'] font-semibold text-[10px] md:text-xs tracking-wide transition-all flex items-center gap-1 ">
+                        <i class="far fa-check-square text-[8px]"></i> Complete
+                    </span>
                     <span onclick="app.navigateTo('/schedule')" class="text-gray-300 hover:text-[#ff6600] font-['Poppins'] font-semibold text-[10px] md:text-xs tracking-wide transition-all flex items-center gap-1">
                         <i class="far fa-calendar-alt text-[8px]"></i> Schedule
                     </span>
@@ -70,10 +72,10 @@
                         <i class="fas fa-ghost text-[8px]"></i> Genres
                     </span>
                     <span onclick="app.navigateTo('/mylist')" class="text-gray-300 hover:text-[#ff6600] font-['Poppins'] font-semibold text-[10px] md:text-xs tracking-wide transition-all flex items-center gap-1">
-                        <i class="fas fa-heart text-[8px] text-[#ff6600]"></i> My List
+                        <i class="fas fa-heart text-[8px]"></i> My List
                     </span>
                     <span onclick="app.navigateTo('/history')" class="text-gray-300 hover:text-[#ff6600] font-['Poppins'] font-semibold text-[10px] md:text-xs tracking-wide transition-all flex items-center gap-1">
-                        <i class="fas fa-history text-[8px] text-[#ff6600]"></i> History
+                        <i class="fas fa-history text-[8px]"></i> History
                     </span>
                     
                     <div class="relative w-40 ml-2">
@@ -153,12 +155,12 @@
             </a>
 
             <a href="#" onclick="event.preventDefault(); window.app.navigateTo('/mylist')" class="flex flex-col items-center p-2 flex-1 text-gray-500 hover:text-[#ff6600] group transition-colors">
-                <i class="fas fa-heart text-[18px] mb-1 text-[#ff6600]"></i>
+                <i class="fas fa-heart text-[18px] mb-1"></i>
                 <span class="text-[8px] font-black uppercase tracking-wider">My List</span>
             </a>
 
             <a href="#" onclick="event.preventDefault(); window.app.navigateTo('/history')" class="flex flex-col items-center p-2 flex-1 text-gray-500 hover:text-[#ff6600] group transition-colors">
-                <i class="fas fa-history text-[18px] mb-1 text-[#ff6600]"></i>
+                <i class="fas fa-history text-[18px] mb-1"></i>
                 <span class="text-[8px] font-black uppercase tracking-wider">History</span>
             </a>
 
@@ -176,9 +178,10 @@
         import { loadMyList } from '/js/mylist.js';
         import { loadHistory } from '/js/history.js';
         import { loadProfile } from "/js/profile.js";
+		import { loadDonate } from "/js/donate.js";
 
         const navigateTo = (path) => { history.pushState(null, null, path); router(); };
-
+        
         if (typeof gtag === 'function') {
             gtag('config', 'G-F3R256S1H4', {
                 'page_path': window.location.pathname + window.location.search
@@ -214,6 +217,7 @@
             else if (path === '/mylist') await loadMyList();
             else if (path === '/history') await loadHistory();
             else if (path === '/profile') await loadProfile();
+            else if (path === '/donate') await loadDonate();
             else if (path.startsWith('/anime/')) await loadDetail(path.split('/')[2]);
             else if (path.startsWith('/episode/')) await loadPlayer(path.split('/')[2]);
             else if (path.startsWith('/genres/')) await loadGenres(path.split('/')[2]);
@@ -223,7 +227,7 @@
         window.app = { 
             showAuthModal, handleLogin, handleRegister, navigateTo, loadCategory, 
             handleSearch, loadDetail, loadPlayer, switchServer, changeQuality, 
-            loadSchedule, loadGenres, loadBatch, loadMyList, loadHistory, loadProfile
+            loadSchedule, loadGenres, loadBatch, loadMyList, loadHistory, loadProfile, loadDonate
         };
         
         // LOGIKA MENU HAMBURGER MOBILE
@@ -343,53 +347,54 @@
       }
     </script>
 
-    <footer class="bg-[#0a0a0a] border-t border-gray-800 pt-16 pb-8 mt-20">
-    <div class="container mx-auto px-6">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-12 mb-16">
-            <div class="space-y-6">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 bg-[#ff6600] rounded-lg flex items-center justify-center shadow-lg shadow-[#ff6600]/20">
-                        <i class="fas fa-play text-white text-xs"></i>
-                    </div>
-                    <span class="text-2xl font-black tracking-tighter text-white">KUZEN<span class="text-[#ff6600]">ANIME</span></span>
-                </div>
-                <p class="text-gray-400 text-sm leading-relaxed max-w-xs">
-                    Platform terbaik untuk streaming anime dengan kualitas tinggi (HD) dan subtitle Indonesia secara gratis. Nikmati ribuan episode tanpa gangguan.
-                </p>
-            </div>
+	<footer class="bg-[#121212] border-t border-gray-800 pt-16 pb-8 mt-20">
+		<div class="container mx-auto px-6">
+			<div class="grid grid-cols-1 md:grid-cols-3 gap-12 mb-16">
+				<div class="space-y-6">
+					<div class="flex items-center gap-3">
+						<div class="w-8 h-8 bg-[#ff6600] rounded-lg flex items-center justify-center shadow-lg shadow-[#ff6600]/20">
+							<i class="fas fa-play text-white text-xs"></i>
+						</div>
+						<span class="text-2xl font-black tracking-tighter text-white">KUZEN<span class="text-[#ff6600]">ANIME</span></span>
+					</div>
+					<p class="text-gray-400 text-sm leading-relaxed max-w-xs">
+						Platform terbaik untuk streaming anime dengan kualitas tinggi (HD) dan subtitle Indonesia secara gratis. Nikmati ribuan episode tanpa gangguan.
+					</p>
+				</div>
 
-            <div>
-                <h3 class="text-white font-bold mb-6 uppercase tracking-widest text-xs">Quick Links</h3>
-                <ul class="space-y-4">
-                    <li><a href="/ongoing" class="text-gray-500 hover:text-[#ff6600] text-sm transition-colors flex items-center gap-2"><i class="fas fa-chevron-right text-[10px]"></i> Ongoing Anime</a></li>
-                    <li><a href="/complete" class="text-gray-500 hover:text-[#ff6600] text-sm transition-colors flex items-center gap-2"><i class="fas fa-chevron-right text-[10px]"></i> Completed Series</a></li>
-                    <li><a href="/schedule" class="text-gray-500 hover:text-[#ff6600] text-sm transition-colors flex items-center gap-2"><i class="fas fa-chevron-right text-[10px]"></i> Jadwal Rilis</a></li>
-                    <li><a href="/genres" class="text-gray-500 hover:text-[#ff6600] text-sm transition-colors flex items-center gap-2"><i class="fas fa-chevron-right text-[10px]"></i> Daftar Genre</a></li>
-                </ul>
-            </div>
+				<div>
+					<h3 class="text-white font-bold mb-6 uppercase tracking-widest text-xs">Quick Links</h3>
+					<ul class="space-y-4">
+						<li><a href="/ongoing" class="text-gray-500 hover:text-[#ff6600] text-sm transition-colors flex items-center gap-2"><i class="fas fa-chevron-right text-[10px]"></i> Ongoing Anime</a></li>
+						<li><a href="/complete" class="text-gray-500 hover:text-[#ff6600] text-sm transition-colors flex items-center gap-2"><i class="fas fa-chevron-right text-[10px]"></i> Completed Series</a></li>
+						<li><a href="/schedule" class="text-gray-500 hover:text-[#ff6600] text-sm transition-colors flex items-center gap-2"><i class="fas fa-chevron-right text-[10px]"></i> Jadwal Rilis</a></li>
+						<li><a href="/genres" class="text-gray-500 hover:text-[#ff6600] text-sm transition-colors flex items-center gap-2"><i class="fas fa-chevron-right text-[10px]"></i> Daftar Genre</a></li>
+						<li><a href="javascript:void(0)" onclick="app.loadDonate()" class="text-gray-500 hover:text-[#ff6600] text-sm transition-colors flex items-center gap-2"><i class="fas fa-chevron-right text-[10px]"></i> Support Us</a></li>
+					</ul>
+				</div>
 
-            <div>
-                <h3 class="text-white font-bold mb-6 uppercase tracking-widest text-xs">Popular Genres</h3>
-                <div class="flex flex-wrap gap-2">
-                    <button onclick="app.loadCategory('genres/action', 1)" class="px-3 py-1.5 bg-gray-900 border border-gray-800 rounded-lg text-xs text-gray-400 hover:border-[#ff6600] hover:text-white cursor-pointer transition-all active:scale-95">Action</button>
-                    <button onclick="app.loadCategory('genres/adventure', 1)" class="px-3 py-1.5 bg-gray-900 border border-gray-800 rounded-lg text-xs text-gray-400 hover:border-[#ff6600] hover:text-white cursor-pointer transition-all active:scale-95">Adventure</button>
-                    <button onclick="app.loadCategory('genres/fantasy', 1)" class="px-3 py-1.5 bg-gray-900 border border-gray-800 rounded-lg text-xs text-gray-400 hover:border-[#ff6600] hover:text-white cursor-pointer transition-all active:scale-95">Fantasy</button>
-                    <button onclick="app.loadCategory('genres/romance', 1)" class="px-3 py-1.5 bg-gray-900 border border-gray-800 rounded-lg text-xs text-gray-400 hover:border-[#ff6600] hover:text-white cursor-pointer transition-all active:scale-95">Romance</button>
-                    <button onclick="app.loadCategory('genres/sci-fi', 1)" class="px-3 py-1.5 bg-gray-900 border border-gray-800 rounded-lg text-xs text-gray-400 hover:border-[#ff6600] hover:text-white cursor-pointer transition-all active:scale-95">Sci-Fi</button>
-                </div>
-            </div>
-        </div>
+				<div>
+					<h3 class="text-white font-bold mb-6 uppercase tracking-widest text-xs">Popular Genres</h3>
+					<div class="flex flex-wrap gap-2">
+						<button onclick="app.loadCategory('genres/action', 1)" class="px-3 py-1.5 bg-gray-900 border border-gray-800 rounded-lg text-xs text-gray-400 hover:border-[#ff6600] hover:text-white cursor-pointer transition-all active:scale-95">Action</button>
+						<button onclick="app.loadCategory('genres/adventure', 1)" class="px-3 py-1.5 bg-gray-900 border border-gray-800 rounded-lg text-xs text-gray-400 hover:border-[#ff6600] hover:text-white cursor-pointer transition-all active:scale-95">Adventure</button>
+						<button onclick="app.loadCategory('genres/fantasy', 1)" class="px-3 py-1.5 bg-gray-900 border border-gray-800 rounded-lg text-xs text-gray-400 hover:border-[#ff6600] hover:text-white cursor-pointer transition-all active:scale-95">Fantasy</button>
+						<button onclick="app.loadCategory('genres/romance', 1)" class="px-3 py-1.5 bg-gray-900 border border-gray-800 rounded-lg text-xs text-gray-400 hover:border-[#ff6600] hover:text-white cursor-pointer transition-all active:scale-95">Romance</button>
+						<button onclick="app.loadCategory('genres/sci-fi', 1)" class="px-3 py-1.5 bg-gray-900 border border-gray-800 rounded-lg text-xs text-gray-400 hover:border-[#ff6600] hover:text-white cursor-pointer transition-all active:scale-95">Sci-Fi</button>
+					</div>
+				</div>
+			</div>
 
-        <div class="border-t border-gray-900 pt-8 flex flex-col md:row justify-between items-center gap-4">
-            <p class="text-gray-600 text-[11px] font-medium uppercase tracking-wider">
-                © 2026 <span class="text-gray-400">KuzenAnime</span>. All rights reserved.
-            </p>
-            <p class="text-gray-600 text-[11px] font-medium uppercase tracking-wider">
-                Made with <i class="fas fa-heart text-red-600 mx-1"></i> by Kuzen Team
-            </p>
-        </div>
-    </div>
-</footer>
+			<div class="border-t border-gray-900 pt-8 flex flex-col md:row justify-between items-center gap-4">
+				<p class="text-gray-600 text-[11px] font-medium uppercase tracking-wider">
+					© 2026 <span class="text-gray-400">KuzenAnime</span>. All rights reserved.
+				</p>
+				<p class="text-gray-600 text-[11px] font-medium uppercase tracking-wider">
+					Made with <i class="fas fa-heart text-red-600 mx-1"></i> by Kuzen Team
+				</p>
+			</div>
+		</div>
+	</footer>
 
 </body>
 </html>
