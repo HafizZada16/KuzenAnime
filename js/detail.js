@@ -1,4 +1,5 @@
 import { USER_API } from "./config.js";
+import { SANKA_API } from "./config.js";
 import { fetchData } from "/js/api.js";
 import { showLoading } from "/js/utils.js";
 
@@ -6,7 +7,7 @@ import { showLoading } from "/js/utils.js";
 async function fetchSynopsisFromSanka(slug) {
   try {
     const response = await fetch(
-      `https://www.sankavollerei.com/anime/anime/${slug}`,
+      `${SANKA_API}/anime/${slug}`,
     );
 
     if (!response.ok) throw new Error("Gagal mengambil data dari Sanka");
