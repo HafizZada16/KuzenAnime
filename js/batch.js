@@ -3,6 +3,7 @@ import { showLoading } from "/js/utils.js";
 
 export async function loadBatch(slug) {
   if (!slug) return;
+  window.scrollTo({ top: 0, behavior: "smooth" });
   showLoading(true);
 
   // Update URL agar bisa di-refresh

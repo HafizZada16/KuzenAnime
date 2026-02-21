@@ -1,42 +1,22 @@
-import { USER_API } from "./config.js";
-import { SANKA_API } from "./config.js";
+import { USER_API, SANKA_API } from "./config.js";
 import { fetchData } from "/js/api.js";
 import { showLoading } from "/js/utils.js";
 
-// Fungsi rahasia mengambil sinopsis dari API Sanka menggunakan "slug" yang sama
-async function fetchSynopsisFromSanka(slug) {
+// 1. Fungsi mengambil detail LENGKAP dari API Sanka
+async function fetchFullDetailFromSanka(slug) {
   try {
-    const response = await fetch(
-      `${SANKA_API}/anime/${slug}`,
-    );
-
+    const response = await fetch(`${SANKA_API}/anime/${slug}`);
     if (!response.ok) throw new Error("Gagal mengambil data dari Sanka");
-
     const result = await response.json();
-
-    if (
-      result.data &&
-      result.data.synopsis &&
-      result.data.synopsis.paragraphs
-    ) {
-      const paragraphsArray = result.data.synopsis.paragraphs;
-
-      if (paragraphsArray.length > 0) {
-        const joinedSynopsis = paragraphsArray.join("<br><br>");
-        return joinedSynopsis;
-      }
-    }
-
-    return "Sinopsis belum tersedia untuk anime ini.";
+    return result.data || null;
   } catch (error) {
-    console.warn("Sanka API Error, menggunakan teks default:", error);
-    return "Sinopsis resmi belum tersedia. Selamat menonton!";
+    console.warn("Sanka API Error:", error);
+    return null;
   }
 }
 
 export async function loadDetail(slug, thumbFromHome = null) {
   window.scrollTo({ top: 0, behavior: "smooth" });
-  // 1. Matikan loading spinner bawaan!
   showLoading(false);
 
   if (thumbFromHome) {
@@ -48,118 +28,79 @@ export async function loadDetail(slug, thumbFromHome = null) {
 
   const display = document.getElementById("content-display");
 
-  // 2. TAMPILKAN SKELETON DETAIL (Meniru Layout Asli)
+  // 2. Tampilkan Skeleton Loader agar transisi halus
   if (display) {
     display.innerHTML = `
-      <div class="animate-fadeIn relative">
-          <div class="w-16 h-4 bg-gray-800 rounded animate-pulse mb-6"></div>
-
-          <div class="flex flex-col md:flex-row gap-6 md:gap-8 mb-10">
-              <div class="w-48 sm:w-56 md:w-72 mx-auto md:mx-0 flex-shrink-0">
-                  <div class="w-full aspect-[3/4] bg-gray-800 rounded-2xl animate-pulse border border-gray-700 shadow-2xl"></div>
-              </div>
-              
-              <div class="flex-grow text-center md:text-left flex flex-col items-center md:items-start">
-                  <div class="w-3/4 h-10 md:h-12 bg-gray-800 rounded-lg animate-pulse mb-4"></div>
-                  
-                  <div class="w-32 h-8 bg-gray-800 rounded-xl animate-pulse mb-6"></div>
-
-                  <div class="flex flex-wrap justify-center md:justify-start gap-2 mb-6">
-                      <div class="w-16 h-6 bg-gray-800 rounded-lg animate-pulse"></div>
-                      <div class="w-20 h-6 bg-gray-800 rounded-lg animate-pulse"></div>
-                      <div class="w-14 h-6 bg-gray-800 rounded-lg animate-pulse"></div>
+      <div class="animate-pulse">
+          <div class="flex flex-col md:flex-row gap-8 mb-10">
+              <div class="w-72 h-96 bg-gray-800 rounded-3xl mx-auto md:mx-0"></div>
+              <div class="flex-grow">
+                  <div class="h-10 bg-gray-800 w-3/4 mb-4 rounded-lg"></div>
+                  <div class="h-6 bg-gray-800 w-1/4 mb-6 rounded-lg"></div>
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                      <div class="h-16 bg-gray-800 rounded-2xl"></div>
+                      <div class="h-16 bg-gray-800 rounded-2xl"></div>
+                      <div class="h-16 bg-gray-800 rounded-2xl"></div>
+                      <div class="h-16 bg-gray-800 rounded-2xl"></div>
                   </div>
-                  
-                  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 text-left w-full">
-                      <div class="bg-gray-800/50 h-16 rounded-2xl animate-pulse border border-gray-700"></div>
-                      <div class="bg-gray-800/50 h-16 rounded-2xl animate-pulse border border-gray-700"></div>
-                      <div class="bg-gray-800/50 h-16 rounded-2xl animate-pulse border border-gray-700"></div>
-                      <div class="bg-gray-800/50 h-16 rounded-2xl animate-pulse border border-gray-700"></div>
-                  </div>
-
-                  <div class="bg-gray-900/30 p-6 rounded-2xl border border-gray-800 w-full animate-pulse">
-                      <div class="h-3 w-full bg-gray-700 rounded-full mb-3"></div>
-                      <div class="h-3 w-5/6 bg-gray-700 rounded-full mb-3"></div>
-                      <div class="h-3 w-4/6 bg-gray-700 rounded-full"></div>
-                  </div>
-              </div>
-          </div>
-
-          <div class="bg-[#121212] border border-gray-800 rounded-3xl p-6 md:p-8 shadow-inner">
-              <div class="w-40 h-6 bg-gray-800 rounded-lg animate-pulse mb-6"></div>
-              <div class="flex flex-col gap-3">
-                  <div class="h-14 w-full bg-gray-800/50 rounded-xl animate-pulse border border-gray-700"></div>
-                  <div class="h-14 w-full bg-gray-800/50 rounded-xl animate-pulse border border-gray-700"></div>
-                  <div class="h-14 w-full bg-gray-800/50 rounded-xl animate-pulse border border-gray-700"></div>
               </div>
           </div>
       </div>
     `;
   }
 
-  // 3. Ambil data utama dari API Kanata
-  const data = await fetchData(`/anime/${slug}`);
+  // 3. Ambil data Kanata & Sanka secara paralel (biar cepet)
+  const [dataKanata, dataSanka] = await Promise.all([
+    fetchData(`/anime/${slug}`),
+    fetchFullDetailFromSanka(slug),
+  ]);
 
-  // CEK APAKAH DATA ADA (LOGIKA ERROR)
-  if (!data) {
+  if (!dataKanata) {
     if (display) {
       display.innerHTML = `<div class="text-center py-20 text-red-500 font-bold uppercase tracking-widest text-[10px]">Gagal memuat detail anime.</div>`;
     }
-    document.title = "Gagal Memuat Detail - KuzenAnime";
     return;
   }
 
-  // --- PINDAHKAN DEKLARASI INI KE ATAS ---
-  const title = data.title || "Unknown Title";
-  const rating = data.score || data.rating || "N/A";
-  const type = data.type || "TV";
-  let thumb =
-    data.thumb ||
-    data.thumbnail ||
+  // --- DATA MAPPING ---
+  const title = dataSanka?.title || dataKanata.title || "Unknown Title";
+  const rating =
+    dataSanka?.score || dataKanata.score || dataKanata.rating || "N/A";
+  const type = dataSanka?.type || dataKanata.type || "TV";
+  const thumb =
+    dataSanka?.poster ||
+    dataKanata.thumb ||
+    dataKanata.thumbnail ||
     localStorage.getItem(`saved_thumb_${slug}`) ||
-    "https://via.placeholder.com/300x400?text=Loading+Image...";
+    "https://via.placeholder.com/300x400?text=No+Image";
 
-  // --- BARU JALANKAN LOGIKA SEO DI SINI ---
-  // Sekarang variabel 'title' sudah dikenali, judul tab PASTI berubah
+  // --- MAPPING SINOPSIS DENGAN FALLBACK YANG BENAR ---
+  let synopsisHtml =
+    "<p class='mb-4 italic text-gray-500'>Sinopsis resmi belum tersedia untuk anime ini.</p>"; // Fallback Default
+
+  // 1. Cek Sanka: Apakah array paragraphs ada dan isinya tidak kosong?
+  if (
+    dataSanka?.synopsis?.paragraphs &&
+    dataSanka.synopsis.paragraphs.length > 0
+  ) {
+    synopsisHtml = dataSanka.synopsis.paragraphs
+      .map((p) => `<p class="mb-4">${p}</p>`)
+      .join("");
+  }
+
   document.title = `${title} Sub Indo - KuzenAnime`;
 
-  // Update Schema Markup (KTP Digital buat Google)
-  const oldSchema = document.getElementById("anime-schema");
-  if (oldSchema) oldSchema.remove();
-
-  const schemaData = {
-    "@context": "https://schema.org",
-    "@type": "Movie",
-    name: title,
-    description: data.synopsis || "Nonton streaming anime gratis di KuzenAnime",
-    image: thumb,
-    url: window.location.href,
-  };
-
-  const script = document.createElement("script");
-  script.id = "anime-schema";
-  script.type = "application/ld+json";
-  script.text = JSON.stringify(schemaData);
-  document.head.appendChild(script);
-
-  // --- LOGIKA STATUS DINAMIS ---
-  const statusVal = data.status || "";
-  const isCompleted =
-    statusVal.toLowerCase().includes("lengkap") ||
-    statusVal.toLowerCase().includes("complete") ||
-    statusVal.toLowerCase().includes("tamat");
-
-  const statusText = isCompleted ? "Completed" : "Ongoing";
-  const statusTextColor = isCompleted ? "text-blue-400" : "text-[#ff6600]";
-
-  // --- LOGIKA FILTER BATCH & EPISODE REGULER ---
+  // Filter Episode (Tetap Pakai Kanata agar Player Tidak Error)
   const batchEpisodes = [];
   const regularEpisodes = [];
-
-  if (data.episodes) {
-    data.episodes.forEach((ep) => {
+  if (dataKanata.episodes) {
+    dataKanata.episodes.forEach((ep) => {
       const titleLower = ep.title.toLowerCase();
-      if (titleLower.includes("batch") || titleLower.includes("sub indo :")) {
+
+      // Jika judulnya mengandung "sub indo :", abaikan saja (di-hide)
+      if (titleLower.includes("sub indo :")) {
+        return;
+      } else if (titleLower.includes("batch")) {
         batchEpisodes.push(ep);
       } else {
         regularEpisodes.push(ep);
@@ -167,94 +108,87 @@ export async function loadDetail(slug, thumbFromHome = null) {
     });
   }
 
-  const totalEps =
-    regularEpisodes.length > 0
-      ? regularEpisodes.length
-      : data.total_episodes || data.total_episode || "?";
-
-  // 4. TIMPA SKELETON DENGAN HTML ASLI
+  // 4. Render HTML Lengkap
   display.innerHTML = `
     <div class="animate-fadeIn relative">
-        <button onclick="window.history.back()" class="flex items-center gap-2 text-gray-300 hover:text-white font-bold text-sm mb-6 transition-colors w-fit group">
-            <i class="fas fa-arrow-left group-hover:-translate-x-1 transition-transform"></i> Back
+        <button onclick="window.history.back()" class="flex items-center gap-2 text-gray-500 hover:text-white font-bold text-xs mb-8 transition-all group">
+            <i class="fas fa-arrow-left group-hover:-translate-x-1 transition-transform"></i> BACK
         </button>
 
-        <div class="flex flex-col md:flex-row gap-6 md:gap-8 mb-10">
-            <div class="w-48 sm:w-56 md:w-72 mx-auto md:mx-0 flex-shrink-0">
-                <img id="detail-poster" src="${thumb}" 
-                     class="w-full rounded-2xl shadow-2xl border border-gray-800 object-cover aspect-[3/4] transition-all duration-500" 
-                     onerror="this.onerror=null; this.src='https://via.placeholder.com/300x400?text=No+Image';">
+        <div class="flex flex-col md:flex-row gap-8 md:gap-12 mb-12">
+            <div class="w-56 sm:w-64 md:w-80 mx-auto md:mx-0 flex-shrink-0">
+                <img src="${thumb}" class="w-full rounded-[2.5rem] shadow-2xl border border-gray-800 object-cover aspect-[3/4]" alt="${title}">
             </div>
             
             <div class="flex-grow text-center md:text-left">
-                <h1 class="text-3xl md:text-5xl font-black mb-4 tracking-tighter leading-none text-white">${title}</h1>
-                
-                <div id="bookmark-container" class="flex justify-center md:justify-start mb-6"></div>
-
-                <div class="flex flex-wrap justify-center md:justify-start gap-2 mb-6">
-                    ${
-                      data.genres
-                        ? data.genres
-                            .map((g) => {
-                              const genreName =
-                                typeof g === "string" ? g : g.name || "";
-                              return genreName
-                                ? `<span class="bg-gray-800/50 border border-gray-700 px-3 py-1 rounded-lg text-[10px] font-bold text-gray-400 uppercase tracking-widest">${genreName}</span>`
-                                : "";
-                            })
-                            .join("")
-                        : ""
-                    }
+                <div class="flex flex-wrap justify-center md:justify-start gap-3 mb-4">
+                    <span class="bg-[#ff6600]/10 text-[#ff6600] text-[10px] font-black px-3 py-1 rounded-full border border-[#ff6600]/20 uppercase">${type}</span>
+                    <span class="bg-blue-500/10 text-blue-400 text-[10px] font-black px-3 py-1 rounded-full border border-blue-500/20 uppercase">${dataSanka?.status || dataKanata.status || "N/A"}</span>
                 </div>
+
+                <h1 class="text-4xl md:text-6xl font-black mb-2 tracking-tighter leading-none text-white">${title}</h1>
+                <p class="text-[#ff6600] font-bold text-sm mb-6">${dataSanka?.japanese || ""}</p>
                 
+                <div id="bookmark-container" class="flex justify-center md:justify-start mb-8"></div>
+
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 text-left">
-                    <div class="bg-gray-900/50 p-4 rounded-2xl border border-gray-800">
-                        <p class="text-[9px] font-black text-gray-500 uppercase mb-1">Status</p>
-                        <p class="text-xs font-bold ${statusTextColor}">${statusText}</p>
+                    <div class="bg-[#121212] p-4 rounded-3xl border border-gray-800">
+                        <p class="text-[9px] font-black text-gray-500 uppercase mb-1 tracking-widest">Score</p>
+                        <p class="text-sm font-black text-yellow-500"><i class="fas fa-star mr-1"></i> ${rating}</p>
                     </div>
-                    <div class="bg-gray-900/50 p-4 rounded-2xl border border-gray-800">
-                        <p class="text-[9px] font-black text-gray-500 uppercase mb-1">Rating</p>
-                        <p class="text-xs font-bold text-yellow-500"><i class="fas fa-star mr-1"></i> ${rating}</p>
+                    <div class="bg-[#121212] p-4 rounded-3xl border border-gray-800">
+                        <p class="text-[9px] font-black text-gray-500 uppercase mb-1 tracking-widest">Studios</p>
+                        <p class="text-sm font-black text-white truncate">${dataSanka?.studios || "N/A"}</p>
                     </div>
-                    <div class="bg-gray-900/50 p-4 rounded-2xl border border-gray-800">
-                        <p class="text-[9px] font-black text-gray-500 uppercase mb-1">Total Episode</p>
-                        <p class="text-xs font-bold text-white">${totalEps}</p>
+                    <div class="bg-[#121212] p-4 rounded-3xl border border-gray-800">
+                        <p class="text-[9px] font-black text-gray-500 uppercase mb-1 tracking-widest">Duration</p>
+                        <p class="text-sm font-black text-white">${dataSanka?.duration || "N/A"}</p>
                     </div>
-                    <div class="bg-gray-900/50 p-4 rounded-2xl border border-gray-800">
-                        <p class="text-[9px] font-black text-gray-500 uppercase mb-1">Type</p>
-                        <p class="text-xs font-bold text-white uppercase tracking-widest">${type}</p>
+                    <div class="bg-[#121212] p-4 rounded-3xl border border-gray-800">
+                        <p class="text-[9px] font-black text-gray-500 uppercase mb-1 tracking-widest">Aired</p>
+                        <p class="text-sm font-black text-white">${dataSanka?.aired || "N/A"}</p>
                     </div>
                 </div>
 
-                <div class="bg-gray-900/30 p-6 rounded-2xl border border-gray-800 italic text-left">
-                    <p id="anime-synopsis" class="text-sm text-gray-400 leading-relaxed">
-                        <span class="animate-pulse text-gray-500">Menarik data sinopsis...</span>
-                    </p>
+                <div class="flex flex-wrap justify-center md:justify-start gap-2 mb-8">
+                    ${(dataSanka?.genreList || dataKanata.genres || [])
+                      .map((g) => {
+                        const name =
+                          typeof g === "string" ? g : g.title || g.name;
+                        return `<span class="bg-gray-800/40 hover:bg-gray-700 border border-gray-700/50 px-4 py-1.5 rounded-xl text-[10px] font-bold text-gray-400 hover:text-white transition cursor-default">${name}</span>`;
+                      })
+                      .join("")}
+                </div>
+
+                <div class="bg-gray-900/20 p-6 md:p-8 rounded-[2rem] border border-gray-800/50 text-left">
+                    <h3 class="text-xs font-black uppercase tracking-[0.2em] text-gray-500 mb-4 flex items-center gap-2">
+                        <i class="fas fa-align-left text-[#ff6600]"></i> Storyline
+                    </h3>
+                    <div class="text-sm text-gray-400 leading-relaxed font-medium">
+                        ${synopsisHtml}
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="bg-[#121212] border border-gray-800 rounded-3xl p-6 md:p-8 shadow-inner">
-            <h2 class="text-xl font-black mb-6 flex items-center gap-3 uppercase tracking-tighter text-white">
-                <i class="fas fa-list-ul text-[#ff6600]"></i> Episode List
+        <div class="bg-[#121212] border border-gray-800 rounded-[2.5rem] p-6 md:p-10 mb-12 shadow-2xl">
+            <h2 class="text-2xl font-black mb-8 flex items-center gap-4 uppercase tracking-tighter text-white">
+                <span class="w-2 h-8 bg-[#ff6600] rounded-full"></span> Episode List
             </h2>
-
+            
             ${
               batchEpisodes.length > 0
                 ? `
-                <div class="mb-8 bg-orange-900/10 border border-orange-900/30 p-5 rounded-2xl">
-                    <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4 flex items-center gap-2">
-                        <i class="fas fa-box-open text-orange-500"></i> Download Batch & Lengkap
+                <div class="mb-10 bg-orange-500/5 border border-orange-500/10 p-6 rounded-3xl">
+                    <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-orange-500/60 mb-5 flex items-center gap-2">
+                        <i class="fas fa-box-open"></i> Full Batch Download
                     </h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         ${batchEpisodes
                           .map(
                             (ep) => `
-                            <div onclick="app.loadBatch('${ep.slug}')" class="bg-orange-900/20 hover:bg-orange-600 border border-orange-700/50 hover:border-orange-400 p-4 rounded-xl cursor-pointer transition-all group shadow-sm">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-xs font-bold text-orange-400 group-hover:text-white transition truncate pr-4">${ep.title}</span>
-                                    <i class="fas fa-download text-orange-600 group-hover:text-white transition text-lg"></i>
-                                </div>
+                            <div onclick="app.loadBatch('${ep.slug}')" class="bg-orange-500/10 hover:bg-orange-500 border border-orange-500/20 p-4 rounded-2xl cursor-pointer transition-all group">
+                                <span class="text-xs font-black text-orange-500 group-hover:text-white transition truncate block">${ep.title}</span>
                             </div>
                         `,
                           )
@@ -265,59 +199,60 @@ export async function loadDetail(slug, thumbFromHome = null) {
                 : ""
             }
 
-            <div>
-                <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4 flex items-center gap-2">
-                    <i class="fas fa-play text-[#ff6600]"></i> Streaming Reguler
-                </h3>
-                <div class="flex flex-col gap-3">
-                    ${
-                      regularEpisodes.length > 0
-                        ? regularEpisodes
-                            .map(
-                              (ep) => `
-                        <div onclick="app.loadPlayer('${ep.slug}')" class="bg-gray-900/50 hover:bg-[#ff6600] border border-gray-800 hover:border-[#ff6600] p-4 rounded-xl cursor-pointer transition-all group">
-                            <div class="flex justify-between items-center">
-                                <span class="text-xs font-bold group-hover:text-white transition truncate pr-4 text-gray-300">${ep.title}</span>
-                                <i class="fas fa-play-circle text-gray-700 group-hover:text-white transition text-lg"></i>
-                            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                ${regularEpisodes
+                  .map(
+                    (ep) => `
+                    <div onclick="app.loadPlayer('${ep.slug}')" class="bg-gray-800/30 hover:bg-[#ff6600] border border-gray-800 hover:border-[#ff6600] p-5 rounded-2xl cursor-pointer transition-all group flex justify-between items-center shadow-sm">
+                        <span class="text-xs font-bold group-hover:text-white text-gray-300 transition">${ep.title}</span>
+                        <div class="w-8 h-8 rounded-full bg-gray-800 group-hover:bg-white/20 flex items-center justify-center transition">
+                            <i class="fas fa-play text-[10px] text-[#ff6600] group-hover:text-white"></i>
                         </div>
-                    `,
-                            )
-                            .join("")
-                        : '<p class="text-gray-500 text-[10px] uppercase font-bold tracking-widest ml-1">Belum ada episode reguler.</p>'
-                    }
-                </div>
+                    </div>
+                `,
+                  )
+                  .join("")}
             </div>
         </div>
+
+        ${
+          dataSanka?.recommendedAnimeList &&
+          dataSanka.recommendedAnimeList.length > 0
+            ? `
+            <div class="mt-20">
+                <div class="flex items-center justify-between mb-8">
+                    <h3 class="text-2xl font-black text-white uppercase tracking-tighter flex items-center gap-4">
+                        <span class="w-2 h-8 bg-[#ff6600] rounded-full"></span> You May Also Like
+                    </h3>
+                </div>
+                <div class="flex gap-4 md:gap-5 overflow-x-auto pb-8 no-scrollbar scroll-smooth items-start">
+                    ${dataSanka.recommendedAnimeList
+                      .map(
+                        (rec) => `
+                        <div onclick="app.loadDetail('${rec.animeId}')" class="w-36 md:w-48 flex-none group cursor-pointer">
+                            
+                            <div class="relative w-full aspect-[3/4] rounded-2xl md:rounded-3xl overflow-hidden border-2 border-transparent group-hover:border-[#ff6600] transition-all duration-300 shadow-lg bg-gray-900">
+                                <img src="${rec.poster}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="${rec.title}">
+                            </div>
+                            
+                            <p class="mt-3 md:mt-4 text-[10px] md:text-xs font-black text-gray-500 group-hover:text-white truncate transition uppercase tracking-wider">${rec.title}</p>
+                        </div>
+                    `,
+                      )
+                      .join("")}
+                </div>
+            </div>
+        `
+            : ""
+        }
     </div>
-    `;
+  `;
 
-  // 5. EKSEKUSI API SANKA & BOOKMARK (Setelah HTML Tampil)
-  const synopsisEl = document.getElementById("anime-synopsis");
-  if (synopsisEl) {
-    const sinopsisAsli = await fetchSynopsisFromSanka(slug);
-    synopsisEl.innerHTML = sinopsisAsli;
-  }
-
-  initBookmarkButton({
-    slug: slug,
-    title: title,
-    thumb: thumb,
-  });
-
-  if (
-    !data.thumb &&
-    !data.thumbnail &&
-    !localStorage.getItem(`saved_thumb_${slug}`)
-  ) {
-    fetchThumbBackground(slug);
-  }
+  // 5. Inisialisasi Fitur Tambahan
+  initBookmarkButton({ slug, title, thumb });
 }
 
-// ==========================================
-// LOGIKA BOOKMARK (MY LIST)
-// ==========================================
-
+// --- FUNGSI BOOKMARK (TETAP SAMA) ---
 async function initBookmarkButton(animeData) {
   const token = localStorage.getItem("kuzen_token");
   const container = document.getElementById("bookmark-container");
@@ -325,9 +260,9 @@ async function initBookmarkButton(animeData) {
 
   if (!token) {
     container.innerHTML = `
-            <button onclick="window.app.showAuthModal(true)" class="bg-gray-800/50 hover:bg-gray-700 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 border border-gray-700">
-                <i class="far fa-heart text-[#ff6600]"></i> Login to Add My List
-            </button>`;
+      <button onclick="window.app.showAuthModal(true)" class="bg-gray-800/50 hover:bg-gray-700 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-3 border border-gray-800">
+          <i class="far fa-heart text-[#ff6600]"></i> Add to My List
+      </button>`;
     return;
   }
 
@@ -347,18 +282,35 @@ function renderBookmarkButton(isBookmarked, animeData) {
   const titleClean = animeData.title.replace(/'/g, "\\'");
 
   container.innerHTML = `
-        <button onclick="handleBookmarkToggle('${animeData.slug}', '${titleClean}', '${animeData.thumb}')" 
-            class="${isBookmarked ? "bg-[#ff6600] shadow-[#ff6600]/30" : "bg-gray-800/80"} hover:scale-105 text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-lg border border-white/5">
-            <i class="${isBookmarked ? "fas text-white" : "far text-[#ff6600]"} fa-heart ${isBookmarked ? "animate-pulse" : ""}"></i> 
-            ${isBookmarked ? "Saved to My List" : "Add to My List"}
-        </button>
-    `;
+    <button onclick="handleBookmarkToggle('${animeData.slug}', '${titleClean}', '${animeData.thumb}')" 
+        class="${isBookmarked ? "bg-[#ff6600] shadow-[#ff6600]/20" : "bg-gray-800/80"} hover:scale-105 text-white px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-3 shadow-xl border border-white/5">
+        <i class="${isBookmarked ? "fas text-white" : "far text-[#ff6600]"} fa-heart"></i> 
+        ${isBookmarked ? "Saved in List" : "Add to My List"}
+    </button>
+  `;
 }
 
-window.handleBookmarkToggle = async (slug, title, thumb) => {
-  const token = localStorage.getItem("kuzen_token");
-  if (!token) return window.app.showAuthModal(true);
+// ==========================================
+// LOGIKA BOOKMARK (MY LIST)
+// ==========================================
 
+window.handleBookmarkToggle = async (slug, title, thumb) => {
+  // 1. Cek apakah user sudah login
+  const token = localStorage.getItem("kuzen_token");
+  if (!token) {
+    // Jika belum login, panggil modal login
+    if (window.app && window.app.showAuthModal) {
+      return window.app.showAuthModal(true);
+    } else {
+      return Swal.fire(
+        "Akses Ditolak",
+        "Silakan login terlebih dahulu!",
+        "warning",
+      );
+    }
+  }
+
+  // 2. Jika sudah login, tembak ke API backend kamu
   try {
     const res = await fetch(`${USER_API}/bookmarks/toggle`, {
       method: "POST",
@@ -372,12 +324,17 @@ window.handleBookmarkToggle = async (slug, title, thumb) => {
         anime_thumb: thumb,
       }),
     });
+
     const result = await res.json();
 
+    // 3. Jika berhasil disimpan/dihapus dari database
     if (result.status === "success") {
+      // Render ulang tombolnya biar otomatis berubah jadi "Saved in List"
       initBookmarkButton({ slug, title, thumb });
 
       const isAdded = result.action === "added";
+
+      // Tampilkan Notifikasi Pop-up (Toast)
       Swal.fire({
         toast: true,
         position: "top-end",
@@ -396,29 +353,6 @@ window.handleBookmarkToggle = async (slug, title, thumb) => {
     }
   } catch (err) {
     console.error("Error toggle bookmark:", err);
+    Swal.fire("Error", "Gagal menghubungi server.", "error");
   }
 };
-
-async function fetchThumbBackground(slug) {
-  try {
-    const query = slug
-      .replace(/-episode-\d+|-sub-indo|-batch/g, "")
-      .replace(/-/g, " ")
-      .trim();
-    const searchData = await fetchData(`/search/${query}`);
-    if (searchData && searchData.length > 0) {
-      const match =
-        searchData.find(
-          (item) => item.slug.includes(slug) || slug.includes(item.slug),
-        ) || searchData[0];
-      const realThumb = match.thumb || match.thumbnail;
-      if (realThumb) {
-        const posterEl = document.getElementById("detail-poster");
-        if (posterEl) posterEl.src = realThumb;
-        localStorage.setItem(`saved_thumb_${slug}`, realThumb);
-      }
-    }
-  } catch (e) {
-    console.log("Background thumb fetch failed");
-  }
-}

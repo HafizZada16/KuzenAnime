@@ -199,7 +199,7 @@
         import { loadHistory } from '/js/history.js';
         import { loadProfile } from "/js/profile.js";
 		import { loadDonate } from "/js/donate.js";
-        import { loadAdminDashboard, fetchAdminStats, editUserByAdmin } from "./js/admin.js";
+        import { loadAdminDashboard, fetchAdminStats, editUserByAdmin } from "/js/admin.js";
 
         const navigateTo = (path) => { history.pushState(null, null, path); router(); };
         
@@ -281,6 +281,7 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
+            const path = window.location.pathname;
             checkAuthUI();
             router();
             const searchToggleBtn = document.getElementById('mobile-search-toggle');
@@ -325,6 +326,16 @@
                         clearTimeout(searchTimeout);
                     }
                 });
+            }
+
+            // Logika untuk menangani refresh pada halaman detail anime
+            if (path.startsWith("/anime/")) {
+                const slug = path.split("/")[2];
+                if (slug) {
+                    app.loadDetail(slug); 
+                }
+            } else if (path === "/" || path === "/index.html") {
+                app.loadHome();
             }
 
             // ==========================================
