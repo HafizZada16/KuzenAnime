@@ -199,6 +199,7 @@
         import { loadHistory } from '/js/history.js';
         import { loadProfile } from "/js/profile.js";
 		import { loadDonate } from "/js/donate.js";
+        import { loadAdminDashboard, fetchAdminStats, editUserByAdmin } from "./js/admin.js";
 
         const navigateTo = (path) => { history.pushState(null, null, path); router(); };
         
@@ -238,6 +239,7 @@
             else if (path === '/history') await loadHistory();
             else if (path === '/profile') await loadProfile();
             else if (path === '/donate') await loadDonate();
+            else if (path === '/admin') await loadAdminDashboard();
             else if (path.startsWith('/anime/')) await loadDetail(path.split('/')[2]);
             else if (path.startsWith('/episode/')) await loadPlayer(path.split('/')[2]);
             else if (path.startsWith('/genres/')) await loadGenres(path.split('/')[2]);
@@ -247,7 +249,7 @@
         window.app = { 
             showAuthModal, handleLogin, handleRegister, navigateTo, loadCategory, 
             handleSearch, loadDetail, loadPlayer, switchServer, changeQuality, 
-            loadSchedule, loadGenres, loadBatch, loadMyList, loadHistory, loadProfile, loadDonate
+            loadSchedule, loadGenres, loadBatch, loadMyList, loadHistory, loadProfile, loadDonate, loadAdminDashboard, fetchAdminStats, editUserByAdmin
         };
         
         // LOGIKA MENU HAMBURGER MOBILE
