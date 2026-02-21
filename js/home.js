@@ -19,7 +19,7 @@ export async function loadHome() {
     // TAMPILKAN SKELETON HOME (Hero Besar + 2 Baris Kategori)
     display.innerHTML = `
       <div class="animate-fadeIn">
-        <div class="w-full h-[200px] md:h-[450px] rounded-2xl md:rounded-3xl bg-gray-800 animate-pulse mb-8 md:mb-10 border border-gray-700"></div>
+        <div class="w-full h-[350px] md:h-[500px] rounded-2xl md:rounded-3xl bg-gray-800 animate-pulse mb-8 md:mb-10 border border-gray-700"></div>
         
         <div class="h-6 md:h-8 w-48 bg-gray-800 rounded animate-pulse mb-4 mt-8"></div>
         ${createSkeletonGrid(6)}
@@ -47,7 +47,7 @@ export async function loadHome() {
 }
 
 // ==========================================
-// FITUR BARU: RENDER HERO SLIDER (PERBAIKAN DOTS)
+// FITUR BARU: RENDER HERO SLIDER (DESAIN KANATA/PREMIUM)
 // ==========================================
 function renderHeroSlider(animeList) {
   const display = document.getElementById("content-display");
@@ -58,60 +58,75 @@ function renderHeroSlider(animeList) {
   animeList.forEach((anime, index) => {
     // Slide Aktif Pertama
     const isActive = index === 0 ? "opacity-100 z-10" : "opacity-0 z-0";
+    const thumb = anime.thumb || anime.thumbnail;
 
     slidesHtml += `
       <div class="hero-slide absolute inset-0 transition-opacity duration-1000 ease-in-out ${isActive}" data-index="${index}">
           
-          <div class="absolute inset-0 bg-gradient-to-t from-[#0b0b0b]/70 via-[#0b0b0b]/30 to-transparent z-10"></div>
-          <div class="absolute inset-0 bg-gradient-to-r from-[#0b0b0b]/60 via-[#0b0b0b]/40 to-transparent z-10"></div>
+          <div class="absolute inset-0 bg-cover bg-center blur-sm opacity-40 transform scale-110" style="background-image: url('${thumb}');"></div>
+          <div class="absolute inset-0 bg-gradient-to-t from-[#0b0b0b] via-[#0b0b0b]/60 to-transparent z-10"></div>
+          <div class="absolute inset-0 bg-gradient-to-r from-[#0b0b0b]/95 via-[#0b0b0b]/60 to-transparent z-10"></div>
           
-          <img src="${anime.thumb || anime.thumbnail}" class="w-full h-full object-cover opacity-60" alt="${anime.title}">
-          
-          <div class="absolute bottom-5 left-4 md:bottom-12 md:left-12 z-20 w-[90%] md:w-1/2 animate-slideUp">
-              
-              <h2 class="text-sm md:text-4xl font-black text-white leading-tight mb-1.5 md:mb-2 drop-shadow-2xl line-clamp-2">${anime.title}</h2>
-              
-              <div class="flex items-center gap-3 text-[10px] md:text-sm text-gray-300 font-bold mb-3 md:mb-5">
-                  <span><i class="fas fa-play-circle text-[#ff6600]"></i> Ep: ${anime.episode || anime.eps || "?"}</span>
+          <div class="absolute inset-0 flex items-center justify-center p-4 md:p-12 lg:px-16 z-20">
+              <div class="flex flex-col md:flex-row items-center gap-3 md:gap-10 w-full max-w-6xl animate-slideUp text-center md:text-left">
+                  
+                  <div class="w-36 sm:w-36 md:w-52 lg:w-60 flex-shrink-0 rounded-xl md:rounded-3xl overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.8)] border border-gray-700/50">
+                      <img src="${thumb}" class="w-full h-full object-cover aspect-[3/4]" alt="${anime.title}">
+                  </div>
+
+                  <div class="flex-grow flex flex-col items-center md:items-start w-full mt-2 md:mt-0">
+                      <div class="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-2 md:mb-4">
+                          <span class="bg-[#ff6600] text-white text-[8px] md:text-[10px] font-black px-2 md:px-3 py-1 rounded border border-[#ff6600] uppercase tracking-widest flex items-center gap-1 shadow-lg shadow-[#ff6600]/30">
+                              <i class="fas fa-fire"></i> Trending
+                          </span>
+                          <span class="bg-gray-800/80 backdrop-blur-sm text-gray-300 border border-gray-700 text-[8px] md:text-[10px] font-bold px-2 md:px-3 py-1 rounded uppercase tracking-widest">
+                              Ep ${anime.episode || anime.eps || "?"}
+                          </span>
+                      </div>
+
+                      <h2 class="text-xl sm:text-3xl md:text-5xl lg:text-6xl font-black text-white mb-3 md:mb-6 tracking-tighter leading-tight drop-shadow-2xl line-clamp-2 md:line-clamp-3 w-full px-2 md:px-0">${anime.title}</h2>
+                      
+                      <div class="flex justify-center md:justify-start gap-3 md:gap-4 w-full">
+                          <button onclick="app.loadDetail('${anime.slug}', '${thumb}')" 
+                                  class="bg-[#ff6600] hover:bg-[#e65c00] text-white px-6 md:px-8 py-2 md:py-3.5 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-[#ff6600]/30 flex items-center justify-center gap-2 hover:scale-105 active:scale-95">
+                              <i class="fas fa-play"></i> Tonton
+                          </button>
+                      </div>
+                  </div>
+
               </div>
-              
-              <button onclick="app.loadDetail('${anime.slug}', '${anime.thumb}')" 
-                      class="bg-[#ff6600] hover:bg-[#e65c00] text-white px-4 py-1.5 md:px-8 md:py-3 rounded-full font-bold text-[10px] md:text-sm transition shadow-[0_0_15px_rgba(255,102,0,0.5)]">
-                  <i class="fas fa-play mr-1 md:mr-2"></i> Tonton
-              </button>
           </div>
       </div>
     `;
 
-    // Titik Navigasi (Dots) - PERBAIKAN DI SINI
-    // Jika index 0 (aktif): Lebar (w-6), Warna Orange
-    // Jika index lain: Kecil (w-2), Warna Abu
     const dotClass =
       index === 0
         ? "bg-[#ff6600] w-4 md:w-6"
         : "bg-gray-500 w-1.5 md:w-2 hover:bg-gray-400";
-
     dotsHtml += `<div class="hero-dot h-1.5 md:h-2 rounded-full transition-all duration-300 cursor-pointer ${dotClass}" data-index="${index}"></div>`;
   });
 
+  // UBAH TINGGI CONTAINER HERO DI SINI: h-[350px] md:h-[500px]
   const heroContainer = `
-    <div class="relative w-full h-[200px] md:h-[450px] rounded-2xl md:rounded-3xl overflow-hidden mb-8 md:mb-10 shadow-2xl group border border-gray-800">
+    <div class="relative w-full h-[350px] md:h-[500px] rounded-2xl md:rounded-[2rem] overflow-hidden mb-8 md:mb-12 shadow-2xl group border border-gray-800/50">
         ${slidesHtml}
         
-        <button id="hero-prev" class="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-30 bg-black/50 hover:bg-[#ff6600] text-white w-6 h-6 md:w-12 md:h-12 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition backdrop-blur-sm">
-            <i class="fas fa-chevron-left text-[10px] md:text-lg"></i>
+        <button id="hero-prev" class="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-30 bg-black/40 hover:bg-[#ff6600] text-white w-8 h-8 md:w-12 md:h-12 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all backdrop-blur-md border border-white/10">
+            <i class="fas fa-chevron-left text-xs md:text-lg"></i>
         </button>
-        <button id="hero-next" class="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-30 bg-black/50 hover:bg-[#ff6600] text-white w-6 h-6 md:w-12 md:h-12 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition backdrop-blur-sm">
-            <i class="fas fa-chevron-right text-[10px] md:text-lg"></i>
+        <button id="hero-next" class="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-30 bg-black/40 hover:bg-[#ff6600] text-white w-8 h-8 md:w-12 md:h-12 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all backdrop-blur-md border border-white/10">
+            <i class="fas fa-chevron-right text-xs md:text-lg"></i>
         </button>
 
-        <div class="absolute bottom-2 md:bottom-6 right-3 md:right-6 z-30 flex gap-1.5 md:gap-2 items-center">
+        <div class="absolute bottom-3 md:bottom-6 right-4 md:right-8 z-30 flex gap-1.5 md:gap-2 items-center">
             ${dotsHtml}
         </div>
     </div>
   `;
 
   display.insertAdjacentHTML("afterbegin", heroContainer);
+
+  // Memanggil fungsi logika slider yang sudah ada
   initHeroSlider(animeList.length);
 }
 

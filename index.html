@@ -328,16 +328,6 @@
                 });
             }
 
-            // Logika untuk menangani refresh pada halaman detail anime
-            if (path.startsWith("/anime/")) {
-                const slug = path.split("/")[2];
-                if (slug) {
-                    app.loadDetail(slug); 
-                }
-            } else if (path === "/" || path === "/index.html") {
-                app.loadHome();
-            }
-
             // ==========================================
             // 3. AUTO-CLOSE SAAT KLIK LUAR / GANTI HALAMAN
             // ==========================================
