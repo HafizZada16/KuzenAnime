@@ -108,7 +108,7 @@ function renderHeroSlider(animeList) {
 
   // UBAH TINGGI CONTAINER HERO DI SINI: h-[350px] md:h-[500px]
   const heroContainer = `
-    <div class="relative w-full h-[350px] md:h-[500px] rounded-2xl md:rounded-[2rem] overflow-hidden mb-8 md:mb-12 shadow-2xl group border border-gray-800/50">
+    <div class="relative w-full h-[420px] sm:h-[500px] md:h-[500px] rounded-2xl md:rounded-[2rem] overflow-hidden mb-8 md:mb-12 shadow-2xl group border border-gray-800/50">
         ${slidesHtml}
         
         <button id="hero-prev" class="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-30 bg-black/40 hover:bg-[#ff6600] text-white w-8 h-8 md:w-12 md:h-12 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all backdrop-blur-md border border-white/10">
@@ -118,7 +118,7 @@ function renderHeroSlider(animeList) {
             <i class="fas fa-chevron-right text-xs md:text-lg"></i>
         </button>
 
-        <div class="absolute bottom-3 md:bottom-6 right-4 md:right-8 z-30 flex gap-1.5 md:gap-2 items-center">
+        <div class="absolute bottom-4 left-1/2 -translate-x-1/2 md:bottom-6 md:left-auto md:right-8 md:translate-x-0 z-30 flex gap-1.5 md:gap-2 items-center">
             ${dotsHtml}
         </div>
     </div>
