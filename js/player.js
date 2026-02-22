@@ -1,6 +1,77 @@
 import { fetchData } from "/js/api.js";
 import { showLoading } from "/js/utils.js";
-import { USER_API } from "./config.js";
+import { USER_API, SANKA_API, ANIME_API } from "./config.js";
+
+function getServerInfo(rawName) {
+  const name = (rawName || "").toLowerCase();
+
+  // KELOMPOK VIP (NO IKLAN) - Warna Hijau
+  if (name.includes("ondesu")) {
+    return {
+      name: "ONDESU HD",
+      badge: "No Iklan",
+      color: "text-green-500 bg-green-500/10 border-green-500/20",
+    };
+  } else if (name.includes("otaku")) {
+    return {
+      name: "OTAKUWATCH HD",
+      badge: "No Iklan",
+      color: "text-green-500 bg-green-500/10 border-green-500/20",
+    };
+  } else if (name.includes("odstream")) {
+    return {
+      name: "ODSTREAM HD",
+      badge: "No Iklan",
+      color: "text-green-500 bg-green-500/10 border-green-500/20",
+    };
+  } else if (name.includes("mega")) {
+    return {
+      name: "MEGA",
+      badge: "No Iklan",
+      color: "text-green-500 bg-green-500/10 border-green-500/20",
+    };
+  } else if (name.includes("gdrive")) {
+    return {
+      name: "GDRIVE",
+      badge: "No Iklan",
+      color: "text-green-500 bg-green-500/10 border-green-500/20",
+    };
+  } else if (name.includes("moedesu")) {
+    return {
+      name: "MOEDESU HD",
+      badge: "No Iklan",
+      color: "text-green-500 bg-green-500/10 border-green-500/20",
+    };
+  }
+  // KELOMPOK RAWAN IKLAN - Warna Kuning
+  else if (name.includes("vidhide")) {
+    return {
+      name: "VIDHIDE",
+      badge: "Iklan VAST",
+      color: "text-yellow-500 bg-yellow-500/10 border-yellow-500/20",
+    };
+  } else if (name.includes("filedon")) {
+    return {
+      name: "FILEDON",
+      badge: "Iklan VAST",
+      color: "text-yellow-500 bg-yellow-500/10 border-yellow-500/20",
+    };
+  } else if (name.includes("yourupload")) {
+    return {
+      name: "YOURUPLOAD",
+      badge: "Iklan VAST",
+      color: "text-yellow-500 bg-yellow-500/10 border-yellow-500/20",
+    };
+  }
+  // DEFAULT
+  else {
+    return {
+      name: rawName.toUpperCase(),
+      badge: "Auto",
+      color: "text-gray-400 bg-gray-800/50 border-gray-700",
+    };
+  }
+}
 
 export async function loadPlayer(epSlug, forceAnimeSlug = null) {
   if (!epSlug) return;
@@ -92,9 +163,7 @@ export async function loadPlayer(epSlug, forceAnimeSlug = null) {
 
   if (!animeSlug) {
     try {
-      const sankaRes = await fetch(
-        `https://www.sankavollerei.com/anime/episode/${epSlug}`,
-      );
+      const sankaRes = await fetch(`${SANKA_API}/episode/${epSlug}`);
       if (sankaRes.ok) {
         const sankaJson = await sankaRes.json();
         if (sankaJson.data && sankaJson.data.animeId) {
@@ -116,6 +185,7 @@ export async function loadPlayer(epSlug, forceAnimeSlug = null) {
 
   localStorage.setItem("current_anime_slug", animeSlug);
   const animeData = await fetchData(`/anime/${animeSlug}`);
+  console.log("TOTAL EPISODE ASLI DARI API:", animeData.episodes.length);
   saveToHistory(data, animeData, animeSlug, epSlug);
 
   let regularEpisodes = [];
@@ -199,7 +269,7 @@ export async function loadPlayer(epSlug, forceAnimeSlug = null) {
                             <h3 class="text-[10px] font-black mb-4 flex items-center gap-2 uppercase tracking-[0.2em] text-gray-400">
                                 <i class="fas fa-server text-[#ff6600]"></i> Pilih Server
                             </h3>
-                            <div id="mirror-list" class="flex flex-wrap gap-2"></div>
+                            <div id="mirror-list" class="grid grid-cols-2 sm:grid-cols-3 lg:flex lg:flex-wrap gap-2 md:gap-3"></div>
                         </div>
                         <div class="flex-shrink-0 w-full md:w-auto">
                             <h3 class="text-[10px] font-black mb-4 uppercase tracking-[0.2em] text-gray-400 md:text-right">Kualitas</h3>
@@ -227,15 +297,31 @@ export async function loadPlayer(epSlug, forceAnimeSlug = null) {
                         <span class="text-[9px] text-gray-600 font-black uppercase">Total: ${regularEpisodes.length}</span>
                     </div>
                     
-                    <div class="flex flex-wrap gap-2">
+                    <div class="flex flex-wrap gap-2 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
                         ${regularEpisodes
                           .map((ep, index) => {
                             const isCurrent = ep.slug === epSlug;
+
+                            // LOGIKA BARU: Ekstrak nomor episode asli dari judul
+                            let epNumber = index + 1; // Fallback
+                            // Cari pola kata "Episode 1155" atau "Eps 1155" di judul
+                            const match = ep.title.match(
+                              /(?:Episode|Eps)\s*([\d\.]+)/i,
+                            );
+                            if (match) {
+                              epNumber = match[1];
+                            } else {
+                              // Jika tidak ada kata "Episode", cari angka pertama yang muncul
+                              const numMatch =
+                                ep.title.match(/\b\d+(\.\d+)?\b/);
+                              if (numMatch) epNumber = numMatch[0];
+                            }
+
                             return `
                                 <button onclick="app.loadPlayer('${ep.slug}')" 
                                     class="px-3 py-1.5 min-w-[32px] rounded-lg text-[10px] font-black transition-all duration-300 uppercase
                                     ${isCurrent ? "bg-[#ff6600] text-white shadow-lg shadow-orange-500/30 ring-1 ring-orange-400" : "bg-gray-800/60 text-gray-400 border border-gray-700/50 hover:bg-gray-700 hover:text-white"}">
-                                    ${index + 1}
+                                    ${epNumber}
                                 </button>
                             `;
                           })
@@ -294,14 +380,22 @@ export const changeQuality = (selectedQ, encodedMirrors) => {
       targetBtn.classList.add("bg-white", "text-black", "shadow-md");
 
     const filtered = mirrors.filter((m) => m.payload?.q === selectedQ);
+
+    // Looping dengan fungsi getServerInfo
     container.innerHTML = filtered
-      .map(
-        (m) => `
+      .map((m) => {
+        const info = getServerInfo(m.name);
+        return `
         <button onclick="app.switchServer('${btoa(JSON.stringify(m.payload))}')" 
-            class="bg-gray-800/80 hover:bg-[#ff6600] border border-gray-700 px-4 py-2 rounded-lg text-[10px] font-black transition uppercase text-white active:scale-95 shadow-sm">
-            ${m.name}
-        </button>`,
-      )
+            class="flex flex-col items-start p-2.5 rounded-xl border border-gray-700 hover:border-[#ff6600] bg-gray-800/50 hover:bg-gray-800 transition-all w-full sm:w-auto min-w-[120px] text-left group shadow-sm active:scale-95">
+            <span class="font-black text-[10px] tracking-widest uppercase mb-1.5 text-gray-300 group-hover:text-white transition-colors">
+                <i class="fas fa-server mr-1 text-[#ff6600]"></i> ${info.name}
+            </span>
+            <span class="text-[8px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${info.color}">
+                ${info.badge}
+            </span>
+        </button>`;
+      })
       .join("");
   } catch (e) {
     console.error("Error changing quality:", e);
@@ -314,7 +408,7 @@ export async function switchServer(encodedPayload) {
   wrapper.innerHTML = `<div class="flex items-center justify-center h-full text-white bg-black/50"><i class="fas fa-circle-notch animate-spin text-4xl text-[#ff6600]"></i></div>`;
 
   try {
-    const res = await fetch(`https://api.kanata.web.id/otakudesu/stream`, {
+    const res = await fetch(`${ANIME_API}/stream`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
