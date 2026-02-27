@@ -386,12 +386,14 @@ export const changeQuality = (selectedQ, encodedMirrors) => {
       .map((m) => {
         const info = getServerInfo(m.name);
         return `
-        <button onclick="app.switchServer('${btoa(JSON.stringify(m.payload))}')" 
-            class="flex flex-col items-start p-2.5 rounded-xl border border-gray-700 hover:border-[#ff6600] bg-gray-800/50 hover:bg-gray-800 transition-all w-full sm:w-auto min-w-[120px] text-left group shadow-sm active:scale-95">
-            <span class="font-black text-[10px] tracking-widest uppercase mb-1.5 text-gray-300 group-hover:text-white transition-colors">
-                <i class="fas fa-server mr-1 text-[#ff6600]"></i> ${info.name}
+        <button onclick="app.switchServer('${btoa(JSON.stringify(m.payload))}', this)" 
+            class="server-btn flex flex-col items-start p-2.5 rounded-xl border border-gray-700 hover:border-[#ff6600] bg-gray-800/50 hover:bg-gray-800 transition-all flex-1 sm:flex-none min-w-[120px] text-left group shadow-sm active:scale-95 overflow-hidden">
+            
+            <span class="server-title font-black text-[9px] md:text-[10px] tracking-widest uppercase mb-1.5 text-gray-300 group-hover:text-white transition-colors truncate w-full">
+                <i class="mr-1 text-[#ff6600]"></i> ${info.name}
             </span>
-            <span class="text-[8px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${info.color}">
+            
+            <span class="text-[7px] md:text-[8px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider ${info.color} whitespace-nowrap">
                 ${info.badge}
             </span>
         </button>`;
@@ -402,7 +404,43 @@ export const changeQuality = (selectedQ, encodedMirrors) => {
   }
 };
 
-export async function switchServer(encodedPayload) {
+export async function switchServer(encodedPayload, btnElement = null) {
+  // LOGIKA PENANDA SERVER AKTIF (Biar tombol tetep Oren)
+  if (btnElement) {
+    // Hapus warna oren dari SEMUA tombol server dulu
+    document.querySelectorAll(".server-btn").forEach((btn) => {
+      btn.classList.remove(
+        "border-[#ff6600]",
+        "bg-gray-800",
+        "ring-1",
+        "ring-[#ff6600]/50",
+      );
+      btn.classList.add("border-gray-700", "bg-gray-800/50");
+
+      const title = btn.querySelector(".server-title");
+      if (title) {
+        title.classList.remove("text-white");
+        title.classList.add("text-gray-300");
+      }
+    });
+
+    // Tambahkan warna oren & ring terang ke tombol YANG DIKLIK
+    btnElement.classList.remove("border-gray-700", "bg-gray-800/50");
+    btnElement.classList.add(
+      "border-[#ff6600]",
+      "bg-gray-800",
+      "ring-1",
+      "ring-[#ff6600]/50",
+    );
+
+    const title = btnElement.querySelector(".server-title");
+    if (title) {
+      title.classList.remove("text-gray-300");
+      title.classList.add("text-white");
+    }
+  }
+
+  // KODE FETCH IFRAME (Tetap Sama Persis)
   const payload = JSON.parse(atob(encodedPayload));
   const wrapper = document.getElementById("video-wrapper");
   wrapper.innerHTML = `<div class="flex items-center justify-center h-full text-white bg-black/50"><i class="fas fa-circle-notch animate-spin text-4xl text-[#ff6600]"></i></div>`;
