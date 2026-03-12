@@ -1,4 +1,4 @@
-import { fetchData } from "./api.js";
+import { SANKA_API } from "./config.js";
 import {
   showLoading,
   createAnimeCard,
@@ -30,19 +30,28 @@ export async function loadHome() {
     `;
   }
 
-  const data = await fetchData("/home");
+  let homeJson = null;
+  try {
+    const res = await fetch(`${SANKA_API}/home`);
+    if (res.ok) homeJson = await res.json();
+  } catch (e) {
+    console.error("Gagal fetch home dari Sanka:", e);
+  }
 
-  if (data && display) {
+  const ongoingList = homeJson?.data?.ongoing?.animeList || [];
+  const completeList = homeJson?.data?.complete?.animeList || [];
+
+  if (display) {
     display.innerHTML = ""; // Bersihkan skeleton
 
     // 1. Render Hero Slider (Ambil 5 anime pertama dari Ongoing)
-    if (data.ongoing && data.ongoing.length > 0) {
-      renderHeroSlider(data.ongoing.slice(0, 5));
+    if (ongoingList.length > 0) {
+      renderHeroSlider(ongoingList.slice(0, 5));
     }
 
     // 2. Render List Kategori
-    renderPreview(data.ongoing, "Ongoing Anime", "ongoing");
-    renderPreview(data.complete, "Complete Anime", "complete");
+    renderPreview(ongoingList, "Ongoing Anime", "ongoing");
+    renderPreview(completeList, "Complete Anime", "complete");
   }
 }
 
@@ -58,7 +67,7 @@ function renderHeroSlider(animeList) {
   animeList.forEach((anime, index) => {
     // Slide Aktif Pertama
     const isActive = index === 0 ? "opacity-100 z-10" : "opacity-0 z-0";
-    const thumb = anime.thumb || anime.thumbnail;
+    const thumb = anime.poster || anime.thumb || anime.thumbnail;
 
     slidesHtml += `
       <div class="hero-slide absolute inset-0 transition-opacity duration-1000 ease-in-out ${isActive}" data-index="${index}">
@@ -80,14 +89,14 @@ function renderHeroSlider(animeList) {
                               <i class="fas fa-fire"></i> Trending
                           </span>
                           <span class="bg-gray-800/80 backdrop-blur-sm text-gray-300 border border-gray-700 text-[8px] md:text-[10px] font-bold px-2 md:px-3 py-1 rounded uppercase tracking-widest">
-                              Ep ${anime.episode || anime.eps || "?"}
+                              Ep ${anime.episodes || anime.episode || anime.eps || "?"}
                           </span>
                       </div>
 
                       <h2 class="text-xl sm:text-3xl md:text-5xl lg:text-6xl font-black text-white mb-3 md:mb-6 tracking-tighter leading-tight drop-shadow-2xl line-clamp-2 md:line-clamp-3 w-full px-2 md:px-0">${anime.title}</h2>
                       
                       <div class="flex justify-center md:justify-start gap-3 md:gap-4 w-full">
-                          <button onclick="app.loadDetail('${anime.slug}', '${thumb}')" 
+                          <button onclick="app.loadDetail('${anime.animeId || anime.slug}', '${thumb}')" 
                                   class="bg-[#ff6600] hover:bg-[#e65c00] text-white px-6 md:px-8 py-2 md:py-3.5 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-[#ff6600]/30 flex items-center justify-center gap-2 hover:scale-105 active:scale-95">
                               <i class="fas fa-play"></i> Tonton
                           </button>
@@ -208,27 +217,36 @@ export async function loadCategory(type, page = 1) {
   const display = document.getElementById("content-display");
 
   window.scrollTo({ top: 0, behavior: "smooth" });
-  // 1. Matikan loading spinner jadul & ubah URL
   showLoading(false);
   history.pushState(null, null, `/${type}?page=${page}`);
 
-  // 2. TAMPILKAN SKELETON DULU (Tergantung tipe device, kita render 10-12 kotak kosong)
   display.innerHTML = `
     <h2 class="text-xl md:text-2xl font-black mb-6 border-l-4 border-[#ff6600] pl-4 tracking-tighter text-gray-700 bg-gray-800/20 w-max rounded-r-md animate-pulse">MEMUAT DATA...</h2>
     ${createSkeletonGrid(12)}
   `;
 
-  // 3. Ambil data dari API
-  const data = await fetchData(`/${type}?page=${page}`);
+  // Map type ke endpoint Sanka
+  const endpointMap = { ongoing: "ongoing-anime", complete: "complete-anime" };
+  const endpoint = endpointMap[type] || `${type}-anime`;
 
-  // 4. Setelah data dapat, TIMPA skeleton dengan data asli
+  let animeList = [];
+  try {
+    const res = await fetch(`${SANKA_API}/${endpoint}?page=${page}`);
+    if (res.ok) {
+      const json = await res.json();
+      animeList = json?.data?.animeList || [];
+    }
+  } catch (e) {
+    console.error("loadCategory error:", e);
+  }
+
   display.innerHTML = `<h2 class="text-xl md:text-2xl font-black mb-6 border-l-4 border-[#ff6600] pl-4 uppercase tracking-tighter text-white capitalize">${type} Anime</h2>`;
 
   let html = `<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-4 md:gap-6">`;
-  data.forEach(
-    (a) =>
-      (html += createAnimeCard(a, `app.loadDetail('${a.slug}', '${a.thumb}')`)),
-  );
+  animeList.forEach((a) => {
+    const normalised = { ...a, thumb: a.poster, slug: a.animeId, episode: a.episodes, status: type };
+    html += createAnimeCard(normalised, `app.loadDetail('${a.animeId}', '${a.poster}')`);
+  });
   html += `</div>` + createPagination(page, type);
 
   display.insertAdjacentHTML("beforeend", html);
@@ -244,14 +262,8 @@ function renderPreview(list, title, type) {
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 md:gap-6">
     `;
   list.slice(0, 6).forEach((a) => {
-    const animeWithStatus = {
-      ...a,
-      status: type === "ongoing" ? "ongoing" : "complete",
-    };
-    html += createAnimeCard(
-      animeWithStatus,
-      `app.loadDetail('${a.slug}', '${a.thumb}')`,
-    );
+    const normalised = { ...a, thumb: a.poster, slug: a.animeId, episode: a.episodes, status: type };
+    html += createAnimeCard(normalised, `app.loadDetail('${a.animeId}', '${a.poster}')`);
   });
   html += `</div>`;
   display.insertAdjacentHTML("beforeend", html);
@@ -286,10 +298,15 @@ export async function handleSearch() {
   }
 
   try {
-    const data = await fetchData(`/search?q=${encodeURIComponent(q)}`);
+    let animeList = [];
+    const res = await fetch(`${SANKA_API}/search/${encodeURIComponent(q)}`);
+    if (res.ok) {
+      const json = await res.json();
+      animeList = json?.data?.animeList || [];
+    }
 
     if (display) {
-      if (data && data.length > 0) {
+      if (animeList.length > 0) {
         display.innerHTML = `
           <div class="animate-fadeIn">
             <div class="flex items-center gap-3 mb-6 mt-2">
@@ -304,16 +321,12 @@ export async function handleSearch() {
 
         const grid = document.getElementById("search-results-grid");
         let html = "";
-        data.forEach((anime) => {
-          const imageUrl = anime.thumb || anime.thumbnail || "";
-          html += createAnimeCard(
-            anime,
-            `app.loadDetail('${anime.slug}', '${imageUrl}')`,
-          );
+        animeList.forEach((anime) => {
+          const normalised = { ...anime, thumb: anime.poster, slug: anime.animeId };
+          html += createAnimeCard(normalised, `app.loadDetail('${anime.animeId}', '${anime.poster}')`);
         });
         grid.innerHTML = html;
       } else {
-        // Tampilan Error Normal
         display.innerHTML = `
           <div class="text-center py-32 opacity-50">
             <i class="fas fa-search-minus text-5xl mb-4 text-gray-600"></i>

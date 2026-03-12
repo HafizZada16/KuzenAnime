@@ -1,5 +1,5 @@
-import { fetchData } from "./api.js";
-import { showLoading, createAnimeCard, createSkeletonGrid } from "./utils.js"; // Pastikan createSkeletonGrid di-import!
+import { SANKA_API } from "./config.js";
+import { showLoading, createAnimeCard, createSkeletonGrid } from "./utils.js";
 
 export async function loadGenres(selectedGenreSlug = null, page = 1) {
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -121,12 +121,17 @@ export async function loadGenres(selectedGenreSlug = null, page = 1) {
   // 4. JIKA ADA GENRE YANG DIKLIK, AMBIL DATA API & TIMPA SKELETON
   if (selectedGenreSlug) {
     try {
-      const data = await fetchData(`/genres/${selectedGenreSlug}?page=${page}`);
+      let animeList = [];
+      const res = await fetch(`${SANKA_API}/genre/${selectedGenreSlug}?page=${page}`);
+      if (res.ok) {
+        const json = await res.json();
+        animeList = json?.data?.animeList || [];
+      }
+
       const contentArea = document.getElementById("genre-content-area");
+      if (!contentArea) return;
 
-      if (!contentArea) return; // Mencegah error kalau user pindah menu terlalu cepat
-
-      if (data && data.length > 0) {
+      if (animeList.length > 0) {
         const genreName =
           genres.find((g) => g.slug === selectedGenreSlug)?.name ||
           selectedGenreSlug;
@@ -139,23 +144,20 @@ export async function loadGenres(selectedGenreSlug = null, page = 1) {
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 md:gap-6 animate-fadeIn">
         `;
 
-        data.forEach((anime) => {
-          const ratingVal = anime.rating || anime.score;
-          if (ratingVal && ratingVal.trim() !== "" && ratingVal !== "-") {
-            anime.extra = ratingVal;
-          } else {
-            anime.extra = "Completed";
-          }
-
-          const imageUrl = anime.thumb || anime.thumbnail || "";
-          finalHtml += createAnimeCard(
-            anime,
-            `app.loadDetail('${anime.slug}', '${imageUrl}')`,
-          );
+        animeList.forEach((anime) => {
+          const scoreVal = anime.score && anime.score.trim() !== "" ? anime.score : null;
+          const normalised = {
+            ...anime,
+            thumb: anime.poster,
+            slug: anime.animeId,
+            episode: anime.episodes,
+            extra: scoreVal || "Completed",
+          };
+          finalHtml += createAnimeCard(normalised, `app.loadDetail('${anime.animeId}', '${anime.poster}')`);
         });
 
         finalHtml += `</div>` + createPaginationGenre(selectedGenreSlug, page);
-        contentArea.innerHTML = finalHtml; // Menimpa Skeleton dengan data asli
+        contentArea.innerHTML = finalHtml;
       } else {
         contentArea.innerHTML = `
             <div class="text-center py-20 bg-gray-900/20 rounded-3xl border border-dashed border-gray-800 animate-fadeIn">

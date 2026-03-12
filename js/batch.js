@@ -1,4 +1,4 @@
-import { fetchData } from "/js/api.js";
+import { SANKA_API } from "/js/config.js";
 import { showLoading } from "/js/utils.js";
 
 export async function loadBatch(slug) {
@@ -6,11 +6,20 @@ export async function loadBatch(slug) {
   window.scrollTo({ top: 0, behavior: "smooth" });
   showLoading(true);
 
-  // Update URL agar bisa di-refresh
   history.pushState(null, null, `/batch/${slug}`);
 
-  // Fetch data ke endpoint batch
-  const data = await fetchData(`/batch/${slug}`);
+  // Fetch dari Sanka API
+  let data = null;
+  try {
+    const res = await fetch(`${SANKA_API}/batch/${slug}`);
+    if (res.ok) {
+      const json = await res.json();
+      data = json.data || null;
+    }
+  } catch (e) {
+    console.error("Gagal fetch batch dari Sanka:", e);
+  }
+
   const display = document.getElementById("content-display");
   if (display) display.innerHTML = "";
 
@@ -20,12 +29,9 @@ export async function loadBatch(slug) {
     return;
   }
 
-  // Ambil slug anime terakhir yang dibuka dari localStorage untuk tombol "Kembali"
   const animeSlug = localStorage.getItem("current_anime_slug");
-
-  // Data dari JSON
   const title = data.title || "Download Batch";
-  const thumb = data.thumb || "https://via.placeholder.com/150x200";
+  const thumb = data.poster || data.thumb || "https://via.placeholder.com/150x200";
 
   display.innerHTML = `
     <div class="animate-fadeIn max-w-4xl mx-auto">
@@ -58,7 +64,7 @@ export async function loadBatch(slug) {
             </h2>
             
             <div class="space-y-6">
-                ${renderDownloadLinks(data.download_list)}
+                ${renderDownloadLinks(data.downloadUrl)}
             </div>
         </div>
     </div>
@@ -67,55 +73,49 @@ export async function loadBatch(slug) {
   showLoading(false);
 }
 
-// Fungsi Helper untuk merender struktur JSON yang memiliki nested array
-function renderDownloadLinks(downloadList) {
-  if (!downloadList || downloadList.length === 0) {
+// Render struktur Sanka: downloadUrl.formats[].qualities[].title/size/urls[]
+function renderDownloadLinks(downloadUrl) {
+  if (!downloadUrl || !downloadUrl.formats || downloadUrl.formats.length === 0) {
     return `<div class="p-4 bg-gray-900/50 rounded-xl text-center text-gray-500 text-xs font-bold uppercase tracking-widest">Belum ada link download.</div>`;
   }
 
   let html = "";
 
-  // Looping grup download list (meski biasanya hanya ada 1 grup berisi title & links kualitas)
-  downloadList.forEach((batchGroup) => {
-    if (!batchGroup.links) return;
+  downloadUrl.formats.forEach((format) => {
+    if (!format.qualities) return;
 
-    // Looping per kualitas (360p, 480p, 720p)
-    batchGroup.links.forEach((qItem) => {
-      const qualityName = qItem.quality || "Unknown Quality";
+    format.qualities.forEach((qItem) => {
+      const qualityName = qItem.title || "Unknown Quality";
       const fileSize = qItem.size || "Unknown Size";
 
       html += `
-            <div class="bg-gray-900/30 hover:bg-gray-900/80 border border-gray-800 hover:border-gray-700 p-5 rounded-2xl transition duration-300">
-                
-                <div class="mb-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                    <span class="bg-[#ff6600] text-white text-[10px] font-black px-4 py-1.5 rounded-lg shadow-lg shadow-orange-600/20 uppercase tracking-widest">
-                        <i class="fas fa-video mr-1"></i> ${qualityName}
-                    </span>
-                    <span class="bg-gray-800 border border-gray-700 text-gray-400 text-[10px] font-black px-3 py-1.5 rounded-lg uppercase tracking-widest">
-                        <i class="fas fa-hdd mr-1"></i> ${fileSize}
-                    </span>
-                    <span class="hidden sm:block h-px flex-grow bg-gray-800"></span>
-                </div>
+        <div class="bg-gray-900/30 hover:bg-gray-900/80 border border-gray-800 hover:border-gray-700 p-5 rounded-2xl transition duration-300">
+            
+            <div class="mb-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <span class="bg-[#ff6600] text-white text-[10px] font-black px-4 py-1.5 rounded-lg shadow-lg shadow-orange-600/20 uppercase tracking-widest">
+                    <i class="fas fa-video mr-1"></i> ${qualityName}
+                </span>
+                <span class="bg-gray-800 border border-gray-700 text-gray-400 text-[10px] font-black px-3 py-1.5 rounded-lg uppercase tracking-widest">
+                    <i class="fas fa-hdd mr-1"></i> ${fileSize}
+                </span>
+                <span class="hidden sm:block h-px flex-grow bg-gray-800"></span>
+            </div>
 
-                <div class="flex flex-wrap gap-2">
-                    ${
-                      qItem.links
-                        ? qItem.links
-                            .map(
-                              (server) => `
+            <div class="flex flex-wrap gap-2">
+                ${
+                  qItem.urls && qItem.urls.length > 0
+                    ? qItem.urls.map((server) => `
                         <a href="${server.url}" target="_blank" rel="noopener noreferrer" 
                             class="flex items-center gap-2 bg-gray-800 hover:bg-orange-600 border border-gray-700 hover:border-orange-500 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase text-gray-300 hover:text-white transition-all shadow-sm group">
                             <i class="fas fa-download opacity-50 group-hover:opacity-100"></i>
-                            ${server.name || "Download"}
+                            ${server.title || "Download"}
                         </a>
-                    `,
-                            )
-                            .join("")
-                        : '<span class="text-xs text-red-500">No servers available</span>'
-                    }
-                </div>
+                      `).join("")
+                    : '<span class="text-xs text-red-500">No servers available</span>'
+                }
             </div>
-            `;
+        </div>
+      `;
     });
   });
 
