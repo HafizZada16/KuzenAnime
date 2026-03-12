@@ -539,8 +539,6 @@ export async function loadAnimasuServers() {
 }
 
 // ─── SWITCH SERVER ────────────────────────────────────────────────────────────
-// mode otakudesu: fetch dari Sanka /server/:id
-// mode animasu  : URL sudah embed, langsung set ke iframe
 export async function switchServer(encodedServerData, btnElement = null, isDirectUrl = false) {
   if (btnElement) {
     document.querySelectorAll(".server-btn").forEach(btn => {
@@ -563,17 +561,72 @@ export async function switchServer(encodedServerData, btnElement = null, isDirec
     let iframeSrc = null;
 
     if (isDirectUrl) {
-      // Mode Animasu: encodedServerData adalah URL embed yang di-btoa
       iframeSrc = decodeURIComponent(escape(atob(encodedServerData)));
     } else {
-      // Mode Otakudesu: encodedServerData adalah JSON { serverId, title }
       const { serverId } = JSON.parse(atob(encodedServerData));
       const res = await fetch(`${SANKA_API}/server/${serverId}`);
       const json = await res.json();
       iframeSrc = json?.data?.url || json?.data?.iframe || null;
     }
 
-    if (iframeSrc) {
+    if (!iframeSrc) throw new Error("Source tidak ditemukan");
+
+    // Cek apakah source bisa di ArtPlayer (Direct Video / HLS / Blogger)
+    const isArtPlayerSource = iframeSrc.includes(".m3u8") || 
+                             iframeSrc.includes(".mp4") || 
+                             iframeSrc.includes("blogger.com/video") ||
+                             iframeSrc.includes("gdriveplayer") || 
+                             iframeSrc.includes("dl.berkasdrive.com");
+
+    if (isArtPlayerSource) {
+      wrapper.innerHTML = `<div id="artplayer-container" class="w-full h-full"></div>`;
+      
+      const art = new Artplayer({
+        container: "#artplayer-container",
+        url: iframeSrc,
+        type: iframeSrc.includes(".m3u8") ? "m3u8" : (iframeSrc.includes("blogger") ? "video" : ""),
+        fullscreen: true,
+        fullscreenWeb: true,
+        playbackRate: true,
+        aspectRatio: true,
+        setting: true,
+        pip: true,
+        autoSize: true,
+        theme: "#ff6600",
+        customType: {
+          m3u8: function (video, url) {
+            if (Hls.isSupported()) {
+              const hls = new Hls();
+              hls.loadSource(url);
+              hls.attachMedia(video);
+            } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+              video.src = url;
+            }
+          },
+        },
+        settings: [
+          {
+            html: "Playback Speed",
+            width: 200,
+            tooltip: "Normal",
+            selector: [
+              { html: "0.5x", value: 0.5 },
+              { html: "0.75x", value: 0.75 },
+              { html: "Normal", value: 1.0, default: true },
+              { html: "1.25x", value: 1.25 },
+              { html: "1.5x", value: 1.5 },
+              { html: "2.0x", value: 2.0 },
+            ],
+            onSelect: function (item) {
+              art.playbackRate = item.value;
+              return item.html;
+            },
+          },
+        ],
+      });
+      window._art = art;
+    } else {
+      // Fallback ke iframe biasa (untuk Streamwish dll)
       wrapper.innerHTML = `
         <iframe src="${iframeSrc}"
           allowfullscreen="true"
@@ -584,8 +637,6 @@ export async function switchServer(encodedServerData, btnElement = null, isDirec
           referrerpolicy="no-referrer"
           class="w-full h-full border-none absolute top-0 left-0">
         </iframe>`;
-    } else {
-      throw new Error("Iframe URL tidak ditemukan");
     }
   } catch (err) {
     console.error("switchServer error:", err);
