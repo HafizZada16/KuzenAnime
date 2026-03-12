@@ -39,7 +39,7 @@ export async function loadHome() {
   }
 
   const ongoingList = homeJson?.data?.ongoing?.animeList || [];
-  const completeList = homeJson?.data?.complete?.animeList || [];
+  const completeList = homeJson?.data?.completed?.animeList || [];
 
   if (display) {
     display.innerHTML = ""; // Bersihkan skeleton
