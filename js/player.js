@@ -204,8 +204,6 @@ export async function loadPlayer(epSlug, forceAnimeSlug = null) {
 
           ${navigationHtml}
 
-          </div>
-
           <!-- SOURCE SWITCHER -->
           <div class="bg-[#121212] border border-gray-800 p-5 rounded-2xl mb-6 shadow-sm">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
