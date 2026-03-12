@@ -230,7 +230,7 @@ export async function loadPlayer(epSlug, forceAnimeSlug = null) {
               </div>
               <div class="flex-shrink-0 w-full md:w-auto">
                 <h3 class="text-[10px] font-black mb-4 uppercase tracking-[0.2em] text-gray-400 md:text-right">Kualitas</h3>
-                <div class="flex bg-gray-800 p-1 rounded-xl w-fit md:ml-auto">
+                <div id="quality-container" class="flex bg-gray-800 p-1 rounded-xl w-fit md:ml-auto">
                   ${qualities.map(q => `
                     <button onclick="app.changeQuality('${q}', '${encodedQualities}')"
                       id="q-${q}"
@@ -306,43 +306,72 @@ export async function loadPlayer(epSlug, forceAnimeSlug = null) {
   window._defaultQuality = defaultQuality;
 
   // Auto-pilih kualitas default dan source default (otakudesu)
+  window._currentSource = "otakudesu";
   if (defaultQuality) {
     window.app.changeQuality(defaultQuality, encodedQualities);
   }
 }
 
-// Ubah kualitas — pakai struktur Sanka: qualities[].title & serverList[]
+// Ubah kualitas — handle Otakudesu & Animasu
 export const changeQuality = (selectedQ, encodedQualities) => {
   try {
-    const qualities = JSON.parse(atob(encodedQualities));
     const container = document.getElementById("mirror-list");
-
+    
+    // Update Button UI
     document.querySelectorAll(".quality-btn").forEach(btn => {
       btn.classList.remove("bg-white", "text-black", "shadow-md");
       btn.classList.add("text-gray-400");
     });
-
     const targetBtn = document.getElementById(`q-${selectedQ}`);
     if (targetBtn) targetBtn.classList.add("bg-white", "text-black", "shadow-md");
 
-    const qualityObj = qualities.find(q => q.title === selectedQ);
-    const serverList = qualityObj?.serverList || [];
+    if (window._currentSource === "animasu") {
+      // Logic Animasu: Filter streams by quality prefix
+      const streams = window._animasuStreams || [];
+      const filtered = streams.filter(s => s.name.startsWith(selectedQ));
+      
+      container.innerHTML = filtered.map(stream => {
+        let providerName = stream.name;
+        try {
+          const urlObj = new URL(stream.url);
+          const hostParts = urlObj.hostname.split('.');
+          providerName = hostParts.length > 1 ? hostParts[hostParts.length - 2] : hostParts[0];
+        } catch(e) {}
 
-    container.innerHTML = serverList.map(server => {
-      const info = getServerInfo(server.title);
-      // Encode serverId untuk dipakai switchServer
-      const encodedServerId = btoa(JSON.stringify({ serverId: server.serverId, title: server.title }));
-      return `
-        <button onclick="app.switchServer('${encodedServerId}', this)"
-          class="server-btn flex flex-col items-start p-2.5 rounded-xl border border-gray-700 hover:border-[#ff6600] bg-gray-800/50 hover:bg-gray-800 transition-all flex-1 sm:flex-none min-w-[120px] text-left group shadow-sm active:scale-95 overflow-hidden">
-          <span class="server-title font-black text-[9px] md:text-[10px] tracking-widest uppercase mb-1.5 text-gray-300 group-hover:text-white transition-colors truncate w-full">
-            <i class="mr-1 text-[#ff6600]"></i> ${info.name}
-          </span>
-          <span class="text-[7px] md:text-[8px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider ${info.color} whitespace-nowrap">
-            ${info.badge}
-          </span>
-        </button>`;
-    }).join("");
+        const info = getServerInfo(providerName);
+        const encodedUrl = btoa(unescape(encodeURIComponent(stream.url)));
+        return `
+          <button onclick="app.switchServer('${encodedUrl}', this, true)"
+            class="server-btn flex flex-col items-start p-2.5 rounded-xl border border-gray-700 hover:border-[#ff6600] bg-gray-800/50 hover:bg-gray-800 transition-all flex-1 sm:flex-none min-w-[120px] text-left group shadow-sm active:scale-95 overflow-hidden">
+            <span class="server-title font-black text-[9px] md:text-[10px] tracking-widest uppercase mb-1.5 text-gray-300 group-hover:text-white transition-colors truncate w-full">
+              <i class="mr-1 text-[#ff6600]"></i> ${info.name}
+            </span>
+            <span class="text-[7px] md:text-[8px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider ${info.color} whitespace-nowrap">
+              ${info.badge}
+            </span>
+          </button>`;
+      }).join("");
+    } else {
+      // Logic Otakudesu
+      const qualities = JSON.parse(atob(encodedQualities));
+      const qualityObj = qualities.find(q => q.title === selectedQ);
+      const serverList = qualityObj?.serverList || [];
+
+      container.innerHTML = serverList.map(server => {
+        const info = getServerInfo(server.title);
+        const encodedServerId = btoa(JSON.stringify({ serverId: server.serverId, title: server.title }));
+        return `
+          <button onclick="app.switchServer('${encodedServerId}', this)"
+            class="server-btn flex flex-col items-start p-2.5 rounded-xl border border-gray-700 hover:border-[#ff6600] bg-gray-800/50 hover:bg-gray-800 transition-all flex-1 sm:flex-none min-w-[120px] text-left group shadow-sm active:scale-95 overflow-hidden">
+            <span class="server-title font-black text-[9px] md:text-[10px] tracking-widest uppercase mb-1.5 text-gray-300 group-hover:text-white transition-colors truncate w-full">
+              <i class="mr-1 text-[#ff6600]"></i> ${info.name}
+            </span>
+            <span class="text-[7px] md:text-[8px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider ${info.color} whitespace-nowrap">
+              ${info.badge}
+            </span>
+          </button>`;
+      }).join("");
+    }
   } catch (e) {
     console.error("Error changing quality:", e);
   }
@@ -361,6 +390,7 @@ export function loadOtakudesuServers() {
   // Kembalikan server list Otakudesu (kualitas default)
   const eq = window._encodedQualities;
   const dq = window._defaultQuality;
+  window._currentSource = "otakudesu";
   if (eq && dq) window.app.changeQuality(dq, eq);
 }
 
@@ -469,33 +499,29 @@ export async function loadAnimasuServers() {
     if (!epRes.ok) throw new Error("Gagal mengambil stream (Stream HTTP " + epRes.status + ")");
     const epJson = await epRes.json();
     const streams = epJson?.streams || [];
+    window._animasuStreams = streams; // simpan untuk filter kualitas
+    window._currentSource = "animasu";
 
     if (streams.length === 0) {
       setMsg(`<div class="text-gray-500 text-[10px] font-bold uppercase"><i class="fas fa-exclamation-circle mr-1"></i> Video belum tersedia di Animasu.</div>`);
       return;
     }
 
-    container.innerHTML = streams.map(stream => {
-      let providerName = stream.name;
-      try {
-        const urlObj = new URL(stream.url);
-        const hostParts = urlObj.hostname.split('.');
-        providerName = hostParts.length > 1 ? hostParts[hostParts.length - 2] : hostParts[0];
-      } catch(e) {}
+    // UPDATE QUALITY BUTTONS
+    const qualities = [...new Set(streams.map(s => s.name.split(' ')[0]))].sort().reverse();
+    const qContainer = document.getElementById("quality-container");
+    if (qContainer) {
+      qContainer.innerHTML = qualities.map(q => `
+        <button onclick="app.changeQuality('${q}', '')"
+          id="q-${q}"
+          class="quality-btn px-4 py-1.5 rounded-lg text-[10px] font-black transition uppercase text-gray-400 hover:text-white">
+          ${q}
+        </button>`).join("");
+    }
 
-      const info = getServerInfo(providerName);
-      const encodedUrl = btoa(unescape(encodeURIComponent(stream.url)));
-      return `
-        <button onclick="app.switchServer('${encodedUrl}', this, true)"
-          class="server-btn flex flex-col items-start p-2.5 rounded-xl border border-gray-700 hover:border-[#ff6600] bg-gray-800/50 hover:bg-gray-800 transition-all flex-1 sm:flex-none min-w-[120px] text-left group shadow-sm active:scale-95 overflow-hidden">
-          <span class="server-title font-black text-[9px] md:text-[10px] tracking-widest uppercase mb-1.5 text-gray-300 group-hover:text-white transition-colors truncate w-full">
-            <i class="mr-1 text-[#ff6600]"></i> ${info.name}
-          </span>
-          <span class="text-[7px] md:text-[8px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider ${info.color} whitespace-nowrap">
-            ${info.badge}
-          </span>
-        </button>`;
-    }).join("");
+    // Auto-select highest
+    const defaultQ = qualities.includes("720p") ? "720p" : qualities[0];
+    window.app.changeQuality(defaultQ, "");
 
   } catch (e) {
     console.error("Animasu error:", e);
