@@ -328,7 +328,9 @@ export const changeQuality = (selectedQ, encodedQualities) => {
     if (window._currentSource === "animasu") {
       // Logic Animasu: Filter streams by quality prefix
       const streams = window._animasuStreams || [];
-      const filtered = streams.filter(s => s.name.startsWith(selectedQ));
+      const filtered = selectedQ === "semua" 
+        ? streams 
+        : streams.filter(s => s.name.startsWith(selectedQ) || !/^\d+p/i.test(s.name));
       
       container.innerHTML = filtered.map(stream => {
         let providerName = stream.name;
@@ -508,19 +510,26 @@ export async function loadAnimasuServers() {
     }
 
     // UPDATE QUALITY BUTTONS
-    const qualities = [...new Set(streams.map(s => s.name.split(' ')[0]))].sort().reverse();
+    const baseQualities = [...new Set(streams.map(s => {
+      const m = s.name.match(/^(\d+p)/i);
+      return m ? m[1] : null;
+    }).filter(q => q))].sort().reverse();
+    
+    // Tambahkan opsi "Semua" di awal
+    const qualities = ["semua", ...baseQualities];
+
     const qContainer = document.getElementById("quality-container");
     if (qContainer) {
       qContainer.innerHTML = qualities.map(q => `
         <button onclick="app.changeQuality('${q}', '')"
           id="q-${q}"
           class="quality-btn px-4 py-1.5 rounded-lg text-[10px] font-black transition uppercase text-gray-400 hover:text-white">
-          ${q}
+          ${q === 'semua' ? 'ALL' : q}
         </button>`).join("");
     }
 
-    // Auto-select highest
-    const defaultQ = qualities.includes("720p") ? "720p" : qualities[0];
+    // Default: Cari 720p, kalau nggak ada 'semua'
+    const defaultQ = baseQualities.includes("720p") ? "720p" : "semua";
     window.app.changeQuality(defaultQ, "");
 
   } catch (e) {
