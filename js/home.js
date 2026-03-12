@@ -244,7 +244,11 @@ export async function loadCategory(type, page = 1) {
 
   let html = `<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-4 md:gap-6">`;
   animeList.forEach((a) => {
-    const normalised = { ...a, thumb: a.poster, slug: a.animeId, episode: a.episodes, status: type };
+    // Badge: hari rilis untuk ongoing, score untuk completed
+    const badge = type === "ongoing"
+      ? (a.releaseDay || "Ongoing")
+      : (a.score && a.score.trim() !== "" ? a.score : "Completed");
+    const normalised = { ...a, thumb: a.poster, slug: a.animeId, episode: a.episodes, extra: badge };
     html += createAnimeCard(normalised, `app.loadDetail('${a.animeId}', '${a.poster}')`);
   });
   html += `</div>` + createPagination(page, type);
@@ -262,7 +266,11 @@ function renderPreview(list, title, type) {
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 md:gap-6">
     `;
   list.slice(0, 6).forEach((a) => {
-    const normalised = { ...a, thumb: a.poster, slug: a.animeId, episode: a.episodes, status: type };
+    // Badge: hari rilis untuk ongoing, score untuk completed
+    const badge = type === "ongoing"
+      ? (a.releaseDay || "Ongoing")
+      : (a.score && a.score.trim() !== "" ? a.score : "Completed");
+    const normalised = { ...a, thumb: a.poster, slug: a.animeId, episode: a.episodes, extra: badge };
     html += createAnimeCard(normalised, `app.loadDetail('${a.animeId}', '${a.poster}')`);
   });
   html += `</div>`;
