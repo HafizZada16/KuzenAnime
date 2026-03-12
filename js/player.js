@@ -528,9 +528,8 @@ export async function loadAnimasuServers() {
         </button>`).join("");
     }
 
-    // Default: Cari 720p, kalau nggak ada 'semua'
-    const defaultQ = baseQualities.includes("720p") ? "720p" : "semua";
-    window.app.changeQuality(defaultQ, "");
+    // Default: Semua (ALL) supaya semua server (termasuk Blogger 480p) keliatan
+    window.app.changeQuality("semua", "");
 
   } catch (e) {
     console.error("Animasu error:", e);
