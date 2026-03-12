@@ -199,19 +199,22 @@
                                 <i class="fas fa-search"></i>
                             </button>
                             
-                            <!-- DESKTOP SEARCH POPUP -->
+                            <!-- DESKTOP SEARCH POPUP (FLOATING) -->
                             <div 
                                 id="desktop-search-container"
-                                class="hidden absolute right-0 top-12 w-64 bg-[#1a1a1a] border border-gray-800 rounded-2xl shadow-2xl p-2 z-[100] animate-slideDown"
+                                class="hidden fixed left-1/2 -translate-x-1/2 top-20 w-full max-w-xl bg-[#1a1a1a]/95 backdrop-blur-md border border-gray-800 rounded-2xl shadow-2xl p-4 z-[100] animate-slideDown"
                             >
-                                <div class="relative">
+                                <div class="relative group">
                                     <input
                                         type="text"
                                         id="search-input-desktop"
-                                        placeholder="Cari anime..."
-                                        class="bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-[11px] outline-none focus:border-[#ff6600] w-full text-white transition"
+                                        placeholder="Ketik judul anime..."
+                                        class="bg-gray-900/50 border border-gray-700/50 rounded-xl px-12 py-3 text-sm outline-none focus:border-[#ff6600] focus:ring-1 focus:ring-[#ff6600]/20 w-full text-white transition-all placeholder:text-gray-600"
                                     />
-                                    <i class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 text-[10px]"></i>
+                                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-[#ff6600] transition-colors"></i>
+                                    <div class="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                                        <span class="text-[10px] text-gray-600 font-bold uppercase tracking-widest px-2 py-1 bg-gray-800/50 rounded-md border border-gray-700/50">ESC</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
