@@ -68,8 +68,14 @@
                 animation: slideUp 0.3s ease-out forwards;
             }
             @keyframes slideDown {
-                from { opacity: 0; transform: translateY(-10px); }
-                to { opacity: 1; transform: translateY(0); }
+                from {
+                    opacity: 0;
+                    transform: translateY(-10px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
             }
             .animate-slideDown {
                 animation: slideDown 0.3s ease-out forwards;
@@ -192,15 +198,15 @@
                         </span>
 
                         <div class="relative ml-2 flex items-center">
-                            <button 
+                            <button
                                 id="desktop-search-toggle"
                                 class="text-gray-400 hover:text-[#ff6600] text-sm focus:outline-none transition-colors p-2"
                             >
                                 <i class="fas fa-search"></i>
                             </button>
-                            
+
                             <!-- DESKTOP SEARCH POPUP (FLOATING) -->
-                            <div 
+                            <div
                                 id="desktop-search-container"
                                 class="hidden fixed left-1/2 -translate-x-1/2 top-20 w-full max-w-xl bg-[#1a1a1a]/95 backdrop-blur-md border border-gray-800 rounded-2xl shadow-2xl p-4 z-[100] animate-slideDown"
                             >
@@ -211,9 +217,16 @@
                                         placeholder="Ketik judul anime..."
                                         class="bg-gray-900/50 border border-gray-700/50 rounded-xl px-12 py-3 text-sm outline-none focus:border-[#ff6600] focus:ring-1 focus:ring-[#ff6600]/20 w-full text-white transition-all placeholder:text-gray-600"
                                     />
-                                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-[#ff6600] transition-colors"></i>
-                                    <div class="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                                        <span class="text-[10px] text-gray-600 font-bold uppercase tracking-widest px-2 py-1 bg-gray-800/50 rounded-md border border-gray-700/50">ESC</span>
+                                    <i
+                                        class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-[#ff6600] transition-colors"
+                                    ></i>
+                                    <div
+                                        class="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2"
+                                    >
+                                        <span
+                                            class="text-[10px] text-gray-600 font-bold uppercase tracking-widest px-2 py-1 bg-gray-800/50 rounded-md border border-gray-700/50"
+                                            >ESC</span
+                                        >
                                     </div>
                                 </div>
                             </div>
@@ -617,7 +630,6 @@
                     dropdown.classList.toggle("hidden");
                     dropdown.classList.toggle("flex");
 
-                    // Ganti icon Garis Tiga (bars) jadi Silang (times)
                     const icon = menuBtn.querySelector("i");
                     if (dropdown.classList.contains("hidden")) {
                         icon.classList.replace("fa-times", "fa-bars");
@@ -726,22 +738,33 @@
 
             // LOGIKA SEARCH DESKTOP (POPUP)
             document.addEventListener("DOMContentLoaded", () => {
-                const desktopSearchToggle = document.getElementById("desktop-search-toggle");
-                const desktopSearchContainer = document.getElementById("desktop-search-container");
-                const desktopSearchInput = document.getElementById("search-input-desktop");
+                const desktopSearchToggle = document.getElementById(
+                    "desktop-search-toggle",
+                );
+                const desktopSearchContainer = document.getElementById(
+                    "desktop-search-container",
+                );
+                const desktopSearchInput = document.getElementById(
+                    "search-input-desktop",
+                );
 
                 if (desktopSearchToggle && desktopSearchContainer) {
                     desktopSearchToggle.addEventListener("click", (e) => {
                         e.stopPropagation();
                         desktopSearchContainer.classList.toggle("hidden");
-                        if (!desktopSearchContainer.classList.contains("hidden")) {
+                        if (
+                            !desktopSearchContainer.classList.contains("hidden")
+                        ) {
                             setTimeout(() => desktopSearchInput.focus(), 100);
                         }
                     });
 
                     // Tutup saat klik luar
                     document.addEventListener("click", (e) => {
-                        if (!desktopSearchContainer.contains(e.target) && !desktopSearchToggle.contains(e.target)) {
+                        if (
+                            !desktopSearchContainer.contains(e.target) &&
+                            !desktopSearchToggle.contains(e.target)
+                        ) {
                             desktopSearchContainer.classList.add("hidden");
                         }
                     });
