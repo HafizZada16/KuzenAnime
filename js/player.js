@@ -204,12 +204,26 @@ export async function loadPlayer(epSlug, forceAnimeSlug = null) {
 
           ${navigationHtml}
 
+          </div>
+
+          <!-- SOURCE SWITCHER -->
           <div class="bg-[#121212] border border-gray-800 p-5 rounded-2xl mb-6 shadow-sm">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
               <div class="flex-grow w-full">
                 <h3 class="text-[10px] font-black mb-4 flex items-center gap-2 uppercase tracking-[0.2em] text-gray-400">
                   <i class="fas fa-server text-[#ff6600]"></i> Pilih Server
                 </h3>
+                <!-- SOURCE TOGGLE -->
+                <div class="flex gap-1 bg-gray-800 p-1 rounded-xl w-fit mb-4">
+                  <button id="src-otakudesu" onclick="app.loadOtakudesuServers()"
+                    class="source-btn px-4 py-1.5 rounded-lg text-[10px] font-black transition uppercase bg-white text-black shadow-md">
+                    <i class="fas fa-tv mr-1"></i> Otakudesu
+                  </button>
+                  <button id="src-animasu" onclick="app.loadAnimasuServers()"
+                    class="source-btn px-4 py-1.5 rounded-lg text-[10px] font-black transition uppercase text-gray-400 hover:text-white">
+                    <i class="fas fa-play-circle mr-1"></i> Animasu
+                  </button>
+                </div>
                 <div id="mirror-list" class="grid grid-cols-2 sm:grid-cols-3 lg:flex lg:flex-wrap gap-2 md:gap-3"></div>
               </div>
               <div class="flex-shrink-0 w-full md:w-auto">
@@ -283,7 +297,12 @@ export async function loadPlayer(epSlug, forceAnimeSlug = null) {
       </div>`;
   }
 
-  // Auto-pilih kualitas default
+  // Simpan epSlug agar bisa diakses source switcher
+  window._currentEpSlug = epSlug;
+  window._encodedQualities = encodedQualities;
+  window._defaultQuality = defaultQuality;
+
+  // Auto-pilih kualitas default dan source default (otakudesu)
   if (defaultQuality) {
     window.app.changeQuality(defaultQuality, encodedQualities);
   }
@@ -326,8 +345,73 @@ export const changeQuality = (selectedQ, encodedQualities) => {
   }
 };
 
-// Switch server — fetch iframe dari Sanka /server/:serverId
-export async function switchServer(encodedServerData, btnElement = null) {
+// ─── SOURCE: OTAKUDESU ───────────────────────────────────────────────────────
+export function loadOtakudesuServers() {
+  // Toggle active state
+  document.querySelectorAll(".source-btn").forEach(b => {
+    b.classList.remove("bg-white", "text-black", "shadow-md");
+    b.classList.add("text-gray-400");
+  });
+  const otBtn = document.getElementById("src-otakudesu");
+  if (otBtn) { otBtn.classList.add("bg-white", "text-black", "shadow-md"); otBtn.classList.remove("text-gray-400"); }
+
+  // Kembalikan server list Otakudesu (kualitas default)
+  const eq = window._encodedQualities;
+  const dq = window._defaultQuality;
+  if (eq && dq) window.app.changeQuality(dq, eq);
+}
+
+// ─── SOURCE: ANIMASU ─────────────────────────────────────────────────────────
+export async function loadAnimasuServers() {
+  // Toggle active state
+  document.querySelectorAll(".source-btn").forEach(b => {
+    b.classList.remove("bg-white", "text-black", "shadow-md");
+    b.classList.add("text-gray-400");
+  });
+  const amBtn = document.getElementById("src-animasu");
+  if (amBtn) { amBtn.classList.add("bg-white", "text-black", "shadow-md"); amBtn.classList.remove("text-gray-400"); }
+
+  const container = document.getElementById("mirror-list");
+  if (!container) return;
+
+  container.innerHTML = `<div class="flex items-center gap-2 text-gray-500 text-[10px] font-bold uppercase"><i class="fas fa-circle-notch animate-spin text-[#ff6600]"></i> Memuat server Animasu...</div>`;
+
+  try {
+    const epSlug = window._currentEpSlug;
+    const res = await fetch(`${SANKA_API}/animasu/detail/${epSlug}`);
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const json = await res.json();
+    const streams = json?.streams || [];
+
+    if (streams.length === 0) {
+      container.innerHTML = `<div class="text-gray-500 text-[10px] font-bold uppercase">Tidak ada server Animasu untuk episode ini.</div>`;
+      return;
+    }
+
+    container.innerHTML = streams.map(stream => {
+      const info = getServerInfo(stream.name);
+      const encodedUrl = btoa(unescape(encodeURIComponent(stream.url)));
+      return `
+        <button onclick="app.switchServer('${encodedUrl}', this, true)"
+          class="server-btn flex flex-col items-start p-2.5 rounded-xl border border-gray-700 hover:border-[#ff6600] bg-gray-800/50 hover:bg-gray-800 transition-all flex-1 sm:flex-none min-w-[120px] text-left group shadow-sm active:scale-95 overflow-hidden">
+          <span class="server-title font-black text-[9px] md:text-[10px] tracking-widest uppercase mb-1.5 text-gray-300 group-hover:text-white transition-colors truncate w-full">
+            <i class="mr-1 text-[#ff6600]"></i> ${stream.name}
+          </span>
+          <span class="text-[7px] md:text-[8px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider ${info.color} whitespace-nowrap">
+            ${info.badge}
+          </span>
+        </button>`;
+    }).join("");
+  } catch (e) {
+    console.error("Animasu error:", e);
+    if (container) container.innerHTML = `<div class="text-red-500 text-[10px] font-bold uppercase">Gagal memuat server Animasu.</div>`;
+  }
+}
+
+// ─── SWITCH SERVER ────────────────────────────────────────────────────────────
+// mode otakudesu: fetch dari Sanka /server/:id
+// mode animasu  : URL sudah embed, langsung set ke iframe
+export async function switchServer(encodedServerData, btnElement = null, isDirectUrl = false) {
   if (btnElement) {
     document.querySelectorAll(".server-btn").forEach(btn => {
       btn.classList.remove("border-[#ff6600]", "bg-gray-800", "ring-1", "ring-[#ff6600]/50");
@@ -346,13 +430,18 @@ export async function switchServer(encodedServerData, btnElement = null) {
   wrapper.innerHTML = `<div class="flex items-center justify-center h-full text-white bg-black/50"><i class="fas fa-circle-notch animate-spin text-4xl text-[#ff6600]"></i></div>`;
 
   try {
-    const { serverId } = JSON.parse(atob(encodedServerData));
+    let iframeSrc = null;
 
-    const res = await fetch(`${SANKA_API}/server/${serverId}`);
-    const json = await res.json();
-
-    // Sanka API: json.data.url berisi embed URL
-    const iframeSrc = json?.data?.url || json?.data?.iframe || null;
+    if (isDirectUrl) {
+      // Mode Animasu: encodedServerData adalah URL embed yang di-btoa
+      iframeSrc = decodeURIComponent(escape(atob(encodedServerData)));
+    } else {
+      // Mode Otakudesu: encodedServerData adalah JSON { serverId, title }
+      const { serverId } = JSON.parse(atob(encodedServerData));
+      const res = await fetch(`${SANKA_API}/server/${serverId}`);
+      const json = await res.json();
+      iframeSrc = json?.data?.url || json?.data?.iframe || null;
+    }
 
     if (iframeSrc) {
       wrapper.innerHTML = `
@@ -366,7 +455,7 @@ export async function switchServer(encodedServerData, btnElement = null) {
           class="w-full h-full border-none absolute top-0 left-0">
         </iframe>`;
     } else {
-      throw new Error("Iframe URL tidak ditemukan dari Sanka API");
+      throw new Error("Iframe URL tidak ditemukan");
     }
   } catch (err) {
     console.error("switchServer error:", err);
