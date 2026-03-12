@@ -258,23 +258,49 @@ export async function loadCategory(type, page = 1) {
 
 function renderPreview(list, title, type) {
   const display = document.getElementById("content-display");
-  let html = `
-        <div class="flex justify-between items-center mb-4 mt-8">
-            <h2 class="text-lg md:text-2xl font-black border-l-4 border-[#ff6600] pl-3 uppercase tracking-tighter">${title}</h2>
-            <span onclick="app.loadCategory('${type}', 1)" class="text-[10px] font-bold text-gray-500 hover:text-white cursor-pointer transition uppercase">View All <i class="fas fa-chevron-right ml-1"></i></span>
-        </div>
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 md:gap-6">
-    `;
-  list.slice(0, 6).forEach((a) => {
-    // Badge: hari rilis untuk ongoing, score untuk completed
+  const sliderId = `slider-${type}`;
+
+  // Buat semua kartu
+  let cardsHtml = "";
+  list.forEach((a) => {
     const badge = type === "ongoing"
       ? (a.releaseDay || "Ongoing")
       : (a.score && a.score.trim() !== "" ? a.score : "Completed");
     const normalised = { ...a, thumb: a.poster, slug: a.animeId, episode: a.episodes, extra: badge };
-    html += createAnimeCard(normalised, `app.loadDetail('${a.animeId}', '${a.poster}')`);
+    // Kartu dengan lebar tetap agar bisa di-scroll horizontal
+    cardsHtml += `<div class="flex-shrink-0 w-[140px] sm:w-[160px] md:w-[175px]">${createAnimeCard(normalised, `app.loadDetail('${a.animeId}', '${a.poster}')`)}</div>`;
   });
-  html += `</div>`;
+
+  const html = `
+    <div class="mt-8">
+      <div class="flex justify-between items-center mb-4">
+          <h2 class="text-lg md:text-2xl font-black border-l-4 border-[#ff6600] pl-3 uppercase tracking-tighter">${title}</h2>
+          <div class="flex items-center gap-2">
+            <button id="${sliderId}-prev" class="w-8 h-8 rounded-full bg-gray-800 hover:bg-[#ff6600] border border-gray-700 hover:border-[#ff6600] flex items-center justify-center transition-all text-white text-xs">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <button id="${sliderId}-next" class="w-8 h-8 rounded-full bg-gray-800 hover:bg-[#ff6600] border border-gray-700 hover:border-[#ff6600] flex items-center justify-center transition-all text-white text-xs">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+            <span onclick="app.loadCategory('${type}', 1)" class="ml-1 text-[10px] font-bold text-gray-500 hover:text-white cursor-pointer transition uppercase">View All <i class="fas fa-chevron-right ml-1"></i></span>
+          </div>
+      </div>
+      <div id="${sliderId}" class="flex gap-3 md:gap-4 overflow-x-auto scroll-smooth pb-3 scrollbar-hide" style="scrollbar-width:none; -ms-overflow-style:none;">
+        ${cardsHtml}
+      </div>
+    </div>
+  `;
+
   display.insertAdjacentHTML("beforeend", html);
+
+  // Inisialisasi tombol prev/next setelah DOM dirender
+  const track = document.getElementById(sliderId);
+  const prevBtn = document.getElementById(`${sliderId}-prev`);
+  const nextBtn = document.getElementById(`${sliderId}-next`);
+  const scrollAmt = () => track.clientWidth * 0.75;
+
+  if (prevBtn) prevBtn.addEventListener("click", () => track.scrollBy({ left: -scrollAmt(), behavior: "smooth" }));
+  if (nextBtn) nextBtn.addEventListener("click", () => track.scrollBy({ left: scrollAmt(), behavior: "smooth" }));
 }
 
 export async function handleSearch() {
