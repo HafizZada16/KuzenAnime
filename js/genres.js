@@ -15,47 +15,34 @@ export async function loadGenres(selectedGenreSlug = null, page = 1) {
   const display = document.getElementById("content-display");
   if (!display) return;
 
-  // Daftar genre statis
-  const genres = [
-    { name: "Action", slug: "action" },
-    { name: "Adventure", slug: "adventure" },
-    { name: "Comedy", slug: "comedy" },
-    { name: "Demons", slug: "demons" },
-    { name: "Drama", slug: "drama" },
-    { name: "Ecchi", slug: "ecchi" },
-    { name: "Fantasy", slug: "fantasy" },
-    { name: "Game", slug: "game" },
-    { name: "Harem", slug: "harem" },
-    { name: "Historical", slug: "historical" },
-    { name: "Horror", slug: "horror" },
-    { name: "Josei", slug: "josei" },
-    { name: "Magic", slug: "magic" },
-    { name: "Martial Arts", slug: "martial-arts" },
-    { name: "Mecha", slug: "mecha" },
-    { name: "Military", slug: "military" },
-    { name: "Music", slug: "music" },
-    { name: "Mystery", slug: "mystery" },
-    { name: "Psychological", slug: "psychological" },
-    { name: "Parody", slug: "parody" },
-    { name: "Police", slug: "police" },
-    { name: "Romance", slug: "romance" },
-    { name: "Samurai", slug: "samurai" },
-    { name: "School", slug: "school" },
-    { name: "Sci-Fi", slug: "sci-fi" },
-    { name: "Seinen", slug: "seinen" },
-    { name: "Shoujo", slug: "shoujo" },
-    { name: "Shoujo Ai", slug: "shoujo-ai" },
-    { name: "Shounen", slug: "shounen" },
-    { name: "Slice of Life", slug: "slice-of-life" },
-    { name: "Sports", slug: "sports" },
-    { name: "Space", slug: "space" },
-    { name: "Super Power", slug: "super-power" },
-    { name: "Supernatural", slug: "supernatural" },
-    { name: "Thriller", slug: "thriller" },
-    { name: "Vampire", slug: "vampire" },
-  ];
+  // Fetch daftar genre dari Sanka API (dengan fallback statis)
+  let genres = [];
+  try {
+    const genreRes = await fetch(`${SANKA_API}/genre`);
+    if (genreRes.ok) {
+      const genreJson = await genreRes.json();
+      genres = (genreJson?.data?.genreList || []).map(g => ({
+        name: g.title,
+        slug: g.genreId,
+      }));
+    }
+  } catch (e) {
+    console.warn("Gagal fetch genre list dari Sanka, pakai fallback.");
+  }
 
-  // 2. RENDER HEADER & TOMBOL GENRE SECARA INSTAN (Tanpa nunggu API)
+  // Fallback statis kalau fetch gagal
+  if (genres.length === 0) {
+    genres = [
+      { name: "Action", slug: "action" }, { name: "Adventure", slug: "adventure" },
+      { name: "Comedy", slug: "comedy" }, { name: "Drama", slug: "drama" },
+      { name: "Fantasy", slug: "fantasy" }, { name: "Horror", slug: "horror" },
+      { name: "Mystery", slug: "mystery" }, { name: "Romance", slug: "romance" },
+      { name: "Sci-Fi", slug: "sci-fi" }, { name: "Shounen", slug: "shounen" },
+      { name: "Slice of Life", slug: "slice-of-life" }, { name: "Sports", slug: "sports" },
+    ];
+  }
+
+  // 2. RENDER HEADER & TOMBOL GENRE
   let topHtml = `
     <div class="animate-fadeIn">
         <div class="flex items-center gap-4 mb-8">
