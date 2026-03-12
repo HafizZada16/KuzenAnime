@@ -571,76 +571,69 @@ export async function switchServer(encodedServerData, btnElement = null, isDirec
 
     if (!iframeSrc) throw new Error("Source tidak ditemukan");
 
-    // Cek apakah source bisa di ArtPlayer (Direct Video / HLS / Blogger)
-    const isArtPlayerSource = iframeSrc.includes(".m3u8") || 
-                             iframeSrc.includes(".mp4") || 
-                             iframeSrc.includes("blogger.com/video") ||
-                             iframeSrc.includes("gdriveplayer") || 
-                             iframeSrc.includes("dl.berkasdrive.com");
-
-    if (isArtPlayerSource) {
-      wrapper.innerHTML = `<div id="artplayer-container" class="w-full h-full"></div>`;
-      
-      const art = new Artplayer({
-        container: "#artplayer-container",
-        url: iframeSrc,
-        type: iframeSrc.includes(".m3u8") ? "m3u8" : (iframeSrc.includes("blogger") ? "video" : ""),
-        fullscreen: true,
-        fullscreenWeb: true,
-        playbackRate: true,
-        aspectRatio: true,
-        setting: true,
-        pip: true,
-        autoSize: true,
-        theme: "#ff6600",
-        customType: {
-          m3u8: function (video, url) {
-            if (Hls.isSupported()) {
-              const hls = new Hls();
-              hls.loadSource(url);
-              hls.attachMedia(video);
-            } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-              video.src = url;
-            }
-          },
-        },
-        settings: [
-          {
-            html: "Playback Speed",
-            width: 200,
-            tooltip: "Normal",
-            selector: [
-              { html: "0.5x", value: 0.5 },
-              { html: "0.75x", value: 0.75 },
-              { html: "Normal", value: 1.0, default: true },
-              { html: "1.25x", value: 1.25 },
-              { html: "1.5x", value: 1.5 },
-              { html: "2.0x", value: 2.0 },
-            ],
-            onSelect: function (item) {
-              art.playbackRate = item.value;
-              return item.html;
-            },
-          },
-        ],
-      });
-      window._art = art;
-    } else {
-      // Fallback ke iframe biasa (untuk Streamwish dll)
-      wrapper.innerHTML = `
-        <iframe src="${iframeSrc}"
-          allowfullscreen="true"
-          webkitallowfullscreen="true"
-          mozallowfullscreen="true"
-          frameborder="0"
-          scrolling="no"
-          referrerpolicy="no-referrer"
-          class="w-full h-full border-none absolute top-0 left-0">
-        </iframe>`;
-    }
+    renderIframe(wrapper, iframeSrc);
+    
   } catch (err) {
     console.error("switchServer error:", err);
     wrapper.innerHTML = `<div class="flex items-center justify-center h-full text-red-500 text-[10px] font-bold uppercase">Gagal memuat server.</div>`;
+  }
+}
+
+function renderIframe(container, src) {
+  const isMobile = window.innerWidth <= 768;
+  
+  if (isMobile) {
+    // TRICK: Force Desktop UI di Mobile dengan Scaling
+    const desktopWidth = 1200;
+    const wrapperWidth = container.offsetWidth || window.innerWidth - 32;
+    const scale = wrapperWidth / desktopWidth;
+    const height = wrapperWidth * (9/16); // Balikin ke 16:9
+
+    container.style.height = `${height}px`;
+    container.style.position = 'relative';
+    container.style.overflow = 'hidden';
+
+    container.innerHTML = `
+      <iframe src="${src}"
+        id="scaled-iframe"
+        allowfullscreen="true"
+        webkitallowfullscreen="true"
+        mozallowfullscreen="true"
+        frameborder="0"
+        scrolling="no"
+        referrerpolicy="no-referrer"
+        style="width: ${desktopWidth}px; height: ${desktopWidth * (9/16)}px; 
+               transform: scale(${scale}); transform-origin: top left; 
+               position: absolute; top: 0; left: 0; border: none;">
+      </iframe>`;
+
+    // Update scale saat rotate/resize
+    const updateScale = () => {
+      const newWrapperWidth = container.offsetWidth;
+      const newScale = newWrapperWidth / desktopWidth;
+      const newHeight = newWrapperWidth * (9/16);
+      container.style.height = `${newHeight}px`;
+      const iframe = document.getElementById("scaled-iframe");
+      if (iframe) {
+        iframe.style.transform = `scale(${newScale})`;
+      }
+    };
+    window.removeEventListener("resize", window._onPlayerResize);
+    window._onPlayerResize = updateScale;
+    window.addEventListener("resize", updateScale);
+    
+  } else {
+    container.style.height = ''; 
+    container.innerHTML = `
+      <iframe src="${src}"
+        allowfullscreen="true"
+        webkitallowfullscreen="true"
+        mozallowfullscreen="true"
+        frameborder="0"
+        scrolling="no"
+        referrerpolicy="no-referrer"
+        class="w-full h-full border-none absolute top-0 left-0">
+      </iframe>`;
   }
 }
 
