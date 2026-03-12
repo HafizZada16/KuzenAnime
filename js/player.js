@@ -13,8 +13,10 @@ function getServerInfo(rawName) {
     return { name: "ODSTREAM HD", badge: "No Iklan", color: "text-green-500 bg-green-500/10 border-green-500/20" };
   } else if (name.includes("mega")) {
     return { name: "MEGA", badge: "No Iklan", color: "text-green-500 bg-green-500/10 border-green-500/20" };
-  } else if (name.includes("gdrive")) {
+  } else if (name.includes("gdrive") || name.includes("berkasdrive")) {
     return { name: "GDRIVE", badge: "No Iklan", color: "text-green-500 bg-green-500/10 border-green-500/20" };
+  } else if (name.includes("blogger")) {
+    return { name: "BLOGGER", badge: "No Iklan", color: "text-green-500 bg-green-500/10 border-green-500/20" };
   } else if (name.includes("moedesu")) {
     return { name: "MOEDESU HD", badge: "No Iklan", color: "text-green-500 bg-green-500/10 border-green-500/20" };
   }
@@ -23,6 +25,8 @@ function getServerInfo(rawName) {
     return { name: "VIDHIDE", badge: "Iklan VAST", color: "text-yellow-500 bg-yellow-500/10 border-yellow-500/20" };
   } else if (name.includes("filedon")) {
     return { name: "FILEDON", badge: "Iklan VAST", color: "text-yellow-500 bg-yellow-500/10 border-yellow-500/20" };
+  } else if (name.includes("streamwish") || name.includes("strwish") || name.includes("stwish")) {
+    return { name: "STREAMWISH", badge: "Iklan VAST", color: "text-yellow-500 bg-yellow-500/10 border-yellow-500/20" };
   } else if (name.includes("yourupload")) {
     return { name: "YOURUPLOAD", badge: "Iklan VAST", color: "text-yellow-500 bg-yellow-500/10 border-yellow-500/20" };
   }
@@ -452,13 +456,22 @@ export async function loadAnimasuServers() {
     }
 
     container.innerHTML = streams.map(stream => {
-      const info = getServerInfo(stream.name);
+      // Ekstrak nama provider dari URL jika memungkinkan
+      let providerName = stream.name;
+      try {
+        const urlObj = new URL(stream.url);
+        const hostParts = urlObj.hostname.split('.');
+        // Ambil bagian domain utama (misal blogger.com -> blogger)
+        providerName = hostParts.length > 1 ? hostParts[hostParts.length - 2] : hostParts[0];
+      } catch(e) {}
+
+      const info = getServerInfo(providerName);
       const encodedUrl = btoa(unescape(encodeURIComponent(stream.url)));
       return `
         <button onclick="app.switchServer('${encodedUrl}', this, true)"
           class="server-btn flex flex-col items-start p-2.5 rounded-xl border border-gray-700 hover:border-[#ff6600] bg-gray-800/50 hover:bg-gray-800 transition-all flex-1 sm:flex-none min-w-[120px] text-left group shadow-sm active:scale-95 overflow-hidden">
           <span class="server-title font-black text-[9px] md:text-[10px] tracking-widest uppercase mb-1.5 text-gray-300 group-hover:text-white transition-colors truncate w-full">
-            <i class="mr-1 text-[#ff6600]"></i> ${stream.name}
+            <i class="mr-1 text-[#ff6600]"></i> ${info.name}
           </span>
           <span class="text-[7px] md:text-[8px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider ${info.color} whitespace-nowrap">
             ${info.badge}
