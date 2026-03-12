@@ -295,8 +295,9 @@ export async function loadPlayer(epSlug, forceAnimeSlug = null) {
       </div>`;
   }
 
-  // Simpan epSlug agar bisa diakses source switcher
+  // Simpan epSlug dan epData agar bisa diakses source switcher
   window._currentEpSlug = epSlug;
+  window._currentEpData = epData;
   window._encodedQualities = encodedQualities;
   window._defaultQuality = defaultQuality;
 
@@ -359,7 +360,7 @@ export function loadOtakudesuServers() {
   if (eq && dq) window.app.changeQuality(dq, eq);
 }
 
-// ─── SOURCE: ANIMASU ─────────────────────────────────────────────────────────
+// ─── SOURCE: ANIMASU (3-step: search → detail → streams) ────────────────────
 export async function loadAnimasuServers() {
   // Toggle active state
   document.querySelectorAll(".source-btn").forEach(b => {
@@ -372,17 +373,63 @@ export async function loadAnimasuServers() {
   const container = document.getElementById("mirror-list");
   if (!container) return;
 
-  container.innerHTML = `<div class="flex items-center gap-2 text-gray-500 text-[10px] font-bold uppercase"><i class="fas fa-circle-notch animate-spin text-[#ff6600]"></i> Memuat server Animasu...</div>`;
+  const setMsg = (html) => { container.innerHTML = html; };
+  setMsg(`<div class="flex items-center gap-2 text-gray-500 text-[10px] font-bold uppercase"><i class="fas fa-circle-notch animate-spin text-[#ff6600]"></i> Mencari di Animasu...</div>`);
 
   try {
-    const epSlug = window._currentEpSlug;
-    const res = await fetch(`${SANKA_API}/animasu/detail/${epSlug}`);
-    if (!res.ok) throw new Error("HTTP " + res.status);
-    const json = await res.json();
-    const streams = json?.streams || [];
+    const epData   = window._currentEpData;
+    const epSlug   = window._currentEpSlug;
+    const fullTitle = epData?.title || epSlug || "";
+
+    // 1. Ekstrak nama anime (sebelum " Episode ") dan nomor episode
+    const epNumMatch = fullTitle.match(/episode\s+([\d.]+)/i)
+                    || epSlug.match(/-episode-([\d.]+)(?:-|$)/i);
+    const epNumber = epNumMatch ? epNumMatch[1] : null;
+
+    const animeName = fullTitle
+      .replace(/\s*episode\s+[\d.]+.*$/i, "")   // buang "Episode X ..."
+      .replace(/subtitle\s+indonesia/i, "")       // buang "Subtitle Indonesia"
+      .trim();
+
+    if (!animeName || !epNumber) throw new Error("Tidak bisa menentukan episode");
+
+    // 2. Search anime di Animasu
+    const keyword = encodeURIComponent(animeName);
+    setMsg(`<div class="flex items-center gap-2 text-gray-500 text-[10px] font-bold uppercase"><i class="fas fa-circle-notch animate-spin text-[#ff6600]"></i> Mencari "${animeName}" di Animasu...</div>`);
+
+    const searchRes = await fetch(`${SANKA_API}/animasu/search/${keyword}`);
+    if (!searchRes.ok) throw new Error("Animasu search HTTP " + searchRes.status);
+    const searchJson = await searchRes.json();
+    const animeList = searchJson?.animes || [];
+    if (animeList.length === 0) throw new Error(`"${animeName}" tidak ditemukan di Animasu`);
+
+    // Ambil hasil pertama (paling relevan)
+    const animeSlug = animeList[0].slug;
+
+    // 3. Fetch detail anime → dapat episode list
+    setMsg(`<div class="flex items-center gap-2 text-gray-500 text-[10px] font-bold uppercase"><i class="fas fa-circle-notch animate-spin text-[#ff6600]"></i> Mencari Episode ${epNumber}...</div>`);
+
+    const detailRes = await fetch(`${SANKA_API}/animasu/detail/${animeSlug}`);
+    if (!detailRes.ok) throw new Error("Animasu detail HTTP " + detailRes.status);
+    const detailJson = await detailRes.json();
+    const episodeList = detailJson?.detail?.episodes || [];
+
+    // Cari episode yang nomor-nya cocok
+    const matchedEp = episodeList.find(ep => {
+      const numMatch = ep.name.match(/([\d.]+)/);
+      return numMatch && numMatch[1] === epNumber;
+    });
+
+    if (!matchedEp) throw new Error(`Episode ${epNumber} tidak tersedia di Animasu`);
+
+    // 4. Fetch streams dari episode slug Animasu
+    const epRes = await fetch(`${SANKA_API}/animasu/detail/${matchedEp.slug}`);
+    if (!epRes.ok) throw new Error("Animasu episode HTTP " + epRes.status);
+    const epJson = await epRes.json();
+    const streams = epJson?.streams || [];
 
     if (streams.length === 0) {
-      container.innerHTML = `<div class="text-gray-500 text-[10px] font-bold uppercase">Tidak ada server Animasu untuk episode ini.</div>`;
+      setMsg(`<div class="text-gray-500 text-[10px] font-bold uppercase"><i class="fas fa-exclamation-circle mr-1"></i> Tidak ada server Animasu untuk episode ini.</div>`);
       return;
     }
 
@@ -400,9 +447,10 @@ export async function loadAnimasuServers() {
           </span>
         </button>`;
     }).join("");
+
   } catch (e) {
     console.error("Animasu error:", e);
-    if (container) container.innerHTML = `<div class="text-red-500 text-[10px] font-bold uppercase">Gagal memuat server Animasu.</div>`;
+    setMsg(`<div class="text-red-500 text-[10px] font-bold uppercase"><i class="fas fa-times-circle mr-1"></i> ${e.message}</div>`);
   }
 }
 
