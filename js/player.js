@@ -208,6 +208,9 @@ export async function loadPlayer(epSlug, forceAnimeSlug = null) {
 
           ${navigationHtml}
 
+          <!-- PREMIUM SETTINGS DASHBOARD (MOBILE) -->
+          <div id="mobile-settings-dashboard" class="lg:hidden mb-6"></div>
+
           <!-- SOURCE SWITCHER -->
           <div class="bg-[#121212] border border-gray-800 p-5 rounded-2xl mb-6 shadow-sm">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -310,6 +313,11 @@ export async function loadPlayer(epSlug, forceAnimeSlug = null) {
   if (defaultQuality) {
     window.app.changeQuality(defaultQuality, encodedQualities);
   }
+
+  // Initial dashboard render
+  if (window.innerWidth <= 768) {
+    setTimeout(renderSettingsDashboard, 500);
+  }
 }
 
 // Ubah kualitas — handle Otakudesu & Animasu
@@ -374,10 +382,120 @@ export const changeQuality = (selectedQ, encodedQualities) => {
           </button>`;
       }).join("");
     }
+
+    // Render/Update Mobile Dashboard if on mobile
+    if (window.innerWidth <= 768) {
+      renderSettingsDashboard();
+    }
   } catch (e) {
     console.error("Error changing quality:", e);
   }
 };
+
+function renderSettingsDashboard() {
+  const container = document.getElementById("mobile-settings-dashboard");
+  if (!container) return;
+
+  const currentQ = document.querySelector(".quality-btn.bg-white")?.innerText || "Auto";
+  const currentServer = document.querySelector(".server-btn.border-[#ff6600] .server-title")?.innerText?.trim() || "Pilih Server";
+
+  container.innerHTML = `
+    <div class="bg-[#1a1a1a]/80 backdrop-blur-md border border-gray-800 rounded-2xl overflow-hidden divide-y divide-gray-800/50 shadow-2xl animate-fadeIn">
+      <!-- Quality Row -->
+      <div class="flex items-center justify-between p-4 active:bg-gray-800 transition-colors cursor-pointer group" onclick="app.showMobileMenu('quality')">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-[#ff6600]/10 flex items-center justify-center border border-[#ff6600]/20">
+            <i class="fas fa-sliders-h text-[#ff6600] text-xs"></i>
+          </div>
+          <div>
+            <div class="text-[9px] text-gray-500 font-black uppercase tracking-[0.2em] leading-none mb-1.5">Kualitas Video</div>
+            <div class="text-[13px] font-bold text-gray-100 flex items-center gap-1.5">
+              ${currentQ} <span class="w-1 h-1 rounded-full bg-green-500 animate-pulse"></span>
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-[10px] text-gray-600 font-bold uppercase">Ganti</span>
+          <i class="fas fa-chevron-right text-gray-700 text-[10px] group-hover:translate-x-0.5 transition-transform"></i>
+        </div>
+      </div>
+
+      <!-- Server Row -->
+      <div class="flex items-center justify-between p-4 active:bg-gray-800 transition-colors cursor-pointer group" onclick="app.showMobileMenu('server')">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+            <i class="fas fa-play text-blue-500 text-xs"></i>
+          </div>
+          <div>
+            <div class="text-[9px] text-gray-500 font-black uppercase tracking-[0.2em] leading-none mb-1.5">Server / Provider</div>
+            <div class="text-[13px] font-bold text-gray-100 truncate max-w-[140px]">${currentServer}</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-[10px] text-gray-600 font-bold uppercase">Ganti</span>
+          <i class="fas fa-chevron-right text-gray-700 text-[10px] group-hover:translate-x-0.5 transition-transform"></i>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+export function showMobileMenu(type) {
+  const overlay = document.createElement("div");
+  overlay.id = "mobile-menu-overlay";
+  overlay.className = "fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] animate-fadeIn";
+  
+  const drawer = document.createElement("div");
+  drawer.className = "fixed bottom-0 left-0 right-0 bg-[#0f0f0f] border-t border-gray-800 rounded-t-[32px] p-6 z-[101] animate-slideUp max-h-[80vh] overflow-y-auto";
+  
+  const title = type === 'quality' ? 'Pilih Kualitas' : 'Pilih Server';
+  const targetId = type === 'quality' ? 'quality-container' : 'mirror-list';
+  const items = document.getElementById(targetId)?.cloneNode(true);
+  
+  // Modifikasi style clone agar pas di drawer
+  if (items) {
+    items.className = "flex flex-col gap-3 py-4";
+    items.querySelectorAll("button").forEach(btn => {
+      btn.className = "flex items-center justify-between w-full p-4 rounded-2xl bg-gray-900/50 border border-gray-800 text-left font-bold text-sm hover:border-[#ff6600] transition-all";
+      // Tambahkan logic klik asli ke clone
+      const originalOnClick = btn.getAttribute("onclick");
+      btn.onclick = () => {
+        eval(originalOnClick);
+        closeMenu();
+      };
+      // Hapus onclick string agar tidak dobel
+      btn.removeAttribute("onclick");
+    });
+  }
+
+  drawer.innerHTML = `
+    <div class="w-12 h-1.5 bg-gray-800 rounded-full mx-auto mb-6"></div>
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-lg font-black text-white italic">${title}</h3>
+      <button onclick="app.closeMobileMenu()" class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-gray-400">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div id="drawer-content"></div>
+  `;
+
+  overlay.onclick = closeMenu;
+  document.body.appendChild(overlay);
+  document.body.appendChild(drawer);
+  document.getElementById("drawer-content").appendChild(items || document.createTextNode("Tidak ada pilihan tersedia"));
+  document.body.style.overflow = "hidden";
+
+  function closeMenu() {
+    overlay.classList.add("opacity-0");
+    drawer.style.transform = "translateY(100%)";
+    setTimeout(() => {
+      overlay.remove();
+      drawer.remove();
+      document.body.style.overflow = "";
+    }, 300);
+  }
+  window.app.closeMobileMenu = closeMenu;
+}
 
 // ─── SOURCE: OTAKUDESU ───────────────────────────────────────────────────────
 export function loadOtakudesuServers() {
@@ -580,60 +698,25 @@ export async function switchServer(encodedServerData, btnElement = null, isDirec
 }
 
 function renderIframe(container, src) {
-  const isMobile = window.innerWidth <= 768;
-  
-  if (isMobile) {
-    // TRICK: Force Desktop UI di Mobile dengan Scaling
-    const desktopWidth = 1200;
-    const wrapperWidth = container.offsetWidth || window.innerWidth - 32;
-    const scale = wrapperWidth / desktopWidth;
-    const height = wrapperWidth * (9/16); // Balikin ke 16:9
+  // Reset container style
+  container.style.height = ''; 
+  container.style.position = 'relative';
+  container.style.overflow = 'hidden';
 
-    container.style.height = `${height}px`;
-    container.style.position = 'relative';
-    container.style.overflow = 'hidden';
+  container.innerHTML = `
+    <iframe src="${src}"
+      allowfullscreen="true"
+      webkitallowfullscreen="true"
+      mozallowfullscreen="true"
+      frameborder="0"
+      scrolling="no"
+      referrerpolicy="no-referrer"
+      class="w-full h-full border-none absolute top-0 left-0">
+    </iframe>`;
 
-    container.innerHTML = `
-      <iframe src="${src}"
-        id="scaled-iframe"
-        allowfullscreen="true"
-        webkitallowfullscreen="true"
-        mozallowfullscreen="true"
-        frameborder="0"
-        scrolling="no"
-        referrerpolicy="no-referrer"
-        style="width: ${desktopWidth}px; height: ${desktopWidth * (9/16)}px; 
-               transform: scale(${scale}); transform-origin: top left; 
-               position: absolute; top: 0; left: 0; border: none;">
-      </iframe>`;
-
-    // Update scale saat rotate/resize
-    const updateScale = () => {
-      const newWrapperWidth = container.offsetWidth;
-      const newScale = newWrapperWidth / desktopWidth;
-      const newHeight = newWrapperWidth * (9/16);
-      container.style.height = `${newHeight}px`;
-      const iframe = document.getElementById("scaled-iframe");
-      if (iframe) {
-        iframe.style.transform = `scale(${newScale})`;
-      }
-    };
-    window.removeEventListener("resize", window._onPlayerResize);
-    window._onPlayerResize = updateScale;
-    window.addEventListener("resize", updateScale);
-    
-  } else {
-    container.style.height = ''; 
-    container.innerHTML = `
-      <iframe src="${src}"
-        allowfullscreen="true"
-        webkitallowfullscreen="true"
-        mozallowfullscreen="true"
-        frameborder="0"
-        scrolling="no"
-        referrerpolicy="no-referrer"
-        class="w-full h-full border-none absolute top-0 left-0">
-      </iframe>`;
+  // Update dashboard if needed
+  if (window.innerWidth <= 768) {
+    setTimeout(renderSettingsDashboard, 100); 
   }
 }
 
