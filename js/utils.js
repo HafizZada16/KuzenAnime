@@ -31,7 +31,7 @@ export function createAnimeCard(anime, onClick) {
   // 2. FALLBACK: Jika tidak ada 'extra', gunakan logika Ongoing / Completed
   else {
     const statusVal = (anime.status || "").toLowerCase();
-    const epText = (anime.episode || anime.eps || "").toLowerCase();
+    const epText = String(anime.episode || anime.eps || "").toLowerCase();
 
     const isCompleted =
       statusVal.includes("complete") ||
