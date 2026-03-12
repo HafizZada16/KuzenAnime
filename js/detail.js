@@ -1,5 +1,4 @@
 import { USER_API, SANKA_API } from "./config.js";
-import { fetchData } from "/js/api.js";
 import { showLoading } from "/js/utils.js";
 
 // 1. Fungsi mengambil detail LENGKAP dari API Sanka
@@ -49,13 +48,10 @@ export async function loadDetail(slug, thumbFromHome = null) {
     `;
   }
 
-  // 3. Ambil data Kanata & Sanka secara paralel (biar cepet)
-  const [dataKanata, dataSanka] = await Promise.all([
-    fetchData(`/anime/${slug}`),
-    fetchFullDetailFromSanka(slug),
-  ]);
+  // 3. Ambil data dari Sanka API saja
+  const dataSanka = await fetchFullDetailFromSanka(slug);
 
-  if (!dataKanata) {
+  if (!dataSanka) {
     if (display) {
       display.innerHTML = `<div class="text-center py-20 text-red-500 font-bold uppercase tracking-widest text-[10px]">Gagal memuat detail anime.</div>`;
     }
@@ -63,26 +59,19 @@ export async function loadDetail(slug, thumbFromHome = null) {
   }
 
   // --- DATA MAPPING ---
-  const title = dataSanka?.title || dataKanata.title || "Unknown Title";
-  const rating =
-    dataSanka?.score || dataKanata.score || dataKanata.rating || "N/A";
-  const type = dataSanka?.type || dataKanata.type || "TV";
+  const title = dataSanka.title || "Unknown Title";
+  const rating = dataSanka.score || "N/A";
+  const type = dataSanka.type || "TV";
   const thumb =
-    dataSanka?.poster ||
-    dataKanata.thumb ||
-    dataKanata.thumbnail ||
+    dataSanka.poster ||
     localStorage.getItem(`saved_thumb_${slug}`) ||
     "https://via.placeholder.com/300x400?text=No+Image";
 
-  // --- MAPPING SINOPSIS DENGAN FALLBACK YANG BENAR ---
+  // --- SINOPSIS ---
   let synopsisHtml =
-    "<p class='mb-4 italic text-gray-500'>Sinopsis resmi belum tersedia untuk anime ini.</p>"; // Fallback Default
+    "<p class='mb-4 italic text-gray-500'>Sinopsis resmi belum tersedia untuk anime ini.</p>";
 
-  // 1. Cek Sanka: Apakah array paragraphs ada dan isinya tidak kosong?
-  if (
-    dataSanka?.synopsis?.paragraphs &&
-    dataSanka.synopsis.paragraphs.length > 0
-  ) {
+  if (dataSanka.synopsis?.paragraphs && dataSanka.synopsis.paragraphs.length > 0) {
     synopsisHtml = dataSanka.synopsis.paragraphs
       .map((p) => `<p class="mb-4">${p}</p>`)
       .join("");
@@ -90,23 +79,9 @@ export async function loadDetail(slug, thumbFromHome = null) {
 
   document.title = `${title} Sub Indo - KuzenAnime`;
 
-  // Filter Episode (Tetap Pakai Kanata agar Player Tidak Error)
-  const batchEpisodes = [];
-  const regularEpisodes = [];
-  if (dataKanata.episodes) {
-    dataKanata.episodes.forEach((ep) => {
-      const titleLower = ep.title.toLowerCase();
-
-      // Jika judulnya mengandung "sub indo :", abaikan saja (di-hide)
-      if (titleLower.includes("sub indo :")) {
-        return;
-      } else if (titleLower.includes("batch")) {
-        batchEpisodes.push(ep);
-      } else {
-        regularEpisodes.push(ep);
-      }
-    });
-  }
+  // --- EPISODE LIST dari Sanka (episodeList + batch) ---
+  const regularEpisodes = [...(dataSanka.episodeList || [])].reverse();
+  const batchItem = dataSanka.batch || null;
 
   // 4. Render HTML Lengkap
   display.innerHTML = `
@@ -123,11 +98,11 @@ export async function loadDetail(slug, thumbFromHome = null) {
             <div class="flex-grow text-center md:text-left">
                 <div class="flex flex-wrap justify-center md:justify-start gap-3 mb-4">
                     <span class="bg-[#ff6600]/10 text-[#ff6600] text-[10px] font-black px-3 py-1 rounded-full border border-[#ff6600]/20 uppercase">${type}</span>
-                    <span class="bg-blue-500/10 text-blue-400 text-[10px] font-black px-3 py-1 rounded-full border border-blue-500/20 uppercase">${dataSanka?.status || dataKanata.status || "N/A"}</span>
+                    <span class="bg-blue-500/10 text-blue-400 text-[10px] font-black px-3 py-1 rounded-full border border-blue-500/20 uppercase">${dataSanka.status || "N/A"}</span>
                 </div>
 
                 <h1 class="text-4xl md:text-6xl font-black mb-2 tracking-tighter leading-none text-white">${title}</h1>
-                <p class="text-[#ff6600] font-bold text-sm mb-6">${dataSanka?.japanese || ""}</p>
+                <p class="text-[#ff6600] font-bold text-sm mb-6">${dataSanka.japanese || ""}</p>
                 
                 <div id="bookmark-container" class="flex justify-center md:justify-start mb-8"></div>
 
@@ -138,23 +113,22 @@ export async function loadDetail(slug, thumbFromHome = null) {
                     </div>
                     <div class="bg-[#121212] p-4 rounded-3xl border border-gray-800">
                         <p class="text-[9px] font-black text-gray-500 uppercase mb-1 tracking-widest">Studios</p>
-                        <p class="text-sm font-black text-white truncate">${dataSanka?.studios || "N/A"}</p>
+                        <p class="text-sm font-black text-white truncate">${dataSanka.studios || "N/A"}</p>
                     </div>
                     <div class="bg-[#121212] p-4 rounded-3xl border border-gray-800">
                         <p class="text-[9px] font-black text-gray-500 uppercase mb-1 tracking-widest">Duration</p>
-                        <p class="text-sm font-black text-white">${dataSanka?.duration || "N/A"}</p>
+                        <p class="text-sm font-black text-white">${dataSanka.duration || "N/A"}</p>
                     </div>
                     <div class="bg-[#121212] p-4 rounded-3xl border border-gray-800">
                         <p class="text-[9px] font-black text-gray-500 uppercase mb-1 tracking-widest">Aired</p>
-                        <p class="text-sm font-black text-white">${dataSanka?.aired || "N/A"}</p>
+                        <p class="text-sm font-black text-white">${dataSanka.aired || "N/A"}</p>
                     </div>
                 </div>
 
                 <div class="flex flex-wrap justify-center md:justify-start gap-2 mb-8">
-                    ${(dataSanka?.genreList || dataKanata.genres || [])
+                    ${(dataSanka.genreList || [])
                       .map((g) => {
-                        const name =
-                          typeof g === "string" ? g : g.title || g.name;
+                        const name = typeof g === "string" ? g : g.title || g.name;
                         return `<span class="bg-gray-800/40 hover:bg-gray-700 border border-gray-700/50 px-4 py-1.5 rounded-xl text-[10px] font-bold text-gray-400 hover:text-white transition cursor-default">${name}</span>`;
                       })
                       .join("")}
@@ -176,23 +150,16 @@ export async function loadDetail(slug, thumbFromHome = null) {
                 <span class="w-2 h-8 bg-[#ff6600] rounded-full"></span> Episode List
             </h2>
             
-            ${
-              batchEpisodes.length > 0
+            ${batchItem
                 ? `
                 <div class="mb-10 bg-orange-500/5 border border-orange-500/10 p-6 rounded-3xl">
                     <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-orange-500/60 mb-5 flex items-center gap-2">
                         <i class="fas fa-box-open"></i> Full Batch Download
                     </h3>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        ${batchEpisodes
-                          .map(
-                            (ep) => `
-                            <div onclick="app.loadBatch('${ep.slug}')" class="bg-orange-500/10 hover:bg-orange-500 border border-orange-500/20 p-4 rounded-2xl cursor-pointer transition-all group">
-                                <span class="text-xs font-black text-orange-500 group-hover:text-white transition truncate block">${ep.title}</span>
-                            </div>
-                        `,
-                          )
-                          .join("")}
+                        <div onclick="app.loadBatch('${batchItem.batchId}')" class="bg-orange-500/10 hover:bg-orange-500 border border-orange-500/20 p-4 rounded-2xl cursor-pointer transition-all group">
+                            <span class="text-xs font-black text-orange-500 group-hover:text-white transition truncate block">${batchItem.title}</span>
+                        </div>
                     </div>
                 </div>
             `
@@ -201,17 +168,14 @@ export async function loadDetail(slug, thumbFromHome = null) {
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 ${regularEpisodes
-                  .map(
-                    (ep) => `
-                    <div onclick="app.loadPlayer('${ep.slug}')" class="bg-gray-800/30 hover:bg-[#ff6600] border border-gray-800 hover:border-[#ff6600] p-5 rounded-2xl cursor-pointer transition-all group flex justify-between items-center shadow-sm">
+                  .map((ep) => `
+                    <div onclick="app.loadPlayer('${ep.episodeId}')" class="bg-gray-800/30 hover:bg-[#ff6600] border border-gray-800 hover:border-[#ff6600] p-5 rounded-2xl cursor-pointer transition-all group flex justify-between items-center shadow-sm">
                         <span class="text-xs font-bold group-hover:text-white text-gray-300 transition">${ep.title}</span>
                         <div class="w-8 h-8 rounded-full bg-gray-800 group-hover:bg-white/20 flex items-center justify-center transition">
                             <i class="fas fa-play text-[10px] text-[#ff6600] group-hover:text-white"></i>
                         </div>
                     </div>
-                `,
-                  )
-                  .join("")}
+                `).join("")}
             </div>
         </div>
 
