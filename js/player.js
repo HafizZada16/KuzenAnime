@@ -365,6 +365,19 @@ export function loadOtakudesuServers() {
 }
 
 // ─── SOURCE: ANIMASU (3-step: search → detail → streams) ────────────────────
+const fetchWithTimeout = async (url, options = {}, timeout = 10000) => {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    clearTimeout(id);
+    return response;
+  } catch (error) {
+    clearTimeout(id);
+    throw error;
+  }
+};
+
 export async function loadAnimasuServers() {
   // Toggle active state
   document.querySelectorAll(".source-btn").forEach(b => {
@@ -378,7 +391,7 @@ export async function loadAnimasuServers() {
   if (!container) return;
 
   const setMsg = (html) => { container.innerHTML = html; };
-  setMsg(`<div class="flex items-center gap-2 text-gray-500 text-[10px] font-bold uppercase"><i class="fas fa-circle-notch animate-spin text-[#ff6600]"></i> Mencari di Animasu...</div>`);
+  setMsg(`<div class="flex items-center gap-2 text-gray-500 text-[10px] font-bold uppercase"><i class="fas fa-circle-notch animate-spin text-[#ff6600]"></i> Menyiapkan...</div>`);
 
   try {
     const epData   = window._currentEpData;
@@ -391,77 +404,82 @@ export async function loadAnimasuServers() {
     const epNumber = epNumMatch ? epNumMatch[1] : null;
 
     const animeName = fullTitle
-      .replace(/\s*episode\s+[\d.]+.*$/i, "")   // buang "Episode X ..."
-      .replace(/subtitle\s+indonesia/i, "")       // buang "Subtitle Indonesia"
+      .replace(/\s*episode\s+[\d.]+.*$/i, "")
+      .replace(/subtitle\s+indonesia/i, "")
       .trim();
 
-    if (!animeName || !epNumber) throw new Error("Tidak bisa menentukan episode");
+    if (!animeName || !epNumber) throw new Error("Data episode tidak terbaca");
 
-    // 2. Search anime di Animasu
-    const keyword = encodeURIComponent(animeName);
-    setMsg(`<div class="flex items-center gap-2 text-gray-500 text-[10px] font-bold uppercase"><i class="fas fa-circle-notch animate-spin text-[#ff6600]"></i> Mencari "${animeName}" di Animasu...</div>`);
+    // Cek Cache Anime Slug
+    const cacheKey = `animasu_slug_${animeName.toLowerCase()}`;
+    let animeSlug = sessionStorage.getItem(cacheKey);
 
-    const searchRes = await fetch(`${SANKA_API}/animasu/search/${keyword}`);
-    if (!searchRes.ok) throw new Error("Animasu search HTTP " + searchRes.status);
-    const searchJson = await searchRes.json();
-    const animeList = searchJson?.animes || [];
-    if (animeList.length === 0) throw new Error(`"${animeName}" tidak ditemukan di Animasu`);
+    if (!animeSlug) {
+      // 2. Search anime di Animasu
+      const keyword = encodeURIComponent(animeName);
+      setMsg(`<div class="flex items-center gap-2 text-gray-500 text-[10px] font-bold uppercase"><i class="fas fa-search animate-pulse text-[#ff6600]"></i> Mencari di Animasu...</div>`);
 
-    // --- IMPROVED ANIME MATCHING ---
-    let animeSlug = animeList[0].slug;
-    const seasonMatch = fullTitle.match(/season\s*(\d+)|s(\d+)/i);
-    const seasonNum = seasonMatch ? (seasonMatch[1] || seasonMatch[2]) : null;
+      const searchRes = await fetchWithTimeout(`${SANKA_API}/animasu/search/${keyword}`);
+      if (!searchRes.ok) throw new Error("Gagal mencari di server (Search HTTP " + searchRes.status + ")");
+      const searchJson = await searchRes.json();
+      const animeList = searchJson?.animes || [];
+      if (animeList.length === 0) throw new Error(`"${animeName}" tidak ditemukan`);
 
-    if (seasonNum) {
-      const bestMatch = animeList.find(a => 
-        a.title.toLowerCase().includes(`season ${seasonNum}`) || 
-        a.title.toLowerCase().includes(`s${seasonNum}`)
-      );
-      if (bestMatch) animeSlug = bestMatch.slug;
-    } else {
-      // Jika tidak ada info season, coba cari yang eksplisit Season 1 atau yang tidak ada embel-embel season lain
-      const s1Match = animeList.find(a => a.title.toLowerCase().includes("season 1") || a.title.toLowerCase().includes("s1"));
-      if (s1Match) animeSlug = s1Match.slug;
-      else {
-        const noSeasonMatch = animeList.find(a => !/season\s*[2-9]|s[2-9]/i.test(a.title));
-        if (noSeasonMatch) animeSlug = noSeasonMatch.slug;
+      // IMPROVED ANIME MATCHING
+      animeSlug = animeList[0].slug;
+      const seasonMatch = fullTitle.match(/season\s*(\d+)|s(\d+)/i);
+      const seasonNum = seasonMatch ? (seasonMatch[1] || seasonMatch[2]) : null;
+
+      if (seasonNum) {
+        const bestMatch = animeList.find(a => 
+          a.title.toLowerCase().includes(`season ${seasonNum}`) || 
+          a.title.toLowerCase().includes(`s${seasonNum}`)
+        );
+        if (bestMatch) animeSlug = bestMatch.slug;
+      } else {
+        const s1Match = animeList.find(a => a.title.toLowerCase().includes("season 1") || a.title.toLowerCase().includes("s1"));
+        if (s1Match) animeSlug = s1Match.slug;
+        else {
+          const noSeasonMatch = animeList.find(a => !/season\s*[2-9]|s[2-9]/i.test(a.title.toLowerCase()));
+          if (noSeasonMatch) animeSlug = noSeasonMatch.slug;
+        }
       }
+      sessionStorage.setItem(cacheKey, animeSlug);
     }
 
-    // 3. Fetch detail anime → dapat episode list
-    setMsg(`<div class="flex items-center gap-2 text-gray-500 text-[10px] font-bold uppercase"><i class="fas fa-circle-notch animate-spin text-[#ff6600]"></i> Mencari Episode ${epNumber}...</div>`);
+    // 3. Fetch detail anime
+    setMsg(`<div class="flex items-center gap-2 text-gray-500 text-[10px] font-bold uppercase"><i class="fas fa-list-ol animate-pulse text-[#ff6600]"></i> Mengambil daftar episode...</div>`);
 
-    const detailRes = await fetch(`${SANKA_API}/animasu/detail/${animeSlug}`);
-    if (!detailRes.ok) throw new Error("Animasu detail HTTP " + detailRes.status);
+    const detailRes = await fetchWithTimeout(`${SANKA_API}/animasu/detail/${animeSlug}`);
+    if (!detailRes.ok) throw new Error("Gagal memuat detail (Detail HTTP " + detailRes.status + ")");
     const detailJson = await detailRes.json();
     const episodeList = detailJson?.detail?.episodes || [];
 
-    // Cari episode yang nomor-nya cocok
     const matchedEp = episodeList.find(ep => {
       const numMatch = ep.name.match(/([\d.]+)/);
       return numMatch && numMatch[1] === epNumber;
     });
 
-    if (!matchedEp) throw new Error(`Episode ${epNumber} tidak tersedia di Animasu`);
+    if (!matchedEp) throw new Error(`Eps ${epNumber} tidak ada di Animasu`);
 
-    // 4. Fetch streams dari episode slug Animasu - FIX: Gunakan endpoint /episode/ bukan /detail/
-    const epRes = await fetch(`${SANKA_API}/animasu/episode/${matchedEp.slug}`);
-    if (!epRes.ok) throw new Error("Animasu episode HTTP " + epRes.status);
+    // 4. Fetch streams
+    setMsg(`<div class="flex items-center gap-2 text-gray-500 text-[10px] font-bold uppercase"><i class="fas fa-link animate-pulse text-[#ff6600]"></i> Mendapatkan link video...</div>`);
+
+    const epRes = await fetchWithTimeout(`${SANKA_API}/animasu/episode/${matchedEp.slug}`);
+    if (!epRes.ok) throw new Error("Gagal mengambil stream (Stream HTTP " + epRes.status + ")");
     const epJson = await epRes.json();
     const streams = epJson?.streams || [];
 
     if (streams.length === 0) {
-      setMsg(`<div class="text-gray-500 text-[10px] font-bold uppercase"><i class="fas fa-exclamation-circle mr-1"></i> Tidak ada server Animasu untuk episode ini.</div>`);
+      setMsg(`<div class="text-gray-500 text-[10px] font-bold uppercase"><i class="fas fa-exclamation-circle mr-1"></i> Video belum tersedia di Animasu.</div>`);
       return;
     }
 
     container.innerHTML = streams.map(stream => {
-      // Ekstrak nama provider dari URL jika memungkinkan
       let providerName = stream.name;
       try {
         const urlObj = new URL(stream.url);
         const hostParts = urlObj.hostname.split('.');
-        // Ambil bagian domain utama (misal blogger.com -> blogger)
         providerName = hostParts.length > 1 ? hostParts[hostParts.length - 2] : hostParts[0];
       } catch(e) {}
 
@@ -481,7 +499,8 @@ export async function loadAnimasuServers() {
 
   } catch (e) {
     console.error("Animasu error:", e);
-    setMsg(`<div class="text-red-500 text-[10px] font-bold uppercase"><i class="fas fa-times-circle mr-1"></i> ${e.message}</div>`);
+    const msg = e.name === 'AbortError' ? "Waktu habis (Server lambat)" : e.message;
+    setMsg(`<div class="text-red-500 text-[10px] font-bold uppercase"><i class="fas fa-times-circle mr-1"></i> Error: ${msg}</div>`);
   }
 }
 
