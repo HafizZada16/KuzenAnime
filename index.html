@@ -67,6 +67,13 @@
             .animate-slideUp {
                 animation: slideUp 0.3s ease-out forwards;
             }
+            @keyframes slideDown {
+                from { opacity: 0; transform: translateY(-10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            .animate-slideDown {
+                animation: slideDown 0.3s ease-out forwards;
+            }
         </style>
 
         <!-- Google tag (gtag.js) -->
@@ -184,16 +191,29 @@
                             <i class="fas fa-history text-[8px]"></i> History
                         </span>
 
-                        <div class="relative w-40 ml-2">
-                            <input
-                                type="text"
-                                id="search-input-desktop"
-                                placeholder="Cari anime..."
-                                class="bg-gray-900 border border-gray-700 rounded-full px-4 py-1.5 text-[10px] outline-none focus:border-[#ff6600] w-full text-white transition"
-                            />
-                            <i
-                                class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 text-[8px]"
-                            ></i>
+                        <div class="relative ml-2 flex items-center">
+                            <button 
+                                id="desktop-search-toggle"
+                                class="text-gray-400 hover:text-[#ff6600] text-sm focus:outline-none transition-colors p-2"
+                            >
+                                <i class="fas fa-search"></i>
+                            </button>
+                            
+                            <!-- DESKTOP SEARCH POPUP -->
+                            <div 
+                                id="desktop-search-container"
+                                class="hidden absolute right-0 top-12 w-64 bg-[#1a1a1a] border border-gray-800 rounded-2xl shadow-2xl p-2 z-[100] animate-slideDown"
+                            >
+                                <div class="relative">
+                                    <input
+                                        type="text"
+                                        id="search-input-desktop"
+                                        placeholder="Cari anime..."
+                                        class="bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-[11px] outline-none focus:border-[#ff6600] w-full text-white transition"
+                                    />
+                                    <i class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 text-[10px]"></i>
+                                </div>
+                            </div>
                         </div>
 
                         <div id="nav-user-controls" class="ml-4">
@@ -699,6 +719,37 @@
                         }
                     }
                 });
+            });
+
+            // LOGIKA SEARCH DESKTOP (POPUP)
+            document.addEventListener("DOMContentLoaded", () => {
+                const desktopSearchToggle = document.getElementById("desktop-search-toggle");
+                const desktopSearchContainer = document.getElementById("desktop-search-container");
+                const desktopSearchInput = document.getElementById("search-input-desktop");
+
+                if (desktopSearchToggle && desktopSearchContainer) {
+                    desktopSearchToggle.addEventListener("click", (e) => {
+                        e.stopPropagation();
+                        desktopSearchContainer.classList.toggle("hidden");
+                        if (!desktopSearchContainer.classList.contains("hidden")) {
+                            setTimeout(() => desktopSearchInput.focus(), 100);
+                        }
+                    });
+
+                    // Tutup saat klik luar
+                    document.addEventListener("click", (e) => {
+                        if (!desktopSearchContainer.contains(e.target) && !desktopSearchToggle.contains(e.target)) {
+                            desktopSearchContainer.classList.add("hidden");
+                        }
+                    });
+
+                    // Tutup saat tekan Escape
+                    document.addEventListener("keydown", (e) => {
+                        if (e.key === "Escape") {
+                            desktopSearchContainer.classList.add("hidden");
+                        }
+                    });
+                }
             });
 
             window.addEventListener("popstate", router);
