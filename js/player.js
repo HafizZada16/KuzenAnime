@@ -403,8 +403,26 @@ export async function loadAnimasuServers() {
     const animeList = searchJson?.animes || [];
     if (animeList.length === 0) throw new Error(`"${animeName}" tidak ditemukan di Animasu`);
 
-    // Ambil hasil pertama (paling relevan)
-    const animeSlug = animeList[0].slug;
+    // --- IMPROVED ANIME MATCHING ---
+    let animeSlug = animeList[0].slug;
+    const seasonMatch = fullTitle.match(/season\s*(\d+)|s(\d+)/i);
+    const seasonNum = seasonMatch ? (seasonMatch[1] || seasonMatch[2]) : null;
+
+    if (seasonNum) {
+      const bestMatch = animeList.find(a => 
+        a.title.toLowerCase().includes(`season ${seasonNum}`) || 
+        a.title.toLowerCase().includes(`s${seasonNum}`)
+      );
+      if (bestMatch) animeSlug = bestMatch.slug;
+    } else {
+      // Jika tidak ada info season, coba cari yang eksplisit Season 1 atau yang tidak ada embel-embel season lain
+      const s1Match = animeList.find(a => a.title.toLowerCase().includes("season 1") || a.title.toLowerCase().includes("s1"));
+      if (s1Match) animeSlug = s1Match.slug;
+      else {
+        const noSeasonMatch = animeList.find(a => !/season\s*[2-9]|s[2-9]/i.test(a.title));
+        if (noSeasonMatch) animeSlug = noSeasonMatch.slug;
+      }
+    }
 
     // 3. Fetch detail anime → dapat episode list
     setMsg(`<div class="flex items-center gap-2 text-gray-500 text-[10px] font-bold uppercase"><i class="fas fa-circle-notch animate-spin text-[#ff6600]"></i> Mencari Episode ${epNumber}...</div>`);
@@ -422,8 +440,8 @@ export async function loadAnimasuServers() {
 
     if (!matchedEp) throw new Error(`Episode ${epNumber} tidak tersedia di Animasu`);
 
-    // 4. Fetch streams dari episode slug Animasu
-    const epRes = await fetch(`${SANKA_API}/animasu/detail/${matchedEp.slug}`);
+    // 4. Fetch streams dari episode slug Animasu - FIX: Gunakan endpoint /episode/ bukan /detail/
+    const epRes = await fetch(`${SANKA_API}/animasu/episode/${matchedEp.slug}`);
     if (!epRes.ok) throw new Error("Animasu episode HTTP " + epRes.status);
     const epJson = await epRes.json();
     const streams = epJson?.streams || [];
