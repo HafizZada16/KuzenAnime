@@ -198,13 +198,17 @@
                             <i class="fas fa-history text-[8px]"></i> History
                         </span>
 
-                        <button
-                            onclick="app.gachaAnime()"
-                            class="btn-gacha px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2 ml-2"
-                        >
-                            <i class="fas fa-dice"></i> Gacha
-                            <span class="gacha-badge">New</span>
-                        </button>
+                        <div class="vtuber-gacha-container">
+                            <button
+                                onclick="app.gachaAnime()"
+                                title="Gacha Anime!"
+                                class="vtuber-mascot-btn group"
+                            >
+                                <img src="/img/vtuber_gacha.png" class="vtuber-mascot-img" alt="Mascot">
+                                <i class="fas fa-dice"></i>
+                                <span class="gacha-badge">New</span>
+                            </button>
+                        </div>
 
                         <div class="relative ml-2 flex items-center">
                             <button
@@ -365,18 +369,13 @@
                             window.app.gachaAnime();
                             document.getElementById('mobile-menu-btn').click();
                         "
-                        class="py-4 px-5 text-white bg-gradient-to-r from-[#ff6600] to-[#ff8533] border-b border-gray-800 flex items-center justify-between group"
+                        class="mobile-gacha-mascot-item"
                     >
-                        <span class="flex items-center">
-                            <i
-                                class="fas fa-dice md:text-lg w-7 text-center mr-1 animate-spin-slow"
-                            ></i>
-                            <span class="font-black italic">GACHA ANIME</span>
-                        </span>
-                        <span
-                            class="bg-white text-[#ff6600] text-[9px] font-black px-2 py-0.5 rounded-full animate-pulse"
-                            >SUPRISE!</span
-                        >
+                        <div class="flex flex-col">
+                            <span class="text-[9px] text-white/50 font-bold uppercase mb-1">Surprise!</span>
+                            <span class="mobile-gacha-text text-xl">GACHA ANIME</span>
+                        </div>
+                        <img src="/img/vtuber_gacha.png" class="mobile-gacha-img" alt="Mascot">
                     </a>
                     <a
                         href="#"
