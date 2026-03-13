@@ -28,7 +28,7 @@ export function showAuthModal(isLogin = true) {
   if (existingModal) existingModal.remove();
 
   const modalHtml = `
-    <div id="auth-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md animate-fadeIn p-4">
+    <div id="auth-modal" class="auth-modal-overlay animate-fadeIn">
         <div class="bg-[#121212] border border-gray-800 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden relative animate-slideDown">
             <button onclick="document.getElementById('auth-modal').remove()" class="absolute top-5 right-5 text-gray-500 hover:text-white transition"><i class="fas fa-times text-xl"></i></button>
 
