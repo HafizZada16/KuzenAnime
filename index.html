@@ -111,7 +111,8 @@
                     "/js/history.js": "/js/history.js?v=3",
                     "/js/profile.js": "/js/profile.js?v=3",
                     "/js/donate.js": "/js/donate.js?v=3",
-                    "/js/admin.js": "/js/admin.js?v=3"
+                    "/js/admin.js": "/js/admin.js?v=3",
+                    "/js/gacha.js": "/js/gacha.js?v=1"
                 }
             }
         </script>
@@ -196,6 +197,14 @@
                         >
                             <i class="fas fa-history text-[8px]"></i> History
                         </span>
+
+                        <button
+                            onclick="app.gachaAnime()"
+                            class="btn-gacha px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2 ml-2"
+                        >
+                            <i class="fas fa-dice"></i> Gacha
+                            <span class="gacha-badge">New</span>
+                        </button>
 
                         <div class="relative ml-2 flex items-center">
                             <button
@@ -348,6 +357,21 @@
                             class="fas fa-history w-5 text-center mr-1 text-[#ff6600]"
                         ></i>
                         History
+                    </a>
+                    <a
+                        href="#"
+                        onclick="
+                            event.preventDefault();
+                            window.app.gachaAnime();
+                            document.getElementById('mobile-menu-btn').click();
+                        "
+                        class="py-4 px-5 text-white bg-gradient-to-r from-[#ff6600] to-[#ff8533] border-b border-gray-800 flex items-center justify-between group"
+                    >
+                        <span class="flex items-center">
+                            <i class="fas fa-dice md:text-lg w-7 text-center mr-1 animate-spin-slow"></i>
+                            <span class="font-black italic">GACHA ANIME</span>
+                        </span>
+                        <span class="bg-white text-[#ff6600] text-[9px] font-black px-2 py-0.5 rounded-full animate-pulse">SUPRISE!</span>
                     </a>
                     <a
                         href="#"
@@ -536,10 +560,9 @@
             import { loadProfile } from "/js/profile.js";
             import { loadDonate } from "/js/donate.js";
             import {
-                loadAdminDashboard,
-                fetchAdminStats,
                 editUserByAdmin,
             } from "/js/admin.js";
+            import { gachaAnime } from "/js/gacha.js";
 
             const navigateTo = (path) => {
                 history.pushState(null, null, path);
@@ -619,6 +642,7 @@
                 loadAdminDashboard,
                 fetchAdminStats,
                 editUserByAdmin,
+                gachaAnime,
             };
 
             // LOGIKA MENU HAMBURGER MOBILE
