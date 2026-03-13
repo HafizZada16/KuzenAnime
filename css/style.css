@@ -135,8 +135,12 @@ body {
   z-index: 10;
 }
 
-.vtuber-mascot-btn:hover {
-  transform: translateY(2px);
+@keyframes mascotVibrate {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(8deg); }
+  50% { transform: rotate(0deg); }
+  75% { transform: rotate(-8deg); }
+  100% { transform: rotate(0deg); }
 }
 
 .vtuber-mascot-img {
@@ -144,29 +148,13 @@ body {
   height: auto;
   pointer-events: none;
   filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: filter 0.2s ease-in-out;
   transform-origin: bottom center;
 }
 
 .vtuber-mascot-btn:hover .vtuber-mascot-img {
-  transform: scale(1.15) translateY(-5px);
-  filter: drop-shadow(0 8px 12px rgba(255, 102, 0, 0.4));
-}
-
-.vtuber-mascot-btn:hover .vtuber-mascot-img {
-  transform: translateX(-50%) translateY(-3px) scale(1.1);
-}
-
-.vtuber-mascot-btn i {
-  color: #ff6600;
-  font-size: 1.1rem;
-  opacity: 0.8;
-  transition: all 0.3s ease;
-}
-
-.vtuber-mascot-btn:hover i {
-  opacity: 1;
-  transform: rotate(15deg);
+  animation: mascotVibrate 0.15s linear infinite;
+  filter: drop-shadow(0 6px 10px rgba(255, 102, 0, 0.6));
 }
 
 /* Mobile specific mascot style (menu list) */
