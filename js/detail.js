@@ -252,29 +252,27 @@ function renderEpisodeGrid(episodes) {
 }
 
 // --- LOGIKA SORTING EPISODE ---
-if (window.app) {
-    window.app.toggleEpisodeSort = () => {
-        const grid = document.getElementById("episode-grid");
-        const sortIcon = document.getElementById("sort-icon");
-        const sortText = document.getElementById("sort-text");
-        
-        if (!grid || !currentEpisodes.length) return;
+export function toggleEpisodeSort() {
+    const grid = document.getElementById("episode-grid");
+    const sortIcon = document.getElementById("sort-icon");
+    const sortText = document.getElementById("sort-text");
+    
+    if (!grid || !currentEpisodes.length) return;
 
-        // Toggle state
-        sortAscending = !sortAscending;
-        currentEpisodes.reverse();
+    // Toggle state
+    sortAscending = !sortAscending;
+    currentEpisodes.reverse();
 
-        // Update UI
-        grid.innerHTML = renderEpisodeGrid(currentEpisodes);
-        
-        if (sortAscending) {
-            sortIcon.className = "fas fa-sort-amount-down-alt";
-            sortText.innerText = "Eps 1 - Last";
-        } else {
-            sortIcon.className = "fas fa-sort-amount-up";
-            sortText.innerText = "Last - Eps 1";
-        }
-    };
+    // Update UI
+    grid.innerHTML = renderEpisodeGrid(currentEpisodes);
+    
+    if (sortAscending) {
+        sortIcon.className = "fas fa-sort-amount-down-alt";
+        sortText.innerText = "Eps 1 - Last";
+    } else {
+        sortIcon.className = "fas fa-sort-amount-up";
+        sortText.innerText = "Last - Eps 1";
+    }
 }
 
 // --- FUNGSI BOOKMARK (TETAP SAMA) ---
