@@ -43,6 +43,35 @@ async function fetchDetailFromOtakudesu(slug) {
     // Mendukung dua format: { data: {...} } atau langsung {...}
     const d = result.data || result;
     
+    // Pisahkan episode reguler dan batch
+    const rawEpisodes = d.episodes || d.episode_list || [];
+    const episodeList = [];
+    let batch = null;
+
+    rawEpisodes.forEach(ep => {
+      let rawTitle = ep.title || ep.episode_title || "";
+      // Bersihkan Judul: Hapus "Sub Indo", "Subtitle Indonesia", dll
+      let cleanTitle = rawTitle
+          .replace(/\[BATCH\]/gi, "")
+          .replace(/Sub\s*Indo.*/gi, "")
+          .replace(/Subtitle\s*Indonesia/gi, "")
+          .trim();
+
+      const epObj = {
+        title: cleanTitle || rawTitle,
+        episodeId: (ep.slug || ep.episode_endpoint || "").replace("/episode/", "").replace("/", "")
+      };
+
+      if (rawTitle.toLowerCase().includes("batch")) {
+        batch = {
+          title: epObj.title,
+          batchId: epObj.episodeId
+        };
+      } else {
+        episodeList.push(epObj);
+      }
+    });
+
     return {
       title: d.title,
       japanese: d.japanese || d.japanese_title,
@@ -57,10 +86,8 @@ async function fetchDetailFromOtakudesu(slug) {
       synopsis: {
         paragraphs: [d.synopsis || ""]
       },
-      episodeList: (d.episodes || d.episode_list || []).map(ep => ({
-        title: ep.title || ep.episode_title,
-        episodeId: (ep.slug || ep.episode_endpoint || "").replace("/episode/", "").replace("/", "")
-      })),
+      episodeList: episodeList,
+      batch: batch,
       isFallback: true
     };
   } catch (error) {
