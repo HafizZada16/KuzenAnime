@@ -37,27 +37,29 @@ async function fetchDetailFromOtakudesu(slug) {
     if (!response.ok) throw new Error(`Otakudesu API Error: ${response.status}`);
     const result = await response.json();
     
-    if (!result.data) return null;
+    if (!result) return null;
 
     // Normalisasi format agar sesuai dengan yang diharapkan loadDetail (Format Sanka)
-    const d = result.data;
+    // Mendukung dua format: { data: {...} } atau langsung {...}
+    const d = result.data || result;
+    
     return {
       title: d.title,
-      japanese: d.japanese_title,
+      japanese: d.japanese || d.japanese_title,
       score: d.score,
-      poster: d.thumbnail,
+      poster: d.thumbnail || d.poster,
       type: d.type,
       status: d.status,
       aired: d.aired,
       duration: d.duration,
       studios: d.producer,
-      genreList: (d.genre_list || []).map(g => g.genre_name),
+      genreList: d.genres || (d.genre_list || []).map(g => g.genre_name || g),
       synopsis: {
-        paragraphs: [d.synopsis]
+        paragraphs: [d.synopsis || ""]
       },
-      episodeList: (d.episode_list || []).map(ep => ({
-        title: ep.episode_title,
-        episodeId: ep.episode_endpoint.replace("/episode/", "").replace("/", "")
+      episodeList: (d.episodes || d.episode_list || []).map(ep => ({
+        title: ep.title || ep.episode_title,
+        episodeId: (ep.slug || ep.episode_endpoint || "").replace("/episode/", "").replace("/", "")
       })),
       isFallback: true
     };
