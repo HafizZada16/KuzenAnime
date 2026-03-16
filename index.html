@@ -200,10 +200,9 @@
 
                         <div class="vtuber-gacha-container">
                             <a
-                                href="javascript:void(0)"
-                                onclick="app.gachaAnime()"
+                                href="/gacha"
                                 title="Gacha Anime!"
-                                class="vtuber-mascot-btn ml-2"
+                                class="vtuber-mascot-btn ml-2 anime-link"
                             >
                                 <img
                                     src="/img/vtuber_gacha_v2.png"
@@ -331,9 +330,8 @@
                         History
                     </a>
                     <a
-                        href="javascript:void(0)"
-                        onclick="app.gachaAnime()"
-                        class="mobile-gacha-mascot-item"
+                        href="/gacha"
+                        class="mobile-gacha-mascot-item anime-link"
                     >
                         <div class="flex flex-col">
                             <span
@@ -555,6 +553,7 @@
                 else if (path === "/history") await loadHistory();
                 else if (path === "/profile") await loadProfile();
                 else if (path === "/donate") await loadDonate();
+                else if (path === "/gacha") await gachaAnime();
                 else if (path === "/admin") await loadAdminDashboard();
                 else if (path.startsWith("/anime/"))
                     await loadDetail(path.split("/")[2]);
