@@ -56,10 +56,12 @@ async function fetchDetailFromOtakudesu(slug) {
 
     rawEpisodes.forEach(ep => {
       let rawTitle = ep.title || ep.episode_title || "";
+      const lowRaw = rawTitle.toLowerCase();
       
       // Strict Hidding: Jika judul mengandung "Sub Indo :" atau "Subtitle Indonesia :" 
-      // biasanya itu link ke halaman Series, bukan episode. Sembunyikan.
-      if (rawTitle.includes("Sub Indo :") || rawTitle.includes("Subtitle Indonesia :")) {
+      // biasanya itu link ke halaman Series/Movie, bukan episode. Sembunyikan.
+      // Mendukung variasi: Sub Indo:, Sub Indo :, Subtitle Indonesia :, dll
+      if (/(Sub\s*Indo|Subtitle\s*Indonesia)\s*:/gi.test(rawTitle)) {
           return;
       }
 
