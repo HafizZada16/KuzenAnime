@@ -19,10 +19,14 @@ export async function gachaAnime() {
     }
 
     try {
-        // Pilih antara Ongoing atau Complete secara acak
-        const type = Math.random() > 0.5 ? 'ongoing-anime' : 'complete-anime';
-        // Ambil halaman secara acak (1-5 agar respon cepat)
-        const page = Math.floor(Math.random() * 5) + 1;
+        // Pilih antara Ongoing (30%) atau Complete (70%) secara acak agar lebih bervariasi
+        const isComplete = Math.random() > 0.3;
+        const type = isComplete ? 'complete-anime' : 'ongoing-anime';
+        
+        // Ambil halaman secara acak
+        // Ongoing biasanya cuma beberapa halaman, Complete bisa sampai puluhan
+        const maxPage = isComplete ? 60 : 5;
+        const page = Math.floor(Math.random() * maxPage) + 1;
         
         const res = await fetch(`${SANKA_API}/${type}?page=${page}`);
         if (!res.ok) throw new Error("Gagal mengambil data gacha");
