@@ -57,6 +57,12 @@ async function fetchDetailFromOtakudesu(slug) {
     rawEpisodes.forEach(ep => {
       let rawTitle = ep.title || ep.episode_title || "";
       
+      // Strict Hidding: Jika judul mengandung "Sub Indo :" atau "Subtitle Indonesia :" 
+      // biasanya itu link ke halaman Series, bukan episode. Sembunyikan.
+      if (rawTitle.includes("Sub Indo :") || rawTitle.includes("Subtitle Indonesia :")) {
+          return;
+      }
+
       // Bersihkan Judul Episode: Hapus "Sub Indo", "Subtitle Indonesia", dll
       let cleanTitle = rawTitle
           .replace(/\[BATCH\]/gi, "")
@@ -64,13 +70,9 @@ async function fetchDetailFromOtakudesu(slug) {
           .replace(/Subtitle\s*Indonesia/gi, "")
           .trim();
 
-      // Filter: Sembunyikan jika itu cuma link duplikat (bukan episode/batch)
-      const lowRaw = rawTitle.toLowerCase();
-      if (!lowRaw.includes("episode") && !lowRaw.includes("eps") && !lowRaw.includes("batch")) {
-        // Jika setelah dibersihkan sama dengan judul anime, atau kosong, maka hide
-        if (cleanTitle.toLowerCase() === animeTitle.toLowerCase() || cleanTitle === "") {
-            return;
-        }
+      // Filter Redundancy: Sembunyikan jika text-nya cuma judul anime saja (sama dengan animeTitle)
+      if (cleanTitle.toLowerCase() === animeTitle.toLowerCase() || cleanTitle === "") {
+          return;
       }
 
       const epObj = {
