@@ -102,7 +102,7 @@
                 "imports": {
                     "/js/auth.js": "/js/auth.js?v=3",
                     "/js/home.js": "/js/home.js?v=3",
-                    "/js/detail.js": "/js/detail.js?v=3.1",
+                    "/js/detail.js": "/js/detail.js?v=3.2",
                     "/js/player.js": "/js/player.js?v=4",
                     "/js/schedule.js": "/js/schedule.js?v=3",
                     "/js/genres.js": "/js/genres.js?v=3",
@@ -569,7 +569,7 @@
                 else if (path.startsWith("/anime/")) {
                     const slug = path.split("/")[2];
                     const extra = history.state || {};
-                    await loadDetail(slug, extra.thumb);
+                    await loadDetail(slug, extra.thumb, extra.title);
                 } else if (path.startsWith("/episode/"))
                     await loadPlayer(path.split("/")[2]);
                 else if (path.startsWith("/genres/"))
@@ -623,8 +623,9 @@
                         
                         // Ekstrak data tambahan jika ada (untuk fallback detail)
                         const thumb = link.getAttribute("data-thumb");
+                        const title = link.getAttribute("data-title");
                         
-                        navigateTo(href, { thumb });
+                        navigateTo(href, { thumb, title });
 
                         // Tutup menu mobile jika link diklik
                         const dropdown =

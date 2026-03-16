@@ -69,12 +69,42 @@ async function fetchDetailFromOtakudesu(slug) {
   }
 }
 
-export async function loadDetail(slug, thumbFromHome = null) {
+// 1c. Search Fallback: Pencarian dengan 1 kata kunci (Kanata API)
+async function fetchBySearchFromOtakudesu(title) {
+  if (!title) return null;
+  try {
+    // Ambil kata pertama saja (Abaikan karakter spesial)
+    const firstWord = title.trim().split(/\s+/)[0].replace(/[^\w]/g, "");
+    if (!firstWord) return null;
+
+    console.log(`Fallback mencari kueri singkat: ${firstWord}`);
+    const response = await fetch(`${ANIME_API}/search/${encodeURIComponent(firstWord)}`);
+    if (!response.ok) return null;
+    
+    const result = await response.json();
+    const list = result.data || result || [];
+    if (Array.isArray(list) && list.length > 0) {
+      // Ambil hasil pertama yang paling relevan (slug)
+      const firstResultSlug = list[0].slug;
+      console.log(`Menemukan hasil search: ${firstResultSlug}, mengambil detail...`);
+      return await fetchDetailFromOtakudesu(firstResultSlug);
+    }
+    return null;
+  } catch (error) {
+    console.warn("Search Fallback Error:", error);
+    return null;
+  }
+}
+
+export async function loadDetail(slug, thumbFromHome = null, titleFromHome = null) {
   window.scrollTo({ top: 0, behavior: "smooth" });
   showLoading(false);
 
   if (thumbFromHome) {
     localStorage.setItem(`saved_thumb_${slug}`, thumbFromHome);
+  }
+  if (titleFromHome) {
+    localStorage.setItem(`saved_title_${slug}`, titleFromHome);
   }
 
   localStorage.setItem("current_anime_slug", slug);
@@ -109,6 +139,15 @@ export async function loadDetail(slug, thumbFromHome = null) {
   if (!dataSanka) {
     console.log("Sanka gagal, mencoba Otakudesu fallback...");
     dataSanka = await fetchDetailFromOtakudesu(slug);
+  }
+
+  // 4. Ultimate Fallback: Jika slug gagal (mungkin beda format), gunakan Search 1 Kata
+  if (!dataSanka) {
+    const backupTitle = titleFromHome || localStorage.getItem(`saved_title_${slug}`);
+    if (backupTitle) {
+      console.log(`Slug gagal, mencoba Search Otakudesu fallback untuk title: ${backupTitle}`);
+      dataSanka = await fetchBySearchFromOtakudesu(backupTitle);
+    }
   }
 
   if (!dataSanka) {
