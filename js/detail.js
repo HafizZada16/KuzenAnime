@@ -1,6 +1,10 @@
 import { USER_API, SANKA_API } from "./config.js";
 import { showLoading } from "/js/utils.js";
 
+// Global state untuk sorting episode di halaman detail
+let currentEpisodes = [];
+let sortAscending = true;
+
 // 1. Fungsi mengambil detail LENGKAP dari API Sanka
 async function fetchFullDetailFromSanka(slug) {
   try {
@@ -80,7 +84,8 @@ export async function loadDetail(slug, thumbFromHome = null) {
   document.title = `${title} Sub Indo - KuzenAnime`;
 
   // --- EPISODE LIST dari Sanka (episodeList + batch) ---
-  const regularEpisodes = [...(dataSanka.episodeList || [])].reverse();
+  currentEpisodes = [...(dataSanka.episodeList || [])].reverse(); // Default: Ascending (1 to Last)
+  sortAscending = true;
   const batchItem = dataSanka.batch || null;
 
   // 4. Render HTML Lengkap
@@ -149,9 +154,15 @@ export async function loadDetail(slug, thumbFromHome = null) {
         </div>
 
         <div class="bg-[#121212] border border-gray-800 rounded-[2.5rem] p-6 md:p-10 mb-12 shadow-2xl">
-            <h2 class="text-2xl font-black mb-8 flex items-center gap-4 uppercase tracking-tighter text-white">
-                <span class="w-2 h-8 bg-[#ff6600] rounded-full"></span> Episode List
-            </h2>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                <h2 class="text-2xl font-black flex items-center gap-4 uppercase tracking-tighter text-white">
+                    <span class="w-2 h-8 bg-[#ff6600] rounded-full"></span> Episode List
+                </h2>
+                <button onclick="app.toggleEpisodeSort()" class="flex items-center gap-2 bg-gray-800/50 hover:bg-gray-700 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-white transition-all border border-gray-700 w-max self-end sm:self-auto">
+                    <i id="sort-icon" class="fas fa-sort-amount-down-alt"></i>
+                    <span id="sort-text">Eps 1 - Last</span>
+                </button>
+            </div>
             
             ${batchItem
                 ? `
@@ -169,17 +180,10 @@ export async function loadDetail(slug, thumbFromHome = null) {
                 : ""
             }
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                ${regularEpisodes
-                  .map((ep) => `
-                    <div onclick="app.loadPlayer('${ep.episodeId}')" class="bg-gray-800/30 hover:bg-[#ff6600] border border-gray-800 hover:border-[#ff6600] p-5 rounded-2xl cursor-pointer transition-all group flex justify-between items-center shadow-sm">
-                        <span class="text-xs font-bold group-hover:text-white text-gray-300 transition">${ep.title}</span>
-                        <div class="w-8 h-8 rounded-full bg-gray-800 group-hover:bg-white/20 flex items-center justify-center transition">
-                            <i class="fas fa-play text-[10px] text-[#ff6600] group-hover:text-white"></i>
-                        </div>
-                    </div>
-                `).join("")}
+            <div id="episode-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                ${renderEpisodeGrid(currentEpisodes)}
             </div>
+        </div>
         </div>
 
         ${
@@ -233,6 +237,44 @@ function initWatchNowButton(episodeList) {
             <i class="fas fa-play"></i> Watch Now
         </button>
     `;
+}
+
+// --- FUNGSI TAMPILAN GRID EPISODE ---
+function renderEpisodeGrid(episodes) {
+    return episodes.map((ep) => `
+        <div onclick="app.loadPlayer('${ep.episodeId}')" class="bg-gray-800/30 hover:bg-[#ff6600] border border-gray-800 hover:border-[#ff6600] p-5 rounded-2xl cursor-pointer transition-all group flex justify-between items-center shadow-sm">
+            <span class="text-xs font-bold group-hover:text-white text-gray-300 transition">${ep.title}</span>
+            <div class="w-8 h-8 rounded-full bg-gray-800 group-hover:bg-white/20 flex items-center justify-center transition">
+                <i class="fas fa-play text-[10px] text-[#ff6600] group-hover:text-white"></i>
+            </div>
+        </div>
+    `).join("");
+}
+
+// --- LOGIKA SORTING EPISODE ---
+if (window.app) {
+    window.app.toggleEpisodeSort = () => {
+        const grid = document.getElementById("episode-grid");
+        const sortIcon = document.getElementById("sort-icon");
+        const sortText = document.getElementById("sort-text");
+        
+        if (!grid || !currentEpisodes.length) return;
+
+        // Toggle state
+        sortAscending = !sortAscending;
+        currentEpisodes.reverse();
+
+        // Update UI
+        grid.innerHTML = renderEpisodeGrid(currentEpisodes);
+        
+        if (sortAscending) {
+            sortIcon.className = "fas fa-sort-amount-down-alt";
+            sortText.innerText = "Eps 1 - Last";
+        } else {
+            sortIcon.className = "fas fa-sort-amount-up";
+            sortText.innerText = "Last - Eps 1";
+        }
+    };
 }
 
 // --- FUNGSI BOOKMARK (TETAP SAMA) ---
