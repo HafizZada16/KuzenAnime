@@ -100,7 +100,7 @@ export async function gachaAnime() {
             setTimeout(() => {
                 overlay.remove();
                 if (window.app && window.app.loadDetail) {
-                    window.app.loadDetail(slug, thumb, title);
+                    window.app.loadDetail(slug, thumb);
                 } else {
                     window.location.href = `/anime/${slug}`;
                 }
