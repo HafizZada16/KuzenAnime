@@ -155,51 +155,52 @@
                     <div
                         class="hidden md:flex gap-5 text-[10px] font-bold items-center tracking-wider overflow-x-auto no-scrollbar py-1"
                     >
-                        <span
-                            onclick="app.navigateTo('/')"
-                            class="text-gray-300 hover:text-[#ff6600] font-['Poppins'] font-semibold text-[10px] md:text-xs tracking-wide transition-all"
-                            >Home</span
+                        <a
+                            href="/"
+                            class="text-gray-300 hover:text-[#ff6600] font-['Poppins'] font-semibold text-[10px] md:text-xs tracking-wide transition-all anime-link"
+                            >Home</a
                         >
-                        <span
-                            onclick="app.navigateTo('/ongoing')"
-                            class="text-gray-300 hover:text-[#ff6600] font-['Poppins'] font-semibold text-[10px] md:text-xs tracking-wide transition-all"
-                            >Ongoing</span
+                        <a
+                            href="/ongoing"
+                            class="text-gray-300 hover:text-[#ff6600] font-['Poppins'] font-semibold text-[10px] md:text-xs tracking-wide transition-all anime-link"
+                            >Ongoing</a
                         >
-                        <span
-                            onclick="app.navigateTo('/complete')"
-                            class="text-gray-300 hover:text-[#ff6600] font-['Poppins'] font-semibold text-[10px] md:text-xs tracking-wide transition-all flex items-center gap-1"
+                        <a
+                            href="/complete"
+                            class="text-gray-300 hover:text-[#ff6600] font-['Poppins'] font-semibold text-[10px] md:text-xs tracking-wide transition-all flex items-center gap-1 anime-link"
                         >
                             <i class="far fa-check-square text-[8px]"></i>
                             Complete
-                        </span>
-                        <span
-                            onclick="app.navigateTo('/schedule')"
-                            class="text-gray-300 hover:text-[#ff6600] font-['Poppins'] font-semibold text-[10px] md:text-xs tracking-wide transition-all flex items-center gap-1"
+                        </a>
+                        <a
+                            href="/schedule"
+                            class="text-gray-300 hover:text-[#ff6600] font-['Poppins'] font-semibold text-[10px] md:text-xs tracking-wide transition-all flex items-center gap-1 anime-link"
                         >
                             <i class="far fa-calendar-alt text-[8px]"></i>
                             Schedule
-                        </span>
-                        <span
-                            onclick="app.navigateTo('/genres')"
-                            class="text-gray-300 hover:text-[#ff6600] font-['Poppins'] font-semibold text-[10px] md:text-xs tracking-wide transition-all flex items-center gap-1"
+                        </a>
+                        <a
+                            href="/genres"
+                            class="text-gray-300 hover:text-[#ff6600] font-['Poppins'] font-semibold text-[10px] md:text-xs tracking-wide transition-all flex items-center gap-1 anime-link"
                         >
                             <i class="fas fa-ghost text-[8px]"></i> Genres
-                        </span>
-                        <span
-                            onclick="app.navigateTo('/mylist')"
-                            class="text-gray-300 hover:text-[#ff6600] font-['Poppins'] font-semibold text-[10px] md:text-xs tracking-wide transition-all flex items-center gap-1"
+                        </a>
+                        <a
+                            href="/mylist"
+                            class="text-gray-300 hover:text-[#ff6600] font-['Poppins'] font-semibold text-[10px] md:text-xs tracking-wide transition-all flex items-center gap-1 anime-link"
                         >
                             <i class="fas fa-heart text-[8px]"></i> My List
-                        </span>
-                        <span
-                            onclick="app.navigateTo('/history')"
-                            class="text-gray-300 hover:text-[#ff6600] font-['Poppins'] font-semibold text-[10px] md:text-xs tracking-wide transition-all flex items-center gap-1"
+                        </a>
+                        <a
+                            href="/history"
+                            class="text-gray-300 hover:text-[#ff6600] font-['Poppins'] font-semibold text-[10px] md:text-xs tracking-wide transition-all flex items-center gap-1 anime-link"
                         >
                             <i class="fas fa-history text-[8px]"></i> History
-                        </span>
+                        </a>
 
                         <div class="vtuber-gacha-container">
-                            <button
+                            <a
+                                href="javascript:void(0)"
                                 onclick="app.gachaAnime()"
                                 title="Gacha Anime!"
                                 class="vtuber-mascot-btn ml-2"
@@ -209,7 +210,7 @@
                                     class="vtuber-mascot-img"
                                     alt="Mascot"
                                 />
-                            </button>
+                            </a>
                         </div>
 
                         <div class="relative ml-2 flex items-center">
@@ -255,10 +256,10 @@
                                 <i class="fas fa-sign-in-alt mr-1"></i> Login
                             </button>
 
-                            <div
+                            <a
                                 id="nav-profile-section"
-                                class="hidden items-center gap-3 cursor-pointer group"
-                                onclick="app.loadProfile()"
+                                href="/profile"
+                                class="hidden items-center gap-3 cursor-pointer group anime-link"
                             >
                                 <span
                                     id="nav-user-name"
@@ -269,7 +270,7 @@
                                     id="nav-user-avatar"
                                     class="w-8 h-8 rounded-full overflow-hidden border-2 border-gray-800 group-hover:border-[#ff6600] transition-all bg-gray-800 flex items-center justify-center"
                                 ></div>
-                            </div>
+                            </a>
                         </div>
                     </div>
                 </div>
