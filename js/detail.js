@@ -200,14 +200,14 @@ export async function loadDetail(slug, thumbFromHome = null) {
                     ${dataSanka.recommendedAnimeList
                       .map(
                         (rec) => `
-                        <div onclick="app.loadDetail('${rec.animeId}')" class="w-36 md:w-48 flex-none group cursor-pointer">
+                        <a href="/anime/${rec.animeId}" class="w-36 md:w-48 flex-none group cursor-pointer anime-link">
                             
                             <div class="relative w-full aspect-[3/4] rounded-2xl md:rounded-3xl overflow-hidden border-2 border-transparent group-hover:border-[#ff6600] transition-all duration-300 shadow-lg bg-gray-900">
                                 <img src="${rec.poster}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="${rec.title}">
                             </div>
                             
                             <p class="mt-3 md:mt-4 text-[10px] md:text-xs font-black text-gray-500 group-hover:text-white truncate transition uppercase tracking-wider">${rec.title}</p>
-                        </div>
+                        </a>
                     `,
                       )
                       .join("")}
@@ -232,22 +232,22 @@ function initWatchNowButton(episodeList) {
     const latestEp = episodeList[0]; // Sanka API returns newest first
     
     container.innerHTML = `
-        <button onclick="app.loadPlayer('${latestEp.episodeId}')" 
-            class="bg-gradient-to-r from-[#ff6600] to-[#ff8533] hover:scale-105 text-white px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-3 shadow-xl shadow-[#ff6600]/20 border border-white/10">
+        <a href="/episode/${latestEp.episodeId}" 
+            class="bg-gradient-to-r from-[#ff6600] to-[#ff8533] hover:scale-105 text-white px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-3 shadow-xl shadow-[#ff6600]/20 border border-white/10 anime-link">
             <i class="fas fa-play"></i> Watch Now
-        </button>
+        </a>
     `;
 }
 
 // --- FUNGSI TAMPILAN GRID EPISODE ---
 function renderEpisodeGrid(episodes) {
     return episodes.map((ep) => `
-        <div onclick="app.loadPlayer('${ep.episodeId}')" class="bg-gray-800/30 hover:bg-[#ff6600] border border-gray-800 hover:border-[#ff6600] p-5 rounded-2xl cursor-pointer transition-all group flex justify-between items-center shadow-sm">
+        <a href="/episode/${ep.episodeId}" class="bg-gray-800/30 hover:bg-[#ff6600] border border-gray-800 hover:border-[#ff6600] p-5 rounded-2xl cursor-pointer transition-all group flex justify-between items-center shadow-sm anime-link">
             <span class="text-xs font-bold group-hover:text-white text-gray-300 transition">${ep.title}</span>
             <div class="w-8 h-8 rounded-full bg-gray-800 group-hover:bg-white/20 flex items-center justify-center transition">
                 <i class="fas fa-play text-[10px] text-[#ff6600] group-hover:text-white"></i>
             </div>
-        </div>
+        </a>
     `).join("");
 }
 

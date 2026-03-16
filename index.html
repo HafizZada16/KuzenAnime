@@ -663,6 +663,26 @@
                 toggleEpisodeSort,
             };
 
+            // Intercept klik pada link internal untuk menjaga mode SPA
+            document.addEventListener("click", (e) => {
+                const link = e.target.closest(".anime-link");
+                if (link) {
+                    const href = link.getAttribute("href");
+                    // Hanya intercept jika link internal dan bukan klik kanan/ctrl-klik
+                    if (
+                        href &&
+                        href.startsWith("/") &&
+                        !e.ctrlKey &&
+                        !e.metaKey &&
+                        !e.shiftKey &&
+                        e.button === 0
+                    ) {
+                        e.preventDefault();
+                        navigateTo(href);
+                    }
+                }
+            });
+
             // LOGIKA MENU HAMBURGER MOBILE
             const menuBtn = document.getElementById("mobile-menu-btn");
             const dropdown = document.getElementById("mobile-dropdown");

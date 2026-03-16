@@ -17,7 +17,7 @@ export function showLoading(show) {
 }
 
 // Fungsi Render Card Dinamis untuk SEMUA Halaman
-export function createAnimeCard(anime, onClick) {
+export function createAnimeCard(anime, url) {
   let topLeftBadge = "";
 
   // 1. PRIORITAS UTAMA: Cek apakah ada properti 'extra' (Biasanya dari page Completed)
@@ -60,7 +60,7 @@ export function createAnimeCard(anime, onClick) {
   const displayEp = anime.episode || anime.eps || "?";
 
   return `
-        <div class="cursor-pointer group animate-fadeIn" onclick="${onClick}">
+        <a href="${url}" class="cursor-pointer group animate-fadeIn block anime-link">
             <div class="relative overflow-hidden rounded-xl aspect-[3/4] bg-gray-900 mb-2 shadow-lg">
                 <img src="${anime.thumb || anime.thumbnail}" 
                      class="w-full h-full object-cover group-hover:scale-110 transition duration-500" 
@@ -76,18 +76,18 @@ export function createAnimeCard(anime, onClick) {
             <h3 class="text-xs md:text-sm font-bold group-hover:text-[#ff6600] line-clamp-2 leading-tight text-gray-200 transition-colors">
                 ${anime.title}
             </h3>
-        </div>
+        </a>
     `;
 }
 
 export function createPagination(currentPage, type) {
   return `
         <div class="flex justify-center items-center gap-4 mt-8 mb-8">
-            <button onclick="app.loadCategory('${type}', ${currentPage - 1})" 
-                ${currentPage <= 1 ? 'disabled class="opacity-30"' : 'class="bg-gray-800 hover:bg-[#ff6600] px-6 py-2 rounded-xl font-bold transition"'}>Prev</button>
+            <a href="/${type}?page=${currentPage - 1}" 
+                ${currentPage <= 1 ? 'onclick="return false" class="opacity-30 cursor-default bg-gray-800 px-6 py-2 rounded-xl font-bold transition"' : 'class="bg-gray-800 hover:bg-[#ff6600] px-6 py-2 rounded-xl font-bold transition anime-link"'}>Prev</a>
             <span class="bg-[#ff6600] px-4 py-2 rounded-xl font-bold">Page ${currentPage}</span>
-            <button onclick="app.loadCategory('${type}', ${currentPage + 1})" 
-                class="bg-gray-800 hover:bg-[#ff6600] px-6 py-2 rounded-xl font-bold transition">Next</button>
+            <a href="/${type}?page=${currentPage + 1}" 
+                class="bg-gray-800 hover:bg-[#ff6600] px-6 py-2 rounded-xl font-bold transition anime-link">Next</a>
         </div>
     `;
 }

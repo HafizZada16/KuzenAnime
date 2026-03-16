@@ -96,10 +96,10 @@ function renderHeroSlider(animeList) {
                       <h2 class="text-xl sm:text-3xl md:text-5xl lg:text-6xl font-black text-white mb-3 md:mb-6 tracking-tighter leading-tight drop-shadow-2xl line-clamp-2 md:line-clamp-3 w-full px-2 md:px-0">${anime.title}</h2>
                       
                       <div class="flex justify-center md:justify-start gap-3 md:gap-4 w-full">
-                          <button onclick="app.loadDetail('${anime.animeId || anime.slug}', '${thumb}')" 
-                                  class="bg-[#ff6600] hover:bg-[#e65c00] text-white px-6 md:px-8 py-2 md:py-3.5 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-[#ff6600]/30 flex items-center justify-center gap-2 hover:scale-105 active:scale-95">
+                          <a href="/anime/${anime.animeId || anime.slug}" 
+                                  class="bg-[#ff6600] hover:bg-[#e65c00] text-white px-6 md:px-8 py-2 md:py-3.5 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-[#ff6600]/30 flex items-center justify-center gap-2 hover:scale-105 active:scale-95 anime-link">
                               <i class="fas fa-play"></i> Tonton
-                          </button>
+                          </a>
                       </div>
                   </div>
 
@@ -249,7 +249,7 @@ export async function loadCategory(type, page = 1) {
       ? (a.releaseDay || "Ongoing")
       : (a.score && a.score.trim() !== "" ? a.score : "Completed");
     const normalised = { ...a, thumb: a.poster, slug: a.animeId, episode: a.episodes, extra: badge };
-    html += createAnimeCard(normalised, `app.loadDetail('${a.animeId}', '${a.poster}')`);
+    html += createAnimeCard(normalised, `/anime/${a.animeId}`);
   });
   html += `</div>` + createPagination(page, type);
 
@@ -268,7 +268,7 @@ function renderPreview(list, title, type) {
       : (a.score && a.score.trim() !== "" ? a.score : "Completed");
     const normalised = { ...a, thumb: a.poster, slug: a.animeId, episode: a.episodes, extra: badge };
     // Kartu dengan lebar tetap agar bisa di-scroll horizontal
-    cardsHtml += `<div class="flex-shrink-0 w-[140px] sm:w-[160px] md:w-[175px]">${createAnimeCard(normalised, `app.loadDetail('${a.animeId}', '${a.poster}')`)}</div>`;
+    cardsHtml += `<div class="flex-shrink-0 w-[140px] sm:w-[160px] md:w-[175px]">${createAnimeCard(normalised, `/anime/${a.animeId}`)}</div>`;
   });
 
   const html = `
@@ -282,7 +282,7 @@ function renderPreview(list, title, type) {
             <button id="${sliderId}-next" class="w-8 h-8 rounded-full bg-gray-800 hover:bg-[#ff6600] border border-gray-700 hover:border-[#ff6600] flex items-center justify-center transition-all text-white text-xs">
               <i class="fas fa-chevron-right"></i>
             </button>
-            <span onclick="app.loadCategory('${type}', 1)" class="ml-1 text-[10px] font-bold text-gray-500 hover:text-white cursor-pointer transition uppercase">View All <i class="fas fa-chevron-right ml-1"></i></span>
+            <a href="/${type}?page=1" class="ml-1 text-[10px] font-bold text-gray-500 hover:text-white cursor-pointer transition uppercase anime-link">View All <i class="fas fa-chevron-right ml-1"></i></a>
           </div>
       </div>
       <div id="${sliderId}" class="flex gap-3 md:gap-4 overflow-x-auto scroll-smooth pb-3 scrollbar-hide" style="scrollbar-width:none; -ms-overflow-style:none;">
@@ -357,7 +357,7 @@ export async function handleSearch() {
         let html = "";
         animeList.forEach((anime) => {
           const normalised = { ...anime, thumb: anime.poster, slug: anime.animeId };
-          html += createAnimeCard(normalised, `app.loadDetail('${anime.animeId}', '${anime.poster}')`);
+          html += createAnimeCard(normalised, `/anime/${anime.animeId}`);
         });
         grid.innerHTML = html;
       } else {
@@ -368,9 +368,9 @@ export async function handleSearch() {
             <p class="text-[10px] text-gray-400 mt-2 max-w-xs mx-auto">
               Tidak ada hasil untuk "${q}". Coba gunakan satu atau dua kata kunci utama saja.
             </p>
-            <button onclick="app.navigateTo('/')" class="mt-6 text-[10px] bg-gray-900 border border-gray-700 px-6 py-2.5 rounded-full font-bold hover:text-[#ff6600] transition uppercase tracking-widest text-white">
+            <a href="/" class="mt-6 inline-block text-[10px] bg-gray-900 border border-gray-700 px-6 py-2.5 rounded-full font-bold hover:text-[#ff6600] transition uppercase tracking-widest text-white anime-link">
               Kembali ke Home
-            </button>
+            </a>
           </div>
         `;
       }
