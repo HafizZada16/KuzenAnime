@@ -72,8 +72,13 @@ async function fetchDetailFromOtakudesu(slug) {
       }
     });
 
+    const animeTitle = (d.title || "")
+      .replace(/Sub\s*Indo.*/gi, "")
+      .replace(/Subtitle\s*Indonesia/gi, "")
+      .trim();
+
     return {
-      title: d.title,
+      title: animeTitle || d.title,
       japanese: d.japanese || d.japanese_title,
       score: d.score,
       poster: d.thumbnail || d.poster,
