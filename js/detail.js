@@ -104,7 +104,10 @@ export async function loadDetail(slug, thumbFromHome = null) {
                 <h1 class="text-4xl md:text-6xl font-black mb-2 tracking-tighter leading-none text-white">${title}</h1>
                 <p class="text-[#ff6600] font-bold text-sm mb-6">${dataSanka.japanese || ""}</p>
                 
-                <div id="bookmark-container" class="flex justify-center md:justify-start mb-8"></div>
+                <div class="flex flex-wrap justify-center md:justify-start gap-4 mb-8">
+                    <div id="watch-now-container"></div>
+                    <div id="bookmark-container"></div>
+                </div>
 
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 text-left">
                     <div class="bg-[#121212] p-4 rounded-3xl border border-gray-800">
@@ -213,7 +216,23 @@ export async function loadDetail(slug, thumbFromHome = null) {
   `;
 
   // 5. Inisialisasi Fitur Tambahan
+  initWatchNowButton(dataSanka.episodeList);
   initBookmarkButton({ slug, title, thumb });
+}
+
+// --- FUNGSI WATCH NOW ---
+function initWatchNowButton(episodeList) {
+    const container = document.getElementById("watch-now-container");
+    if (!container || !episodeList || episodeList.length === 0) return;
+
+    const latestEp = episodeList[0]; // Sanka API returns newest first
+    
+    container.innerHTML = `
+        <button onclick="app.loadPlayer('${latestEp.episodeId}')" 
+            class="bg-gradient-to-r from-[#ff6600] to-[#ff8533] hover:scale-105 text-white px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-3 shadow-xl shadow-[#ff6600]/20 border border-white/10">
+            <i class="fas fa-play"></i> Watch Now
+        </button>
+    `;
 }
 
 // --- FUNGSI BOOKMARK (TETAP SAMA) ---
