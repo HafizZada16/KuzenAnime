@@ -43,6 +43,12 @@ async function fetchDetailFromOtakudesu(slug) {
     // Mendukung dua format: { data: {...} } atau langsung {...}
     const d = result.data || result;
     
+    // Bersihkan Judul Utama Anime
+    const animeTitle = (d.title || "")
+      .replace(/Sub\s*Indo.*/gi, "")
+      .replace(/Subtitle\s*Indonesia/gi, "")
+      .trim();
+
     // Pisahkan episode reguler dan batch
     const rawEpisodes = d.episodes || d.episode_list || [];
     const episodeList = [];
@@ -50,19 +56,29 @@ async function fetchDetailFromOtakudesu(slug) {
 
     rawEpisodes.forEach(ep => {
       let rawTitle = ep.title || ep.episode_title || "";
-      // Bersihkan Judul: Hapus "Sub Indo", "Subtitle Indonesia", dll
+      
+      // Bersihkan Judul Episode: Hapus "Sub Indo", "Subtitle Indonesia", dll
       let cleanTitle = rawTitle
           .replace(/\[BATCH\]/gi, "")
-          .replace(/Sub\s*Indo.*/gi, "")
+          .replace(/Sub\s*Indo\s*(:)?/gi, "")
           .replace(/Subtitle\s*Indonesia/gi, "")
           .trim();
+
+      // Filter: Sembunyikan jika itu cuma link duplikat (bukan episode/batch)
+      const lowRaw = rawTitle.toLowerCase();
+      if (!lowRaw.includes("episode") && !lowRaw.includes("eps") && !lowRaw.includes("batch")) {
+        // Jika setelah dibersihkan sama dengan judul anime, atau kosong, maka hide
+        if (cleanTitle.toLowerCase() === animeTitle.toLowerCase() || cleanTitle === "") {
+            return;
+        }
+      }
 
       const epObj = {
         title: cleanTitle || rawTitle,
         episodeId: (ep.slug || ep.episode_endpoint || "").replace("/episode/", "").replace("/", "")
       };
 
-      if (rawTitle.toLowerCase().includes("batch")) {
+      if (lowRaw.includes("batch")) {
         batch = {
           title: epObj.title,
           batchId: epObj.episodeId
@@ -71,11 +87,6 @@ async function fetchDetailFromOtakudesu(slug) {
         episodeList.push(epObj);
       }
     });
-
-    const animeTitle = (d.title || "")
-      .replace(/Sub\s*Indo.*/gi, "")
-      .replace(/Subtitle\s*Indonesia/gi, "")
-      .trim();
 
     return {
       title: animeTitle || d.title,
