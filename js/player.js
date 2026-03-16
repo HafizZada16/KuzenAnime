@@ -1,5 +1,5 @@
 import { showLoading } from "/js/utils.js";
-import { USER_API, SANKA_API } from "./config.js";
+import { USER_API, SANKA_API, ANIME_API } from "./config.js";
 
 function getServerInfo(rawName) {
     const name = (rawName || "").toLowerCase().trim();
@@ -164,6 +164,40 @@ export async function loadPlayer(epSlug, forceAnimeSlug = null) {
         }
     } catch (e) {
         console.error("Sanka API gagal:", e);
+    }
+
+    // --- FALLBACK: OTAKUDESU (Kanata API) ---
+    if (!epData) {
+        console.log("Sanka Episode gagal, mencoba Otakudesu fallback...");
+        try {
+            const cleanEpSlug = epSlug.replace("/episode/", "").replace("/", "");
+            const res = await fetch(`${ANIME_API}/episode/${cleanEpSlug}`);
+            if (res.ok) {
+                const json = await res.json();
+                if (json.data) {
+                    const d = json.data;
+                    // Normalisasi format Otakudesu ke Sanka
+                    epData = {
+                        title: d.title,
+                        animeId: d.anime_endpoint.replace("/anime/", "").replace("/", ""),
+                        defaultStreamingUrl: d.stream_url,
+                        server: {
+                            qualities: d.mirror_embed_list ? [{
+                                title: "Default",
+                                serverList: d.mirror_embed_list.map(m => ({
+                                    title: m.staring_it,
+                                    url: m.endpoint // Ini biasanya base64 atau direct
+                                }))
+                            }] : []
+                        },
+                        releaseTime: "Updated",
+                        info: { type: "TV" }
+                    };
+                }
+            }
+        } catch (e) {
+            console.error("Otakudesu Episode Fallback gagal:", e);
+        }
     }
 
     if (!epData) {

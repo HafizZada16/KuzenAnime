@@ -60,7 +60,10 @@ export function createAnimeCard(anime, url) {
   const displayEp = anime.episode || anime.eps || "?";
 
   return `
-        <a href="${url}" class="cursor-pointer group animate-fadeIn block anime-link">
+        <a href="${url}" 
+           data-title="${anime.title.replace(/"/g, '&quot;')}" 
+           data-thumb="${(anime.thumb || anime.thumbnail || '').replace(/"/g, '&quot;')}"
+           class="cursor-pointer group animate-fadeIn block anime-link">
             <div class="relative overflow-hidden rounded-xl aspect-[3/4] bg-gray-900 mb-2 shadow-lg">
                 <img src="${anime.thumb || anime.thumbnail}" 
                      class="w-full h-full object-cover group-hover:scale-110 transition duration-500" 

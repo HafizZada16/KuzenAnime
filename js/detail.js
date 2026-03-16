@@ -22,8 +22,18 @@ async function fetchFullDetailFromSanka(slug) {
 async function fetchDetailFromOtakudesu(slug) {
   try {
     // Bersihkan slug jika ada sisa-sisa path
-    const cleanSlug = slug.replace("/anime/", "").replace("/", "");
-    const response = await fetch(`${ANIME_API}/anime/${cleanSlug}`);
+    let cleanSlug = slug.replace("/anime/", "").replace("/", "");
+    
+    // Coba slug as-is dulu
+    let response = await fetch(`${ANIME_API}/anime/${cleanSlug}`);
+    
+    // Jika gagal, coba hapus "-sub-indo" (Sanka style)
+    if (!response.ok && cleanSlug.includes("-sub-indo")) {
+      const altSlug = cleanSlug.replace("-sub-indo", "");
+      console.log(`Fallback mencoba slug alternatif: ${altSlug}`);
+      response = await fetch(`${ANIME_API}/anime/${altSlug}`);
+    }
+
     if (!response.ok) throw new Error(`Otakudesu API Error: ${response.status}`);
     const result = await response.json();
     
@@ -57,12 +67,35 @@ async function fetchDetailFromOtakudesu(slug) {
   }
 }
 
-export async function loadDetail(slug, thumbFromHome = null) {
+// 1c. Search Fallback: Jika slug berbeda total, cari berdasarkan judul
+async function fetchBySearchFromOtakudesu(title) {
+  try {
+    console.log(`Fallback mencari judul: ${title}`);
+    const response = await fetch(`${ANIME_API}/search/${encodeURIComponent(title)}`);
+    if (!response.ok) return null;
+    const result = await response.json();
+    const list = result.data || [];
+    if (list.length > 0) {
+      // Ambil hasil pertama dan ambil detailnya
+      const firstResultSlug = list[0].slug;
+      return await fetchDetailFromOtakudesu(firstResultSlug);
+    }
+    return null;
+  } catch (error) {
+    console.warn("Search Fallback Error:", error);
+    return null;
+  }
+}
+
+export async function loadDetail(slug, thumbFromHome = null, titleFromHome = null) {
   window.scrollTo({ top: 0, behavior: "smooth" });
   showLoading(false);
 
   if (thumbFromHome) {
     localStorage.setItem(`saved_thumb_${slug}`, thumbFromHome);
+  }
+  if (titleFromHome) {
+    localStorage.setItem(`saved_title_${slug}`, titleFromHome);
   }
 
   localStorage.setItem("current_anime_slug", slug);
@@ -73,12 +106,12 @@ export async function loadDetail(slug, thumbFromHome = null) {
   // 2. Tampilkan Skeleton Loader agar transisi halus
   if (display) {
     display.innerHTML = `
-      <div class="animate-pulse">
+      <div class="animate-pulse px-4 md:px-0">
           <div class="flex flex-col md:flex-row gap-8 mb-10">
-              <div class="w-72 h-96 bg-gray-800 rounded-3xl mx-auto md:mx-0"></div>
+              <div class="w-full md:w-72 h-[450px] md:h-96 bg-gray-800 rounded-3xl mx-auto md:mx-0"></div>
               <div class="flex-grow">
-                  <div class="h-10 bg-gray-800 w-3/4 mb-4 rounded-lg"></div>
-                  <div class="h-6 bg-gray-800 w-1/4 mb-6 rounded-lg"></div>
+                  <div class="h-10 bg-gray-800 w-3/4 mb-4 rounded-lg hidden md:block"></div>
+                  <div class="h-6 bg-gray-800 w-1/4 mb-6 rounded-lg hidden md:block"></div>
                   <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                       <div class="h-16 bg-gray-800 rounded-2xl"></div>
                       <div class="h-16 bg-gray-800 rounded-2xl"></div>
@@ -97,6 +130,15 @@ export async function loadDetail(slug, thumbFromHome = null) {
   if (!dataSanka) {
     console.log("Sanka gagal, mencoba Otakudesu fallback...");
     dataSanka = await fetchDetailFromOtakudesu(slug);
+  }
+
+  // 4. Jika masih gagal dan kita punya judul (dari Gacha/Home), coba Search di Otakudesu
+  if (!dataSanka) {
+    const backupTitle = titleFromHome || localStorage.getItem(`saved_title_${slug}`);
+    if (backupTitle) {
+      console.log("Slug gagal, mencoba Search Otakudesu fallback...");
+      dataSanka = await fetchBySearchFromOtakudesu(backupTitle);
+    }
   }
 
   if (!dataSanka) {

@@ -520,8 +520,8 @@
             } from "/js/admin.js";
             import { gachaAnime } from "/js/gacha.js";
 
-            const navigateTo = (path) => {
-                history.pushState(null, null, path);
+            const navigateTo = (path, extraData = null) => {
+                history.pushState(extraData, null, path);
                 router();
             };
 
@@ -566,9 +566,11 @@
                 else if (path === "/donate") await loadDonate();
                 else if (path === "/gacha") await gachaAnime();
                 else if (path === "/admin") await loadAdminDashboard();
-                else if (path.startsWith("/anime/"))
-                    await loadDetail(path.split("/")[2]);
-                else if (path.startsWith("/episode/"))
+                else if (path.startsWith("/anime/")) {
+                    const slug = path.split("/")[2];
+                    const extra = history.state || {};
+                    await loadDetail(slug, extra.thumb, extra.title);
+                } else if (path.startsWith("/episode/"))
                     await loadPlayer(path.split("/")[2]);
                 else if (path.startsWith("/genres/"))
                     await loadGenres(path.split("/")[2]);
@@ -618,7 +620,12 @@
                         e.button === 0
                     ) {
                         e.preventDefault();
-                        navigateTo(href);
+                        
+                        // Ekstrak data tambahan jika ada (untuk fallback detail)
+                        const thumb = link.getAttribute("data-thumb");
+                        const title = link.getAttribute("data-title");
+                        
+                        navigateTo(href, { thumb, title });
 
                         // Tutup menu mobile jika link diklik
                         const dropdown =
