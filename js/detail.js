@@ -1,4 +1,4 @@
-import { USER_API, SANKA_API } from "./config.js";
+import { USER_API, SANKA_API, ANIME_API } from "./config.js";
 import { showLoading } from "/js/utils.js";
 
 // Global state untuk sorting episode di halaman detail
@@ -9,11 +9,50 @@ let sortAscending = true;
 async function fetchFullDetailFromSanka(slug) {
   try {
     const response = await fetch(`${SANKA_API}/anime/${slug}`);
-    if (!response.ok) throw new Error("Gagal mengambil data dari Sanka");
+    if (!response.ok) throw new Error(`Sanka API Error: ${response.status}`);
     const result = await response.json();
     return result.data || null;
   } catch (error) {
     console.warn("Sanka API Error:", error);
+    return null;
+  }
+}
+
+// 1b. Fallback: Ambil detail dari Otakudesu (Kanata API)
+async function fetchDetailFromOtakudesu(slug) {
+  try {
+    // Bersihkan slug jika ada sisa-sisa path
+    const cleanSlug = slug.replace("/anime/", "").replace("/", "");
+    const response = await fetch(`${ANIME_API}/anime/${cleanSlug}`);
+    if (!response.ok) throw new Error(`Otakudesu API Error: ${response.status}`);
+    const result = await response.json();
+    
+    if (!result.data) return null;
+
+    // Normalisasi format agar sesuai dengan yang diharapkan loadDetail (Format Sanka)
+    const d = result.data;
+    return {
+      title: d.title,
+      japanese: d.japanese_title,
+      score: d.score,
+      poster: d.thumbnail,
+      type: d.type,
+      status: d.status,
+      aired: d.aired,
+      duration: d.duration,
+      studios: d.producer,
+      genreList: (d.genre_list || []).map(g => g.genre_name),
+      synopsis: {
+        paragraphs: [d.synopsis]
+      },
+      episodeList: (d.episode_list || []).map(ep => ({
+        title: ep.episode_title,
+        episodeId: ep.episode_endpoint.replace("/episode/", "").replace("/", "")
+      })),
+      isFallback: true
+    };
+  } catch (error) {
+    console.warn("Otakudesu Fallback Error:", error);
     return null;
   }
 }
@@ -52,12 +91,22 @@ export async function loadDetail(slug, thumbFromHome = null) {
     `;
   }
 
-  // 3. Ambil data dari Sanka API saja
-  const dataSanka = await fetchFullDetailFromSanka(slug);
+  // 3. Ambil data dari Sanka API, jika gagal pakai Otakudesu
+  let dataSanka = await fetchFullDetailFromSanka(slug);
+  
+  if (!dataSanka) {
+    console.log("Sanka gagal, mencoba Otakudesu fallback...");
+    dataSanka = await fetchDetailFromOtakudesu(slug);
+  }
 
   if (!dataSanka) {
     if (display) {
-      display.innerHTML = `<div class="text-center py-20 text-red-500 font-bold uppercase tracking-widest text-[10px]">Gagal memuat detail anime.</div>`;
+      display.innerHTML = `
+        <div class="text-center py-20 animate-fadeIn">
+            <i class="fas fa-exclamation-circle text-[#ff6600] text-5xl mb-4"></i>
+            <p class="text-white font-black uppercase tracking-widest text-xs mb-6">Gagal memuat detail anime.</p>
+            <button onclick="location.reload()" class="bg-gray-800 hover:bg-[#ff6600] text-white px-8 py-3 rounded-2xl font-black uppercase tracking-widest transition-all text-[10px]">Coba Lagi</button>
+        </div>`;
     }
     return;
   }
@@ -84,7 +133,11 @@ export async function loadDetail(slug, thumbFromHome = null) {
   document.title = `${title} Sub Indo - KuzenAnime`;
 
   // --- EPISODE LIST dari Sanka (episodeList + batch) ---
-  currentEpisodes = [...(dataSanka.episodeList || [])].reverse(); // Default: Ascending (1 to Last)
+  // Jika fallback, biasanya list episode sudah urut ascending (lama ke baru)
+  currentEpisodes = dataSanka.isFallback 
+    ? [...(dataSanka.episodeList || [])]
+    : [...(dataSanka.episodeList || [])].reverse(); 
+    
   sortAscending = true;
   const batchItem = dataSanka.batch || null;
 
