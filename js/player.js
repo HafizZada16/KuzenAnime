@@ -98,7 +98,9 @@ export async function loadPlayer(epSlug, forceAnimeSlug = null) {
         localStorage.setItem("current_anime_slug", forceAnimeSlug);
     }
 
-    history.pushState(null, null, `/episode/${epSlug}`);
+    if (window.location.pathname !== `/episode/${epSlug}`) {
+        history.pushState(null, null, `/episode/${epSlug}`);
+    }
 
     const display = document.getElementById("content-display");
 
@@ -244,21 +246,27 @@ export async function loadPlayer(epSlug, forceAnimeSlug = null) {
     const nextEpisode = epData.hasNextEpisode ? epData.nextEpisode : null;
 
     const navigationHtml = `
-    <div class="flex justify-end items-center gap-2 md:gap-3 mb-6 w-full animate-fadeIn">
-      ${
-          prevEpisode
-              ? `<button onclick="app.loadPlayer('${prevEpisode.episodeId}', '${animeSlug}')" class="bg-gray-800/60 hover:bg-[#ff6600] text-gray-400 hover:text-white py-1.5 px-3 md:px-4 rounded-lg text-[9px] md:text-[10px] font-black uppercase tracking-widest transition flex items-center gap-1.5 border border-gray-700/50 hover:border-[#ff6600] group shadow-sm">
-            <i class="fas fa-chevron-left text-[8px] group-hover:-translate-x-0.5 transition-transform"></i> <span>Prev</span>
-          </button>`
-              : ""
-      }
-      ${
-          nextEpisode
-              ? `<button onclick="app.loadPlayer('${nextEpisode.episodeId}', '${animeSlug}')" class="bg-[#ff6600] hover:bg-[#e65c00] text-white py-1.5 px-3 md:px-4 rounded-lg text-[9px] md:text-[10px] font-black uppercase tracking-widest transition flex items-center gap-1.5 shadow-md shadow-[#ff6600]/20 group border border-[#ff6600]">
-            <span>Next</span> <i class="fas fa-chevron-right text-[8px] group-hover:translate-x-0.5 transition-transform"></i>
-          </button>`
-              : ""
-      }
+    <div class="flex justify-between items-center gap-2 md:gap-3 mb-6 w-full animate-fadeIn">
+      <button onclick="app.loadDetail('${animeSlug}')" class="bg-gray-800/60 hover:bg-gray-700 text-gray-400 hover:text-white py-1.5 px-3 md:px-4 rounded-lg text-[9px] md:text-[10px] font-black uppercase tracking-widest transition flex items-center gap-1.5 border border-gray-700/50 group shadow-sm">
+        <i class="fas fa-arrow-left text-[8px] group-hover:-translate-x-0.5 transition-transform"></i> <span>Kembali ke Detail</span>
+      </button>
+
+      <div class="flex gap-2 md:gap-3">
+        ${
+            prevEpisode
+                ? `<button onclick="app.loadPlayer('${prevEpisode.episodeId}', '${animeSlug}')" class="bg-gray-800/60 hover:bg-[#ff6600] text-gray-400 hover:text-white py-1.5 px-3 md:px-4 rounded-lg text-[9px] md:text-[10px] font-black uppercase tracking-widest transition flex items-center gap-1.5 border border-gray-700/50 hover:border-[#ff6600] group shadow-sm">
+              <i class="fas fa-chevron-left text-[8px] group-hover:-translate-x-0.5 transition-transform"></i> <span>Prev</span>
+            </button>`
+                : ""
+        }
+        ${
+            nextEpisode
+                ? `<button onclick="app.loadPlayer('${nextEpisode.episodeId}', '${animeSlug}')" class="bg-[#ff6600] hover:bg-[#e65c00] text-white py-1.5 px-3 md:px-4 rounded-lg text-[9px] md:text-[10px] font-black uppercase tracking-widest transition flex items-center gap-1.5 shadow-md shadow-[#ff6600]/20 group border border-[#ff6600]">
+              <span>Next</span> <i class="fas fa-chevron-right text-[8px] group-hover:translate-x-0.5 transition-transform"></i>
+            </button>`
+                : ""
+        }
+      </div>
     </div>`;
 
     // --- KUALITAS dari Sanka server.qualities ---

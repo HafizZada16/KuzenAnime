@@ -108,7 +108,9 @@ export async function loadDetail(slug, thumbFromHome = null, titleFromHome = nul
   }
 
   localStorage.setItem("current_anime_slug", slug);
-  history.pushState(null, null, `/anime/${slug}`);
+  if (window.location.pathname !== `/anime/${slug}`) {
+    history.pushState(null, null, `/anime/${slug}`);
+  }
 
   const display = document.getElementById("content-display");
 
