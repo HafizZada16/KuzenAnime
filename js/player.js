@@ -1,5 +1,6 @@
 import { showLoading } from "/js/utils.js";
-import { USER_API, SANKA_API, ANIME_API } from "./config.js";
+import { USER_API, USER_API_BACKUP, SANKA_API, ANIME_API } from "./config.js";
+import { fetchWithFallback } from "./api.js";
 
 function getServerInfo(rawName) {
     const name = (rawName || "").toLowerCase().trim();
@@ -928,7 +929,7 @@ async function saveToHistory(episodeData, animeSlug, epSlug) {
     if (!token) return;
 
     try {
-        const res = await fetch(`${USER_API}/history`, {
+        const res = await fetchWithFallback("/history", USER_API, USER_API_BACKUP, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

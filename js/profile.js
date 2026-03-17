@@ -1,4 +1,5 @@
-import { USER_API } from "./config.js";
+import { USER_API, USER_API_BACKUP } from "./config.js";
+import { fetchWithFallback } from "./api.js";
 import { showLoading } from "./utils.js";
 
 export async function loadProfile() {
@@ -28,7 +29,7 @@ export async function loadProfile() {
   let currentUserPhoto = "";
 
   try {
-    const res = await fetch(`${USER_API}/profile`, {
+    const res = await fetchWithFallback("/profile", USER_API, USER_API_BACKUP, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (res.ok) {
@@ -159,7 +160,7 @@ window.handleImageUpload = async (e) => {
   if (imageUrl) {
     // SIMPAN KE BACKEND KAMU (Code ke-3 yang kamu tanya ada di sini)
     try {
-      const res = await fetch(`${USER_API}/profile/update-photo`, {
+      const res = await fetchWithFallback("/profile/update-photo", USER_API, USER_API_BACKUP, {
         method: "PUT", // Sesuaikan method backend (PUT/POST)
         headers: {
           "Content-Type": "application/json",
@@ -205,7 +206,7 @@ window.handleUpdateUsername = async (e) => {
 
   try {
     showLoading(true);
-    const res = await fetch(`${USER_API}/profile/update-username`, {
+    const res = await fetchWithFallback("/profile/update-username", USER_API, USER_API_BACKUP, {
       method: "PUT", // Atau POST, sesuaikan backendmu
       headers: {
         "Content-Type": "application/json",
@@ -266,7 +267,7 @@ window.handleUpdatePassword = async (e) => {
 
   try {
     showLoading(true);
-    const res = await fetch(`${USER_API}/profile/update-password`, {
+    const res = await fetchWithFallback("/profile/update-password", USER_API, USER_API_BACKUP, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

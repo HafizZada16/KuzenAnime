@@ -1,5 +1,6 @@
 import { showLoading } from "./utils.js";
-import { USER_API } from "./config.js";
+import { USER_API, USER_API_BACKUP } from "./config.js";
+import { fetchWithFallback } from "./api.js";
 
 export async function loadHistory() {
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -66,7 +67,7 @@ export async function loadHistory() {
 
   try {
     // 4. Ambil data asli dari server
-    const res = await fetch(`${USER_API}/history`, {
+    const res = await fetchWithFallback("/history", USER_API, USER_API_BACKUP, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const result = await res.json();

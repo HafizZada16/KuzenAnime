@@ -1,6 +1,7 @@
 // js/auth.js
 import { showLoading } from "./utils.js";
-import { USER_API } from "./config.js";
+import { USER_API, USER_API_BACKUP } from "./config.js";
+import { fetchWithFallback } from "./api.js";
 
 // ==========================================
 // HELPER POPUP TEMA KUZENANIME
@@ -107,7 +108,7 @@ export async function handleRegister() {
   showLoading(true);
 
   try {
-    const res = await fetch(`${USER_API}/register`, {
+    const res = await fetchWithFallback("/register", USER_API, USER_API_BACKUP, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, email, password }),
@@ -133,7 +134,7 @@ export async function handleLogin() {
 
   showLoading(true);
   try {
-    const res = await fetch(`${USER_API}/login`, {
+    const res = await fetchWithFallback("/login", USER_API, USER_API_BACKUP, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
@@ -225,7 +226,7 @@ export async function checkAuthUI() {
   if (token) {
     try {
       // Ambil data terbaru dari server (agar foto profil terbaru terload)
-      const res = await fetch(`${USER_API}/profile`, {
+      const res = await fetchWithFallback("/profile", USER_API, USER_API_BACKUP, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

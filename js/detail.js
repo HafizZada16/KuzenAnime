@@ -1,4 +1,5 @@
-import { USER_API, SANKA_API, ANIME_API } from "./config.js";
+import { USER_API, USER_API_BACKUP, SANKA_API, ANIME_API } from "./config.js";
+import { fetchWithFallback } from "./api.js";
 import { showLoading } from "/js/utils.js";
 
 // Global state untuk sorting episode di halaman detail
@@ -443,7 +444,7 @@ async function initBookmarkButton(animeData) {
   }
 
   try {
-    const res = await fetch(`${USER_API}/bookmarks/check/${animeData.slug}`, {
+    const res = await fetchWithFallback(`/bookmarks/check/${animeData.slug}`, USER_API, USER_API_BACKUP, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const result = await res.json();
@@ -488,7 +489,7 @@ window.handleBookmarkToggle = async (slug, title, thumb) => {
 
   // 2. Jika sudah login, tembak ke API backend kamu
   try {
-    const res = await fetch(`${USER_API}/bookmarks/toggle`, {
+    const res = await fetchWithFallback("/bookmarks/toggle", USER_API, USER_API_BACKUP, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

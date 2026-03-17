@@ -1,4 +1,5 @@
-import { USER_API } from "./config.js";
+import { USER_API, USER_API_BACKUP } from "./config.js";
+import { fetchWithFallback } from "./api.js";
 
 export async function loadAdminDashboard() {
   fetchAdminStats();
@@ -71,7 +72,7 @@ export async function loadAdminDashboard() {
 export async function fetchAdminStats() {
   const token = localStorage.getItem("kuzen_token");
   try {
-    const res = await fetch(`${USER_API}/admin/stats`, {
+    const res = await fetchWithFallback("/admin/stats", USER_API, USER_API_BACKUP, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const data = await res.json();
@@ -131,7 +132,7 @@ export async function editUserByAdmin(userId) {
 
     const token = localStorage.getItem("kuzen_token");
     try {
-      const res = await fetch(`${USER_API}/admin/reset-user-password`, {
+      const res = await fetchWithFallback("/admin/reset-user-password", USER_API, USER_API_BACKUP, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

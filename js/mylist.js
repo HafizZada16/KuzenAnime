@@ -1,5 +1,6 @@
 import { showLoading, createSkeletonGrid } from "./utils.js"; // Pastikan createSkeletonGrid di-import
-import { USER_API } from "./config.js";
+import { USER_API, USER_API_BACKUP } from "./config.js";
+import { fetchWithFallback } from "./api.js";
 
 export async function loadMyList() {
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -47,7 +48,7 @@ export async function loadMyList() {
 
   try {
     // 3. Ambil data asli dari API
-    const res = await fetch(`${USER_API}/bookmarks`, {
+    const res = await fetchWithFallback("/bookmarks", USER_API, USER_API_BACKUP, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const result = await res.json();
@@ -127,7 +128,7 @@ window.deleteBookmark = async (slug) => {
     if (result.isConfirmed) {
       const token = localStorage.getItem("kuzen_token");
       try {
-        const res = await fetch(`${USER_API}/bookmarks/toggle`, {
+        const res = await fetchWithFallback("/bookmarks/toggle", USER_API, USER_API_BACKUP, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
