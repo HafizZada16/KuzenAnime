@@ -140,7 +140,7 @@ export async function loadGenres(selectedGenreSlug = null, page = 1) {
             episode: anime.episodes,
             extra: scoreVal || "Completed",
           };
-          finalHtml += createAnimeCard(normalised, `app.loadDetail('${anime.animeId}', '${anime.poster}')`);
+          finalHtml += createAnimeCard(normalised, `/anime/${anime.animeId}`);
         });
 
         finalHtml += `</div>` + createPaginationGenre(selectedGenreSlug, page);
