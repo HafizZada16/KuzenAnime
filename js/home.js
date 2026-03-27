@@ -314,6 +314,12 @@ export async function handleSearch() {
   if (mobileInput) mobileInput.value = "";
   if (desktopInput) desktopInput.value = "";
 
+  // Tutup container pencarian
+  const mobileSearchContainer = document.getElementById("mobile-search-container");
+  const desktopSearchContainer = document.getElementById("desktop-search-container");
+  if (mobileSearchContainer) mobileSearchContainer.classList.add("hidden");
+  if (desktopSearchContainer) desktopSearchContainer.classList.add("hidden");
+
   // Matikan loading muter-muter
   showLoading(false);
   history.pushState(null, null, `/search?q=${encodeURIComponent(q)}`);
