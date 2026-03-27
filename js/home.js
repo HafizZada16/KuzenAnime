@@ -310,6 +310,10 @@ export async function handleSearch() {
 
   if (!q) return;
 
+  // Kosongkan input setelah query didapatkan
+  if (mobileInput) mobileInput.value = "";
+  if (desktopInput) desktopInput.value = "";
+
   // Matikan loading muter-muter
   showLoading(false);
   history.pushState(null, null, `/search?q=${encodeURIComponent(q)}`);
