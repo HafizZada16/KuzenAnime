@@ -48,17 +48,17 @@ function getServerInfo(rawName) {
             badge: "No Iklan",
             color: "text-green-500 bg-green-500/10 border-green-500/20",
         };
+    } else if (name.includes("filedon")) {
+        return {
+            name: "FILEDON",
+            badge: "No Iklan",
+            color: "text-green-500 bg-green-500/10 border-green-500/20",
+        };
     }
     // KELOMPOK RAWAN IKLAN - Warna Kuning
     else if (name.includes("vidhide")) {
         return {
             name: "VIDHIDE",
-            badge: "Iklan VAST",
-            color: "text-yellow-500 bg-yellow-500/10 border-yellow-500/20",
-        };
-    } else if (name.includes("filedon")) {
-        return {
-            name: "FILEDON",
             badge: "Iklan VAST",
             color: "text-yellow-500 bg-yellow-500/10 border-yellow-500/20",
         };
@@ -173,7 +173,9 @@ export async function loadPlayer(epSlug, forceAnimeSlug = null) {
     if (!epData) {
         console.log("Sanka Episode gagal, mencoba Otakudesu fallback...");
         try {
-            const cleanEpSlug = epSlug.replace("/episode/", "").replace("/", "");
+            const cleanEpSlug = epSlug
+                .replace("/episode/", "")
+                .replace("/", "");
             const res = await fetch(`${ANIME_API}/episode/${cleanEpSlug}`);
             if (res.ok) {
                 const json = await res.json();
@@ -182,19 +184,27 @@ export async function loadPlayer(epSlug, forceAnimeSlug = null) {
                     // Normalisasi format Otakudesu ke Sanka
                     epData = {
                         title: d.title,
-                        animeId: d.anime_endpoint.replace("/anime/", "").replace("/", ""),
+                        animeId: d.anime_endpoint
+                            .replace("/anime/", "")
+                            .replace("/", ""),
                         defaultStreamingUrl: d.stream_url,
                         server: {
-                            qualities: d.mirror_embed_list ? [{
-                                title: "Default",
-                                serverList: d.mirror_embed_list.map(m => ({
-                                    title: m.staring_it,
-                                    url: m.endpoint // Ini biasanya base64 atau direct
-                                }))
-                            }] : []
+                            qualities: d.mirror_embed_list
+                                ? [
+                                      {
+                                          title: "Default",
+                                          serverList: d.mirror_embed_list.map(
+                                              (m) => ({
+                                                  title: m.staring_it,
+                                                  url: m.endpoint, // Ini biasanya base64 atau direct
+                                              }),
+                                          ),
+                                      },
+                                  ]
+                                : [],
                         },
                         releaseTime: "Updated",
-                        info: { type: "TV" }
+                        info: { type: "TV" },
                     };
                 }
             }
@@ -460,7 +470,9 @@ async function preloadAnimasuData(epData, epSlug) {
 
         if (!animeSlug) {
             const keyword = encodeURIComponent(animeName);
-            const searchRes = await fetchWithTimeout(`${SANKA_API}/animasu/search/${keyword}`);
+            const searchRes = await fetchWithTimeout(
+                `${SANKA_API}/animasu/search/${keyword}`,
+            );
             if (!searchRes.ok) return null;
             const searchJson = await searchRes.json();
             const animeList = searchJson?.animes || [];
@@ -468,21 +480,30 @@ async function preloadAnimasuData(epData, epSlug) {
 
             animeSlug = animeList[0].slug;
             const seasonMatch = fullTitle.match(/season\s*(\d+)|s(\d+)/i);
-            const seasonNum = seasonMatch ? seasonMatch[1] || seasonMatch[2] : null;
+            const seasonNum = seasonMatch
+                ? seasonMatch[1] || seasonMatch[2]
+                : null;
 
             if (seasonNum) {
                 const bestMatch = animeList.find(
-                    (a) => a.title.toLowerCase().includes(`season ${seasonNum}`) || a.title.toLowerCase().includes(`s${seasonNum}`)
+                    (a) =>
+                        a.title.toLowerCase().includes(`season ${seasonNum}`) ||
+                        a.title.toLowerCase().includes(`s${seasonNum}`),
                 );
                 if (bestMatch) animeSlug = bestMatch.slug;
             } else {
                 const s1Match = animeList.find(
-                    (a) => a.title.toLowerCase().includes("season 1") || a.title.toLowerCase().includes("s1")
+                    (a) =>
+                        a.title.toLowerCase().includes("season 1") ||
+                        a.title.toLowerCase().includes("s1"),
                 );
                 if (s1Match) animeSlug = s1Match.slug;
                 else {
                     const noSeasonMatch = animeList.find(
-                        (a) => !/season\s*[2-9]|s[2-9]/i.test(a.title.toLowerCase())
+                        (a) =>
+                            !/season\s*[2-9]|s[2-9]/i.test(
+                                a.title.toLowerCase(),
+                            ),
                     );
                     if (noSeasonMatch) animeSlug = noSeasonMatch.slug;
                 }
@@ -490,7 +511,9 @@ async function preloadAnimasuData(epData, epSlug) {
             sessionStorage.setItem(cacheKey, animeSlug);
         }
 
-        const detailRes = await fetchWithTimeout(`${SANKA_API}/animasu/detail/${animeSlug}`);
+        const detailRes = await fetchWithTimeout(
+            `${SANKA_API}/animasu/detail/${animeSlug}`,
+        );
         if (!detailRes.ok) return null;
         const detailJson = await detailRes.json();
         const episodeList = detailJson?.detail?.episodes || [];
@@ -502,7 +525,9 @@ async function preloadAnimasuData(epData, epSlug) {
 
         if (!matchedEp) return null;
 
-        const epRes = await fetchWithTimeout(`${SANKA_API}/animasu/episode/${matchedEp.slug}`);
+        const epRes = await fetchWithTimeout(
+            `${SANKA_API}/animasu/episode/${matchedEp.slug}`,
+        );
         if (!epRes.ok) return null;
         const epJson = await epRes.json();
         return epJson?.streams || [];
@@ -778,27 +803,36 @@ export async function loadAnimasuServers() {
 
     try {
         let streams = null;
-        
+
         // Cek apakah ada preload promise dan apakah sudah selesai/sedang jalan
         if (window._animasuPreloadPromise) {
             // Jika preload sedang jalan, tampilkan loading bentar (atau langsung await jika cepat)
             // Tapi user minta "langsung muncul", jadi kita cuma setMsg kalau belum kelar dalam 100ms
             const timeout = setTimeout(() => {
-                setMsg(`<div class="flex items-center gap-2 text-gray-500 text-[10px] font-bold uppercase"><i class="fas fa-circle-notch animate-spin text-[#ff6600]"></i> Menyiapkan Animasu...</div>`);
+                setMsg(
+                    `<div class="flex items-center gap-2 text-gray-500 text-[10px] font-bold uppercase"><i class="fas fa-circle-notch animate-spin text-[#ff6600]"></i> Menyiapkan Animasu...</div>`,
+                );
             }, 100);
-            
+
             streams = await window._animasuPreloadPromise;
             clearTimeout(timeout);
         }
 
         // Fallback jika preload gagal atau tidak ada
         if (!streams || streams.length === 0) {
-            setMsg(`<div class="flex items-center gap-2 text-gray-500 text-[10px] font-bold uppercase"><i class="fas fa-circle-notch animate-spin text-[#ff6600]"></i> Mencoba memuat ulang...</div>`);
-            streams = await preloadAnimasuData(window._currentEpData, window._currentEpSlug);
+            setMsg(
+                `<div class="flex items-center gap-2 text-gray-500 text-[10px] font-bold uppercase"><i class="fas fa-circle-notch animate-spin text-[#ff6600]"></i> Mencoba memuat ulang...</div>`,
+            );
+            streams = await preloadAnimasuData(
+                window._currentEpData,
+                window._currentEpSlug,
+            );
         }
 
         if (!streams || streams.length === 0) {
-            setMsg(`<div class="text-gray-500 text-[10px] font-bold uppercase"><i class="fas fa-exclamation-circle mr-1"></i> Video belum tersedia di Animasu.</div>`);
+            setMsg(
+                `<div class="text-gray-500 text-[10px] font-bold uppercase"><i class="fas fa-exclamation-circle mr-1"></i> Video belum tersedia di Animasu.</div>`,
+            );
             return;
         }
 
@@ -837,7 +871,9 @@ export async function loadAnimasuServers() {
         window.app.changeQuality("semua", "");
     } catch (e) {
         console.error("Animasu error:", e);
-        setMsg(`<div class="text-red-500 text-[10px] font-bold uppercase"><i class="fas fa-times-circle mr-1"></i> Error memuat Animasu.</div>`);
+        setMsg(
+            `<div class="text-red-500 text-[10px] font-bold uppercase"><i class="fas fa-times-circle mr-1"></i> Error memuat Animasu.</div>`,
+        );
     }
 }
 
@@ -929,22 +965,28 @@ async function saveToHistory(episodeData, animeSlug, epSlug) {
     if (!token) return;
 
     try {
-        const res = await fetchWithFallback("/history", USER_API, USER_API_BACKUP, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
+        const res = await fetchWithFallback(
+            "/history",
+            USER_API,
+            USER_API_BACKUP,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    anime_slug: animeSlug,
+                    anime_title:
+                        episodeData.title?.split(" Episode")[0] ||
+                        "Unknown Anime",
+                    anime_thumb:
+                        localStorage.getItem(`saved_thumb_${animeSlug}`) || "",
+                    episode_slug: epSlug,
+                    episode_title: episodeData.title,
+                }),
             },
-            body: JSON.stringify({
-                anime_slug: animeSlug,
-                anime_title:
-                    episodeData.title?.split(" Episode")[0] || "Unknown Anime",
-                anime_thumb:
-                    localStorage.getItem(`saved_thumb_${animeSlug}`) || "",
-                episode_slug: epSlug,
-                episode_title: episodeData.title,
-            }),
-        });
+        );
         if (!res.ok) throw new Error("Server bermasalah");
     } catch (err) {
         console.error("Gagal auto-save history:", err);
