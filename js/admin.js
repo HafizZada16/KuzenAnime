@@ -86,7 +86,7 @@ export async function fetchAdminStats() {
         (u) => `
             <tr class="hover:bg-gray-800/30 transition-colors">
                 <td class="px-6 py-4 flex items-center gap-3">
-                    <img src="${u.photo || "/img/default-avatar.png"}" class="w-8 h-8 rounded-full border border-gray-700">
+                    <img src="${u.photo || "/img/default-avatar.png"}" class="w-8 h-8 rounded-full border border-gray-700" onerror="this.onerror=null; this.src='/img/default-avatar.png';">
                     <div>
                         <p class="text-sm font-bold text-white">${u.username}</p>
                         <p class="text-[10px] text-gray-600">${u.email}</p>

@@ -1,5 +1,5 @@
-import { SANKA_API } from "/js/config.js";
-import { showLoading } from "/js/utils.js";
+import { SANKA_API } from "./config.js";
+import { showLoading } from "./utils.js";
 
 export async function loadBatch(slug) {
   if (!slug) return;

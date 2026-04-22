@@ -298,10 +298,10 @@ app.post("/api/history", authenticateToken, async (req, res) => {
         );
 
         if (existing.length > 0) {
-            // 2. JIKA SUDAH ADA, UPDATE KE EPISODE TERBARU
+            // 2. JIKA SUDAH ADA, UPDATE KE EPISODE TERBARU & UPDATE POSTER
             await db.query(
-                "UPDATE watch_history SET episode_slug = ?, episode_title = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-                [episode_slug, episode_title, existing[0].id],
+                "UPDATE watch_history SET anime_thumb = ?, episode_slug = ?, episode_title = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+                [anime_thumb, episode_slug, episode_title, existing[0].id],
             );
             return res.json({
                 status: "success",
@@ -330,6 +330,21 @@ app.post("/api/history", authenticateToken, async (req, res) => {
         res.status(500).json({
             status: "error",
             message: "Gagal memproses riwayat.",
+        });
+    }
+});
+
+// Hapus Semua Riwayat Nonton User
+app.delete("/api/history", authenticateToken, async (req, res) => {
+    try {
+        await db.query("DELETE FROM watch_history WHERE user_id = ?", [
+            req.user.id,
+        ]);
+        res.json({ status: "success", message: "Riwayat berhasil dihapus!" });
+    } catch (error) {
+        res.status(500).json({
+            status: "error",
+            message: "Gagal menghapus riwayat.",
         });
     }
 });

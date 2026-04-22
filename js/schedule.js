@@ -1,5 +1,5 @@
 import { SANKA_API } from "./config.js";
-import { showLoading, createSkeletonList } from "./utils.js";
+import { showLoading, createSkeletonList, getProxyImage } from "./utils.js";
 
 export async function loadSchedule() {
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -71,7 +71,7 @@ export async function loadSchedule() {
               <div onclick="app.loadDetail('${anime.slug}', '${poster}')" class="group cursor-pointer bg-gray-900/50 hover:bg-gray-800 border border-gray-800 hover:border-[#ff6600]/50 p-3 rounded-xl transition-all flex items-center gap-4 shadow-sm">
                   
                   <div class="w-10 h-14 md:w-12 md:h-16 flex-shrink-0 rounded-lg overflow-hidden border border-gray-700 group-hover:border-[#ff6600] transition-colors duration-300">
-                      <img src="${poster}" alt="${title}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy">
+                      <img src="${getProxyImage(poster)}" alt="${title}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" onerror="this.onerror=null; this.src='https://via.placeholder.com/150x200?text=No+Image';">
                   </div>
                   
                   <div class="flex-grow min-w-0">

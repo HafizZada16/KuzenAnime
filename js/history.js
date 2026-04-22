@@ -1,4 +1,4 @@
-import { showLoading } from "./utils.js";
+import { showLoading, getProxyImage } from "./utils.js";
 import { USER_API, USER_API_BACKUP } from "./config.js";
 import { fetchWithFallback } from "./api.js";
 
@@ -80,6 +80,10 @@ export async function loadHistory() {
                   <h2 class="text-2xl md:text-4xl font-black uppercase tracking-tighter italic text-white">Recent Activity</h2>
                   <p class="text-[10px] text-[#ff6600] font-black uppercase tracking-[0.3em]">Lanjutkan tontonan Anda</p>
               </div>
+              <button onclick="window.app.clearHistory()" class="flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
+                  <i class="fas fa-trash-alt text-[8px]"></i>
+                  <span>Clear</span>
+              </button>
           </div>
     `;
 
@@ -104,7 +108,9 @@ export async function loadHistory() {
                  onclick="app.loadPlayer('${item.episode_slug}', '${item.anime_slug}')">
                 
                 <div class="w-24 h-32 flex-shrink-0 relative">
-                    <img src="${item.anime_thumb}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    <img src="${getProxyImage(item.anime_thumb)}" 
+                         class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                         onerror="this.onerror=null; this.src='https://placehold.co/400x600/121212/666666?text=No+Poster';">
                     <div class="absolute inset-0 bg-[#ff6600]/20 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
                         <i class="fas fa-play text-white text-xs"></i>
                     </div>
@@ -131,5 +137,60 @@ export async function loadHistory() {
   } catch (err) {
     if (content)
       content.innerHTML = `<p class="text-center text-red-500 py-20 uppercase font-black text-xs">Gagal memuat riwayat.</p>`;
+  }
+}
+
+export async function clearHistory() {
+  const token = localStorage.getItem("kuzen_token");
+  if (!token) return;
+
+  const result = await Swal.fire({
+    title: "Hapus Semua Riwayat?",
+    text: "Tindakan ini tidak bisa dibatalkan!",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#ff6600",
+    cancelButtonColor: "#3085d6",
+    confirmButtonText: "Ya, Hapus!",
+    cancelButtonText: "Batal",
+    background: "#1a1a1a",
+    color: "#fff",
+  });
+
+  if (result.isConfirmed) {
+    try {
+      const res = await fetchWithFallback(
+        "/history",
+        USER_API,
+        USER_API_BACKUP,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      const data = await res.json();
+      if (data.status === "success") {
+        Swal.fire({
+          title: "Terhapus!",
+          text: "Riwayat nonton Anda telah dibersihkan.",
+          icon: "success",
+          background: "#1a1a1a",
+          color: "#fff",
+          confirmButtonColor: "#ff6600",
+        });
+        loadHistory();
+      } else {
+        throw new Error(data.message);
+      }
+    } catch (err) {
+      Swal.fire({
+        title: "Gagal!",
+        text: "Terjadi kesalahan saat menghapus riwayat.",
+        icon: "error",
+        background: "#1a1a1a",
+        color: "#fff",
+      });
+    }
   }
 }

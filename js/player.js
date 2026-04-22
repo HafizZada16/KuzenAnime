@@ -1,4 +1,4 @@
-import { showLoading } from "/js/utils.js";
+import { showLoading, getProxyImage } from "./utils.js";
 import { USER_API, USER_API_BACKUP, SANKA_API, ANIME_API } from "./config.js";
 import { fetchWithFallback } from "./api.js";
 
@@ -426,7 +426,7 @@ export async function loadPlayer(epSlug, forceAnimeSlug = null) {
                           : anime.latestReleaseDate || "Ongoing";
                       return `<div onclick="app.loadDetail('${slug}')" class="flex gap-3 group cursor-pointer">
                   <div class="w-16 h-20 flex-shrink-0 overflow-hidden rounded-lg bg-gray-800 border border-gray-700">
-                    <img src="${thumb}" class="w-full h-full object-cover group-hover:scale-110 transition duration-300" onerror="this.onerror=null; this.src='https://via.placeholder.com/150x200?text=No+Image';">
+                    <img src="${getProxyImage(thumb)}" class="w-full h-full object-cover group-hover:scale-110 transition duration-300" onerror="this.onerror=null; this.src='https://via.placeholder.com/150x200?text=No+Image';">
                   </div>
                   <div class="flex flex-col justify-center min-w-0">
                     <h4 class="text-[10px] font-bold line-clamp-2 group-hover:text-[#ff6600] transition-colors leading-tight">${title}</h4>
@@ -977,6 +977,26 @@ async function saveToHistory(episodeData, animeSlug, epSlug) {
     if (!token) return;
 
     try {
+        // Cek thumb dari berbagai sumber
+        let thumb = episodeData.info?.poster || 
+                    episodeData.poster || 
+                    localStorage.getItem(`saved_thumb_${animeSlug}`);
+
+        // Jika benar-benar kosong, coba ambil dari API detail anime
+        if (!thumb || thumb === "" || thumb === "null") {
+            try {
+                const animeRes = await fetch(`${SANKA_API}/anime/${animeSlug}`);
+                if (animeRes.ok) {
+                    const animeJson = await animeRes.json();
+                    thumb = animeJson.data?.poster || "";
+                    
+                    if (thumb) localStorage.setItem(`saved_thumb_${animeSlug}`, thumb);
+                }
+            } catch (e) {
+                console.warn("Gagal fetch poster cadangan:", e);
+            }
+        }
+
         const res = await fetchWithFallback(
             "/history",
             USER_API,
@@ -992,8 +1012,7 @@ async function saveToHistory(episodeData, animeSlug, epSlug) {
                     anime_title:
                         episodeData.title?.split(" Episode")[0] ||
                         "Unknown Anime",
-                    anime_thumb:
-                        localStorage.getItem(`saved_thumb_${animeSlug}`) || "",
+                    anime_thumb: thumb || "",
                     episode_slug: epSlug,
                     episode_title: episodeData.title,
                 }),

@@ -1,4 +1,4 @@
-import { showLoading, createSkeletonGrid } from "./utils.js"; // Pastikan createSkeletonGrid di-import
+import { showLoading, createSkeletonGrid, getProxyImage } from "./utils.js"; // Pastikan createSkeletonGrid di-import
 import { USER_API, USER_API_BACKUP } from "./config.js";
 import { fetchWithFallback } from "./api.js";
 
@@ -83,7 +83,7 @@ export async function loadMyList() {
         html += `
                     <div class="group relative bg-gray-900 rounded-2xl overflow-hidden border border-gray-800 hover:border-[#ff6600] transition-all duration-300 shadow-lg">
                         <div class="aspect-[3/4] overflow-hidden cursor-pointer" onclick="app.loadDetail('${item.anime_slug}', '${item.anime_thumb}')">
-                            <img src="${item.anime_thumb}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                            <img src="${getProxyImage(item.anime_thumb)}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.onerror=null; this.src='https://via.placeholder.com/300x400?text=No+Image';">
                             <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80"></div>
                         </div>
 

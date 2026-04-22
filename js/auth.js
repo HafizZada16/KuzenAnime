@@ -237,7 +237,7 @@ export async function checkAuthUI() {
 
         // Template Foto Profil
         const avatarHtml = photo
-          ? `<img src="${photo}" class="w-8 h-8 rounded-full object-cover border border-gray-700 shadow-sm">`
+          ? `<img src="${photo}" class="w-8 h-8 rounded-full object-cover border border-gray-700 shadow-sm" onerror="this.onerror=null; this.src='/img/default-avatar.png';">`
           : `<div class="w-8 h-8 bg-gradient-to-tr from-[#ff6600] to-orange-400 rounded-full flex items-center justify-center text-[10px] text-white font-black">${username.charAt(0).toUpperCase()}</div>`;
 
         // Render Desktop
@@ -270,7 +270,7 @@ export async function checkAuthUI() {
         if (loginBtnMobile) {
           loginBtnMobile.innerHTML = `
             <div class="flex items-center gap-3 w-full py-1">
-                ${photo ? `<img src="${photo}" class="w-7 h-7 rounded-full object-cover border border-gray-800">` : `<i class="fas fa-user-circle w-7 text-center text-[#ff6600] text-lg"></i>`}
+                ${photo ? `<img src="${photo}" class="w-7 h-7 rounded-full object-cover border border-gray-800" onerror="this.onerror=null; this.src='/img/default-avatar.png';">` : `<i class="fas fa-user-circle w-7 text-center text-[#ff6600] text-lg"></i>`}
                 <span class="font-['Poppins'] font-bold text-white tracking-tight text-xs">${username}</span>
             </div>
           `;

@@ -1,6 +1,6 @@
 import { USER_API, USER_API_BACKUP, SANKA_API, ANIME_API } from "./config.js";
 import { fetchWithFallback } from "./api.js";
-import { showLoading } from "/js/utils.js";
+import { showLoading, getProxyImage } from "./utils.js";
 
 // Global state untuk sorting episode di halaman detail
 let currentEpisodes = [];
@@ -251,7 +251,7 @@ export async function loadDetail(slug, thumbFromHome = null, titleFromHome = nul
 
         <div class="flex flex-col md:flex-row gap-8 md:gap-12 mb-12">
             <div class="w-56 sm:w-64 md:w-80 mx-auto md:mx-0 flex-shrink-0">
-                <img src="${thumb}" class="w-full rounded-[2.5rem] shadow-2xl border border-gray-800 object-cover aspect-[3/4]" alt="${title}">
+                <img src="${getProxyImage(thumb)}" class="w-full rounded-[2.5rem] shadow-2xl border border-gray-800 object-cover aspect-[3/4]" alt="${title}" onerror="this.onerror=null; this.src='https://via.placeholder.com/300x400?text=No+Image';">
             </div>
             
             <div class="flex-grow text-center md:text-left">
@@ -357,7 +357,7 @@ export async function loadDetail(slug, thumbFromHome = null, titleFromHome = nul
                         <a href="/anime/${rec.animeId}" class="w-36 md:w-48 flex-none group cursor-pointer anime-link">
                             
                             <div class="relative w-full aspect-[3/4] rounded-2xl md:rounded-3xl overflow-hidden border-2 border-transparent group-hover:border-[#ff6600] transition-all duration-300 shadow-lg bg-gray-900">
-                                <img src="${rec.poster}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="${rec.title}">
+                                <img src="${getProxyImage(rec.poster)}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="${rec.title}" onerror="this.onerror=null; this.src='https://via.placeholder.com/300x400?text=No+Image';">
                             </div>
                             
                             <p class="mt-3 md:mt-4 text-[10px] md:text-xs font-black text-gray-500 group-hover:text-white truncate transition uppercase tracking-wider">${rec.title}</p>

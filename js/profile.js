@@ -53,7 +53,7 @@ export async function loadProfile() {
                     <div id="profile-pic-container" class="w-full h-full bg-gradient-to-tr from-[#ff6600] to-orange-400 rounded-full flex items-center justify-center shadow-lg shadow-orange-500/30 overflow-hidden border-4 border-gray-900">
                         ${
                           currentUserPhoto
-                            ? `<img id="profile-img" src="${currentUserPhoto}" class="w-full h-full object-cover">`
+                            ? `<img id="profile-img" src="${currentUserPhoto}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='/img/default-avatar.png';">`
                             : `<i id="profile-icon" class="fas fa-user text-4xl text-white"></i>`
                         }
                     </div>
@@ -172,7 +172,7 @@ window.handleImageUpload = async (e) => {
       if (res.ok) {
         // Update UI secara instan
         const container = document.getElementById("profile-pic-container");
-        container.innerHTML = `<img src="${imageUrl}" class="w-full h-full object-cover animate-fadeIn">`;
+        container.innerHTML = `<img src="${imageUrl}" class="w-full h-full object-cover animate-fadeIn" onerror="this.onerror=null; this.src='/img/default-avatar.png';">`;
 
         Swal.fire({
           icon: "success",

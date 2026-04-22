@@ -16,6 +16,14 @@ export function showLoading(show) {
   }
 }
 
+// Fungsi Proxy Gambar (Dinonaktifkan sementara karena kendala akses)
+export function getProxyImage(url) {
+  if (!url || String(url).trim() === "" || url === "null" || url === "undefined") {
+    return "https://placehold.co/400x600/121212/666666?text=No+Poster";
+  }
+  return url;
+}
+
 // Fungsi Render Card Dinamis untuk SEMUA Halaman
 export function createAnimeCard(anime, url) {
   let topLeftBadge = "";
@@ -58,14 +66,16 @@ export function createAnimeCard(anime, url) {
 
   // Teks episode di pojok kanan atas
   const displayEp = anime.episode || anime.eps || "?";
+  const rawThumb = anime.thumb || anime.thumbnail || "";
+  const proxiedThumb = getProxyImage(rawThumb);
 
   return `
         <a href="${url}" 
            data-title="${anime.title.replace(/"/g, '&quot;')}" 
-           data-thumb="${(anime.thumb || anime.thumbnail || '').replace(/"/g, '&quot;')}"
+           data-thumb="${rawThumb.replace(/"/g, '&quot;')}"
            class="cursor-pointer group animate-fadeIn block anime-link">
             <div class="relative overflow-hidden rounded-xl aspect-[3/4] bg-gray-900 mb-2 shadow-lg">
-                <img src="${anime.thumb || anime.thumbnail}" 
+                <img src="${proxiedThumb}" 
                      class="w-full h-full object-cover group-hover:scale-110 transition duration-500" 
                      onerror="this.onerror=null; this.src='https://via.placeholder.com/300x400?text=No+Image';">
                 

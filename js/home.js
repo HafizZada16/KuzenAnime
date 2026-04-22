@@ -4,6 +4,7 @@ import {
   createAnimeCard,
   createPagination,
   createSkeletonGrid,
+  getProxyImage,
 } from "./utils.js";
 
 // Variabel global untuk menyimpan "timer hantu" agar bisa dimatikan
@@ -72,7 +73,7 @@ function renderHeroSlider(animeList) {
     slidesHtml += `
       <div class="hero-slide absolute inset-0 transition-opacity duration-1000 ease-in-out ${isActive}" data-index="${index}">
           
-          <div class="absolute inset-0 bg-cover bg-center blur-sm opacity-40 transform scale-110" style="background-image: url('${thumb}');"></div>
+          <div class="absolute inset-0 bg-cover bg-center blur-sm opacity-40 transform scale-110" style="background-image: url('${getProxyImage(thumb)}');"></div>
           <div class="absolute inset-0 bg-gradient-to-t from-[#0b0b0b] via-[#0b0b0b]/60 to-transparent z-10"></div>
           <div class="absolute inset-0 bg-gradient-to-r from-[#0b0b0b]/95 via-[#0b0b0b]/60 to-transparent z-10"></div>
           
@@ -80,7 +81,7 @@ function renderHeroSlider(animeList) {
               <div class="flex flex-col md:flex-row items-center gap-3 md:gap-10 w-full max-w-6xl animate-slideUp text-center md:text-left">
                   
                   <div class="w-36 sm:w-36 md:w-52 lg:w-60 flex-shrink-0 rounded-xl md:rounded-3xl overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.8)] border border-gray-700/50">
-                      <img src="${thumb}" class="w-full h-full object-cover aspect-[3/4]" alt="${anime.title}">
+                      <img src="${getProxyImage(thumb)}" class="w-full h-full object-cover aspect-[3/4]" alt="${anime.title}" onerror="this.onerror=null; this.src='https://via.placeholder.com/300x400?text=No+Image';">
                   </div>
 
                   <div class="flex-grow flex flex-col items-center md:items-start w-full mt-2 md:mt-0">
