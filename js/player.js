@@ -8,19 +8,19 @@ function getServerInfo(rawName) {
     // KELOMPOK VIP (NO IKLAN) - Warna Hijau
     if (name.includes("ondesu")) {
         return {
-            name: "ONDESU HD",
+            name: "ONDESU",
             badge: "No Iklan",
             color: "text-green-500 bg-green-500/10 border-green-500/20",
         };
     } else if (name.includes("otaku")) {
         return {
-            name: "OTAKUWATCH HD",
+            name: "OTAKUWATCH",
             badge: "No Iklan",
             color: "text-green-500 bg-green-500/10 border-green-500/20",
         };
     } else if (name.includes("odstream")) {
         return {
-            name: "ODSTREAM HD",
+            name: "ODSTREAM",
             badge: "No Iklan",
             color: "text-green-500 bg-green-500/10 border-green-500/20",
         };
@@ -51,6 +51,18 @@ function getServerInfo(rawName) {
     } else if (name.includes("filedon")) {
         return {
             name: "FILEDON",
+            badge: "No Iklan",
+            color: "text-green-500 bg-green-500/10 border-green-500/20",
+        };
+    } else if (name.includes("short")) {
+        return {
+            name: "SHORT",
+            badge: "No Iklan",
+            color: "text-green-500 bg-green-500/10 border-green-500/20",
+        };
+    } else if (name.includes("desustream")) {
+        return {
+            name: "DESUSTREAM",
             badge: "No Iklan",
             color: "text-green-500 bg-green-500/10 border-green-500/20",
         };

@@ -105,7 +105,7 @@
                     "/js/auth.js": "/js/auth.js?v=3.1",
                     "/js/home.js": "/js/home.js?v=3.1",
                     "/js/detail.js": "/js/detail.js?v=3.8",
-                    "/js/player.js": "/js/player.js?v=4.2",
+                    "/js/player.js": "/js/player.js?v=4.3",
                     "/js/schedule.js": "/js/schedule.js?v=3.1",
                     "/js/genres.js": "/js/genres.js?v=3.1",
                     "/js/batch.js": "/js/batch.js?v=3.1",
@@ -622,11 +622,11 @@
                         e.button === 0
                     ) {
                         e.preventDefault();
-                        
+
                         // Ekstrak data tambahan jika ada (untuk fallback detail)
                         const thumb = link.getAttribute("data-thumb");
                         const title = link.getAttribute("data-title");
-                        
+
                         navigateTo(href, { thumb, title });
 
                         // Tutup menu mobile jika link diklik
